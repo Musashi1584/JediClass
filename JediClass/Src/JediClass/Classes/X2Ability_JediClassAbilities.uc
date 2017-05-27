@@ -77,8 +77,9 @@ static function X2AbilityTemplate ForceLightning()
 	Template.AddTargetEffect(DamageEffect);
 	Template.AddMultiTargetEffect(DamageEffect);
 
-	//Template.AssociatedPassives.AddItem('Electroshock');
-	//Template.AddTargetEffect(ElectroshockDisorientEffect());
+	Template.AssociatedPassives.AddItem('Electroshock');
+	Template.AddTargetEffect(ElectroshockDisorientEffect());
+	Template.AddMultiTargetEffect(ElectroshockDisorientEffect());
 
 	// Hit Calculation (Different weapons now have different calculations for range)
 	ToHitCalc = new class'X2AbilityToHitCalc_StandardAim';
@@ -88,8 +89,8 @@ static function X2AbilityTemplate ForceLightning()
 	Template.AbilityToHitOwnerOnMissCalc = ToHitCalc;
 			
 	// Targeting Method
-	//Template.TargetingMethod = class'X2TargetingMethod_TopDown';
-	Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
+	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
+	//Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
 	//Template.CinescriptCameraType = "Psionic_FireAtLocation";
 	Template.bOverrideAim = true;
 	Template.bUseSourceLocationZToAim = true;

@@ -253,7 +253,7 @@ function SendProjectile(vector Source, vector Target)
 	
 	//WeaponEntity = XComWeapon(UnitPawn.Weapon);
 
-	ProjectileTemplate = X2UnifiedProjectile(`CONTENT.RequestGameArchetype("JediClassMod.Archetypes.PJ_ForceLightning"));
+	ProjectileTemplate = X2UnifiedProjectile(`CONTENT.RequestGameArchetype("Perk_Force_Lightning_Assets.Archetypes.PJ_ForceLightning"));
 	`LOG("ProjectileTemplate" @ ProjectileTemplate,, 'JediClass');
 
 	FireVolleyNotify = new class'AnimNotify_FireWeaponVolley';
