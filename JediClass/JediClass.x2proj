@@ -32,6 +32,12 @@ tags=Soilder Class, Jedi, May the force be with you</Description>
     <Content Include="Config\XComJediClass.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\JedClassAbilities.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\Perk_Force_Chain_Lightning.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\Perk_Force_Lightning.upk">
       <SubType>Content</SubType>
     </Content>
