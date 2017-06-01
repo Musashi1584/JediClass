@@ -76,6 +76,23 @@ simulated state Executing
 		}
 	}
 	
+	function MaybeNotifyEnvironmentDamage()
+	{
+		local XComGameState_EnvironmentDamage EnvironmentDamage;		
+		local TTile CurrentTile;
+
+		CurrentTile = `XWORLD.GetTileCoordinatesFromPosition(Unit.Location);
+		
+		foreach StateChangeContext.AssociatedState.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamage)
+		{
+			if(EnvironmentDamage.HitLocationTile == CurrentTile)
+			{			
+				DmgObjectRef = EnvironmentDamage.GetReference();				
+				SetTimer(0.3f, false, nameof(DelayedNotify)); //Add a small delay since the is tile based 
+			}
+		}
+	}
+
 	function DelayedNotify()
 	{
 		VisualizationMgr.SendInterTrackMessage(DmgObjectRef);

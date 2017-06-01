@@ -302,7 +302,7 @@ simulated function bool IsExplosiveDamage()
 
 simulated function AddX2ActionsForVisualization(XComGameState VisualizeGameState, out VisualizationTrack BuildTrack, name EffectApplyResult)
 {
-	local X2Action_Knockback KnockbackAction;
+	local X2Action_ForcePush KnockbackAction;
 
 	`LOG("X2Effect_ForcePush AddX2ActionsForVisualization",, 'JediClass');
 
@@ -312,12 +312,9 @@ simulated function AddX2ActionsForVisualization(XComGameState VisualizeGameState
 		{
 			if (XComGameState_Unit(BuildTrack.StateObject_NewState).IsAlive())
 			{
-				`LOG("X2Effect_ForcePush Add X2Action_Knockback",, 'JediClass');
-				KnockbackAction = X2Action_Knockback(class'X2Action_Knockback'.static.AddToVisualizationTrack(BuildTrack, VisualizeGameState.GetContext()));
-				if( OverrideRagdollFinishTimerSec >= 0 )
-				{
-					KnockbackAction.OverrideRagdollFinishTimerSec = OverrideRagdollFinishTimerSec;
-				}
+				`LOG("X2Effect_ForcePush Add X2Action_ForcePush",, 'JediClass');
+				KnockbackAction = X2Action_ForcePush(class'X2Action_ForcePush'.static.AddToVisualizationTrack(BuildTrack, VisualizeGameState.GetContext()));
+				KnockbackAction.AnimationDelay = 1.0f + RandRange(0.0f, 1.0f);
 			}
 		}
 		else if (BuildTrack.StateObject_NewState.IsA('XComGameState_EnvironmentDamage') || BuildTrack.StateObject_NewState.IsA('XComGameState_Destructible'))
@@ -349,8 +346,8 @@ defaultproperties
 
 	DamageTypes.Add("KnockbackDamage");
 
-	DefaultDamage=100.0
-	DefaultRadius=64.0
+	DefaultDamage=10.0
+	DefaultRadius=16.0
 
 	OverrideRagdollFinishTimerSec=-1
 
