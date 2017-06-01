@@ -32,7 +32,10 @@ tags=Soilder Class, Jedi, May the force be with you</Description>
     <Content Include="Config\XComJediClass.ini">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Content\JedClassAbilities.upk">
+    <Content Include="Content\JediClassAbilities.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\JediClassUI.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\Perk_Force_Chain_Lightning.upk">
@@ -56,7 +59,16 @@ tags=Soilder Class, Jedi, May the force be with you</Description>
     <Content Include="Src\JediClass\Classes\X2Action_Fire_ChainLightning.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\JediClass\Classes\X2Action_Fire_ForceChoke.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClass\Classes\X2Action_ForcePush.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\JediClass\Classes\X2DownloadableContentInfo_JediClass.uc" />
+    <Content Include="Src\JediClass\Classes\X2Effect_ForcePush.uc">
+      <SubType>Content</SubType>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
 </Project>
