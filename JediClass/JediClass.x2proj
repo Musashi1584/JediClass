@@ -69,6 +69,9 @@ tags=Soilder Class, Jedi, May the force be with you</Description>
     <Content Include="Src\JediClass\Classes\X2Effect_ForcePush.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\JediClass\Classes\X2Effect_RemoveOverwatch.uc">
+      <SubType>Content</SubType>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
 </Project>

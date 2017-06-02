@@ -1,12 +1,16 @@
 class X2Ability_JediClassAbilities extends X2Ability
 	dependson (XComGameStateContext_Ability) config(JediClass);
 
+
+var config int FORCE_PUSH_STUNNED_ACTIONS;
+var config int FORCE_PUSH_STUN_CHANCE;
 var config int FORCE_PUSH_KNOCKBACK_DISTANCE;
 var config int FORCE_LIGHTNING_COOLDOWN;
 var config int FORCE_CHAIN_LIGHTNING_COOLDOWN;
 var config WeaponDamageValue FORCE_LIGHTNING_BASEDAMAGE;
 var config WeaponDamageValue FORCE_CHAIN_LIGHTNING_BASEDAMAGE;
 var config WeaponDamageValue FORCE_CHOKE_BASEDAMAGE;
+var config WeaponDamageValue FORCE_PUSH_BASEDAMAGE;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -29,9 +33,11 @@ static function X2AbilityTemplate ForcePush()
 	local X2Condition_UnitProperty			UnitPropertyCondition;
 	local X2AbilityToHitCalc_StandardAim    ToHitCalc;
 	local X2AbilityCost_ActionPoints        ActionPointCost;
-	//local X2Effect_ApplyWeaponDamage		DamageEffect;
+	local X2Effect_ApplyWeaponDamage		DamageEffect;
 	local array<name>                       SkipExclusions;
 	local X2Effect_ForcePush				KnockBackEffect;
+	local X2Effect_RemoveEffects			RemoveEffects;
+	local X2Effect_RemoveOverwatch			RemoveOverwatchEffect;
 
 	// Macro to do localisation and stuffs
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForcePush');
@@ -72,19 +78,31 @@ static function X2AbilityTemplate ForcePush()
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);	
 
-	//Stun Effect
-	//DamageEffect = new class'X2Effect_ApplyWeaponDamage';
-	//DamageEffect.bIgnoreBaseDamage = true;
-	//DamageEffect.bBypassShields = true;
-	//DamageEffect.EffectDamageValue = default.FORCE_CHOKE_BASEDAMAGE;
-	//Template.AddTargetEffect(DamageEffect);
 	KnockBackEffect = new class'X2Effect_ForcePush';
 	KnockBackEffect.KnockbackDistance = default.FORCE_PUSH_KNOCKBACK_DISTANCE;
 	KnockBackEffect.bKnockbackDestroysNonFragile = true;
 	//KnockBackEffect.bUseTargetLocation = true;
 	Template.AddTargetEffect(KnockBackEffect);
 
-	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StatCheck_UnitVsUnit';
+	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	DamageEffect.bIgnoreBaseDamage = true;
+	DamageEffect.bBypassShields = true;
+	DamageEffect.EffectDamageValue = default.FORCE_PUSH_BASEDAMAGE;
+	Template.AddTargetEffect(DamageEffect);
+
+	Template.AddTargetEffect(StunEffect(default.FORCE_PUSH_STUNNED_ACTIONS, default.FORCE_PUSH_STUN_CHANCE, false));
+
+	RemoveEffects = new class'X2Effect_RemoveEffects';
+	RemoveEffects.EffectNamesToRemove.AddItem('Suppression');
+	RemoveEffects.EffectNamesToRemove.AddItem('AreaSuppression');
+	RemoveEffects.bCheckSource = true;
+	Template.AddTargetEffect(RemoveEffects);
+
+	RemoveOverwatchEffect = new class'X2Effect_RemoveOverwatch';
+	Template.AddTargetEffect(RemoveOverwatchEffect);
+
+	//Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StatCheck_UnitVsUnit';
+	Template.AbilityToHitCalc = default.DeadEye;
 
 	// Targeting Method
 	Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
@@ -94,10 +112,14 @@ static function X2AbilityTemplate ForcePush()
 	Template.SourceMissSpeech = 'SwordMiss';
 
 	// MAKE IT LIVE!
+	Template.bSkipFireAction = true;
+
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
-
+	
+	Template.AdditionalAbilities.AddItem('ForceChokeAnimSet');
+	
 	return Template;
 }
 
@@ -558,4 +580,21 @@ static function X2Effect_Persistent ElectroshockDisorientEffect()
 	DisorientedEffect.TargetConditions.AddItem(Condition_UnitProperty);
 	
 	return DisorientedEffect;
+}
+
+static function X2Effect_Stunned StunEffect(int StunLevel, int Chance, optional bool bIsMentalDamage = true)
+{
+	local X2Effect_Stunned StunEffect;
+	local X2Condition_UnitProperty Condition_UnitProperty;
+
+	StunEffect = class'X2StatusEffects'.static.CreateStunnedStatusEffect(StunLevel,Chance, bIsMentalDamage);
+	StunEffect.bApplyOnHit = true;
+	StunEffect.bApplyOnMiss = false;
+
+	Condition_UnitProperty = new class'X2Condition_UnitProperty';
+	Condition_UnitProperty.ExcludeOrganic = false;
+	Condition_UnitProperty.ExcludeRobotic = true;
+	StunEffect.TargetConditions.AddItem(Condition_UnitProperty);
+	
+	return StunEffect;
 }

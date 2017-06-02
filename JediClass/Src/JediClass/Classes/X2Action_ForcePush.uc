@@ -1,7 +1,6 @@
 class X2Action_ForcePush extends X2Action;
 
 var float AnimationDelay;
-
 var private Vector Destination, ImpulseDirection;
 var private Rotator OldRotation;
 var private XComGameState_Unit NewUnitState;
@@ -14,27 +13,27 @@ var private XComWorldData WorldData;
 var private int iTries, iFattyMult;
 var private TTile UnitTileLocation;
 var private XComGameStateHistory History;
+var private TTile LastTile;
+var private XComUnitPawn SourceUnitPawn;
 
 function Init(const out VisualizationTrack InTrack)
 {
-	super.Init(InTrack);
+	local XComGameState_Ability AbilityState;
+	local Actor SourceVisualizer;
+	local XGUnit SourceUnit;
 
+	super.Init(InTrack);
+	
 	History = class'XComGameStateHistory'.static.GetGameStateHistory();
 	WorldData = class'XComWorldData'.static.GetWorldData();
 
+	AbilityContext = XComGameStateContext_Ability(StateChangeContext);
+	SourceVisualizer = History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID).GetVisualizer();
+	SourceUnit = XGUnit(SourceVisualizer);
+	SourceUnitPawn = SourceUnit.GetPawn();
+
 	NewUnitState = XComGameState_Unit(InTrack.StateObject_NewState);
 	NewUnitState.GetKeystoneVisibilityLocation(UnitTileLocation);
-
-	//Destination = WorldData.GetPositionFromTileCoordinates(UnitTileLocation);
-	//
-	//bNeedsPhysicsFixup = VSize2D(Destination - UnitPawn.Location) > 192.0f || (Destination.Z - UnitPawn.Location.Z > 192.0f);
-	//PhysicsImpulse = Normal(Destination - UnitPawn.Location);
-	//PhysicsImpulse.Z = 0.0f;
-	//ShouldFaceVec = -PhysicsImpulse;
-	//
-	//PhysicsImpulse *= VSize2D(Destination - UnitPawn.Location) * 1.5f;
-	//PhysicsImpulse += Vect(0, 0, 1) * 400.0f;
-	//PhysicsImpulse.Z = WorldData.GetFloorZForPosition(Destination, true) + UnitPawn.CollisionHeight + class'XComWorldData'.const.Cover_BufferDistance;
 
 	Destination = WorldData.GetPositionFromTileCoordinates(UnitTileLocation);
 	Destination.Z = WorldData.GetFloorZForPosition(Destination, true) + UnitPawn.CollisionHeight + class'XComWorldData'.const.Cover_BufferDistance;	
@@ -82,12 +81,16 @@ simulated state Executing
 		local TTile CurrentTile;
 
 		CurrentTile = `XWORLD.GetTileCoordinatesFromPosition(Unit.Location);
-		
+
+		//`LOG("X2Action_ForcePush MaybeNotifyEnvironmentDamage" @ CurrentTile.X @ CurrentTile.Y @ CurrentTile.Z,, 'JediClass');
+
 		foreach StateChangeContext.AssociatedState.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamage)
 		{
-			if(EnvironmentDamage.HitLocationTile == CurrentTile)
-			{			
-				DmgObjectRef = EnvironmentDamage.GetReference();				
+			//`LOG("X2Action_ForcePush EnvironmentDamage" @ EnvironmentDamage.HitLocationTile.X @ EnvironmentDamage.HitLocationTile.Y @ EnvironmentDamage.HitLocationTile.Z,, 'JediClass');
+			if(EnvironmentDamage.HitLocationTile.X == CurrentTile.X && EnvironmentDamage.HitLocationTile.Y == CurrentTile.Y)
+			{
+				DmgObjectRef = EnvironmentDamage.GetReference();
+				//`LOG("X2Action_ForcePush Notify Environmentdamage" @ DmgObjectRef.ObjectID,, 'JediClass');
 				SetTimer(0.3f, false, nameof(DelayedNotify)); //Add a small delay since the is tile based 
 			}
 		}
@@ -108,8 +111,26 @@ simulated state Executing
 		UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(AnimParams);
 	}
 
-Begin:	
-	sleep(AnimationDelay);
+	simulated function Tick(float dt)
+	{
+		local TTile CurrentTile;
+
+		CurrentTile = `XWORLD.GetTileCoordinatesFromPosition(Unit.Location);
+
+		if (CurrentTile != LastTile)
+		{
+			MaybeNotifyEnvironmentDamage();
+		}
+
+		LastTile = CurrentTile;
+	}
+
+Begin:
+	AnimParams = default.AnimParams;
+	AnimParams.AnimName = 'FF_ForceChokeA';
+	FinishAnim(SourceUnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(AnimParams));
+	
+	Sleep(AnimationDelay);
 
 	UnitPawn.DeathRestingLocation = EndingLocation;
 	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(false);
@@ -138,13 +159,14 @@ Begin:
 	DistanceToTargetSquared = VSizeSq2D(EndingLocation - UnitPawn.Location);
 	If (DistanceToTargetSquared > CloseEnoughDistance/2)
 	{
+		//`LOG("X2Action_ForcePush AddImpulse" @ DistanceToTargetSquared,, 'JediClass');
 		ImpulseDirection = EndingLocation - UnitPawn.Location;
 		If (ImpulseDirection.Z >= -10) ImpulseDirection.Z += 150; //give a slight launching impulse if the targetlocation isnt beneath us
 		ImpulseDirection = ImpulseDirection * 0.2;
 		UnitPawn.SetRagdollLinearDriveToDestination(EndingLocation, ImpulseDirection, 0.5f, 2.0f);
 		DistanceToTargetSquared = VSizeSq2D(EndingLocation - UnitPawn.Location);
 	}
-	sleep(0.5f);
+	sleep(0.0f);
 	
 
 	//Do additional impulses to get our target near the intended position
@@ -158,8 +180,9 @@ Begin:
 		ImpulseDirection = ImpulseDirection * 0.4;
 
 		UnitPawn.Mesh.AddImpulse(ImpulseDirection);
-		sleep (0.01f);
+		sleep (0.0f);
 		DistanceToTargetSquared = VSizeSq2D(EndingLocation - UnitPawn.Location);
+		//`LOG("X2Action_ForcePush" @ DistanceToTargetSquared @ iTries,, 'JediClass');
 	}
 
 	if(!NewUnitState.IsDead() && !NewUnitState.IsIncapacitated())
@@ -196,7 +219,6 @@ Begin:
 
 		Unit.ProcessNewPosition();
 		Unit.IdleStateMachine.CheckForStanceUpdate();
-		//UnitPawn.m_fDistanceMovedAlongPath = KnockbackDistance;
 	}
 	
 	CompleteAction();	
