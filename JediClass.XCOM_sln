@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # XCOM ModBuddy Solution File, Format Version 11.00
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{5DAE07AF-E217-45C1-8DE7-FF99D6011E8A}") = "JediClass", "JediClass\JediClass.x2proj", "{881E796D-FD99-465B-BAA9-DE256171F6B0}"
+Project("{5DAE07AF-E217-45C1-8DE7-FF99D6011E8A}") = "JediClass", "JediClass\JediClass.x2proj", "{E514E032-2ECC-4858-B6A7-3E3913E25A7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Default|XCOM 2 = Default|XCOM 2
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{881E796D-FD99-465B-BAA9-DE256171F6B0}.Debug|XCOM 2.ActiveCfg = Debug|XCOM 2
-		{881E796D-FD99-465B-BAA9-DE256171F6B0}.Debug|XCOM 2.Build.0 = Debug|XCOM 2
-		{881E796D-FD99-465B-BAA9-DE256171F6B0}.Default|XCOM 2.ActiveCfg = Default|XCOM 2
-		{881E796D-FD99-465B-BAA9-DE256171F6B0}.Default|XCOM 2.Build.0 = Default|XCOM 2
+		{E514E032-2ECC-4858-B6A7-3E3913E25A7F}.Debug|XCOM 2.ActiveCfg = Debug|XCOM 2
+		{E514E032-2ECC-4858-B6A7-3E3913E25A7F}.Debug|XCOM 2.Build.0 = Debug|XCOM 2
+		{E514E032-2ECC-4858-B6A7-3E3913E25A7F}.Default|XCOM 2.ActiveCfg = Default|XCOM 2
+		{E514E032-2ECC-4858-B6A7-3E3913E25A7F}.Default|XCOM 2.Build.0 = Default|XCOM 2
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

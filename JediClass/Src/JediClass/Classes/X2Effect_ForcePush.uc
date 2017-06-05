@@ -3,6 +3,8 @@
 //---------------------------------------------------------------------------------------
 class X2Effect_ForcePush extends X2Effect;
 
+var name ForcePushAnimSequence;
+
 /** Distance that the target will be thrown backwards, in meters */
 var int KnockbackDistance;
 
@@ -87,26 +89,10 @@ private function GetTilesEnteredArray(XComGameStateContext_Ability AbilityContex
 		TargetLocation = WorldData.GetPositionFromTileCoordinates(TempTile);
 		//`LOG("X2Effect_ForcePush TargetLocation" @ TargetLocation,, 'JediClass');
 
-		if (AbilityTemplate != none && AbilityTemplate.AbilityTargetStyle.IsA('X2AbilityTarget_Cursor'))
-		{
-			//attack source is at cursor location
-			`assert( AbilityContext.InputContext.TargetLocations.Length > 0 );
-			SourceLocation = AbilityContext.InputContext.TargetLocations[0];
-
-			TempTile = WorldData.GetTileCoordinatesFromPosition(SourceLocation);
-			SourceLocation = WorldData.GetPositionFromTileCoordinates(TempTile);
-
-			//Need to produce a non-zero vector
-			bCursorTargetFound = (SourceLocation.X != TargetLocation.X || SourceLocation.Y != TargetLocation.Y);
-		}
-
-		if (!bCursorTargetFound)
-		{
-			//attack source is from a Unit
-			SourceUnit = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
-			SourceUnit.GetKeystoneVisibilityLocation(TempTile);
-			SourceLocation = WorldData.GetPositionFromTileCoordinates(TempTile);
-		}
+		//attack source is from a Unit
+		SourceUnit = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+		SourceUnit.GetKeystoneVisibilityLocation(TempTile);
+		SourceLocation = WorldData.GetPositionFromTileCoordinates(TempTile);
 
 		//`LOG("X2Effect_ForcePush TargetUnit" @ TargetUnit.IsAlive() @ TargetUnit.IsIncapacitated(),, 'JediClass');
 
@@ -218,6 +204,7 @@ simulated function ApplyEffectToWorld(const out EffectAppliedData ApplyEffectPar
 					if (AbilityContext.ResultContext.MultiTargetEffectResults[MultiTargetIndex].ApplyResults[EffectIndex] == 'AA_Success')
 					{
 						Targets.AddItem(AbilityContext.InputContext.MultiTargets[MultiTargetIndex]);
+						`LOG("X2Effect_ForcePush Add multi target" @ AbilityContext.InputContext.MultiTargets[MultiTargetIndex].ObjectID,, 'JediClass');
 						break;
 					}
 				}
@@ -294,6 +281,7 @@ simulated function bool IsExplosiveDamage()
 simulated function AddX2ActionsForVisualization(XComGameState VisualizeGameState, out VisualizationTrack BuildTrack, name EffectApplyResult)
 {
 	local X2Action_ForcePush KnockbackAction;
+	local X2Action_CameraFollowUnit CameraFollowAction;
 
 	//`LOG("X2Effect_ForcePush AddX2ActionsForVisualization",, 'JediClass');
 
@@ -303,9 +291,14 @@ simulated function AddX2ActionsForVisualization(XComGameState VisualizeGameState
 		{
 			if (XComGameState_Unit(BuildTrack.StateObject_NewState).IsAlive())
 			{
+				CameraFollowAction = X2Action_CameraFollowUnit(class'X2Action_CameraFollowUnit'.static.AddToVisualizationTrack(BuildTrack, VisualizeGameState.GetContext()));
+				CameraFollowAction.AbilityToFrame = XComGameStateContext_Ability(VisualizeGameState.GetContext());
+
 				//`LOG("X2Effect_ForcePush Add X2Action_ForcePush",, 'JediClass');
 				KnockbackAction = X2Action_ForcePush(class'X2Action_ForcePush'.static.AddToVisualizationTrack(BuildTrack, VisualizeGameState.GetContext()));
+				KnockbackAction.ForcePushAnimSequence = ForcePushAnimSequence;
 				//KnockbackAction.AnimationDelay = 1.0f + RandRange(0.0f, 1.0f);
+				
 			}
 		}
 		else if (BuildTrack.StateObject_NewState.IsA('XComGameState_EnvironmentDamage') || BuildTrack.StateObject_NewState.IsA('XComGameState_Destructible'))
@@ -337,7 +330,7 @@ defaultproperties
 
 	DamageTypes.Add("KnockbackDamage");
 
-	DefaultDamage=100.0
+	DefaultDamage=1000.0
 	DefaultRadius=16.0
 
 	OverrideRagdollFinishTimerSec=-1

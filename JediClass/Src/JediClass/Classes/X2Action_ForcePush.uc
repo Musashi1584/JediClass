@@ -1,5 +1,6 @@
 class X2Action_ForcePush extends X2Action;
 
+var name ForcePushAnimSequence;
 var float AnimationDelay;
 var private Vector Destination, ImpulseDirection;
 var private Rotator OldRotation;
@@ -127,8 +128,8 @@ simulated state Executing
 
 Begin:
 	AnimParams = default.AnimParams;
-	AnimParams.AnimName = 'FF_ForceChokeA';
-	FinishAnim(SourceUnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(AnimParams));
+	AnimParams.AnimName = ForcePushAnimSequence;
+	SourceUnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(AnimParams);
 	
 	Sleep(AnimationDelay);
 
