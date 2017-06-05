@@ -48,7 +48,8 @@ private function bool CanBeDestroyed(XComInteractiveLevelActor InteractiveActor,
 {
 	//make sure the knockback damage can destroy this actor.
 	//check the number of interaction points to prevent larger objects from being destroyed.
-	return InteractiveActor != none && DamageAmount >= InteractiveActor.Health && InteractiveActor.InteractionPoints.Length <= 8;
+	//return InteractiveActor != none && DamageAmount >= InteractiveActor.Health && InteractiveActor.InteractionPoints.Length <= 8;
+	return true;
 }
 
 //Returns the list of tiles that the unit will pass through as part of the knock back. The last tile in the array is the final destination.
@@ -96,8 +97,8 @@ private function GetTilesEnteredArray(XComGameStateContext_Ability AbilityContex
 
 		//`LOG("X2Effect_ForcePush TargetUnit" @ TargetUnit.IsAlive() @ TargetUnit.IsIncapacitated(),, 'JediClass');
 
-		if(TargetUnit.IsAlive() || TargetUnit.IsIncapacitated())
-		{
+		//if(TargetUnit.IsAlive() || TargetUnit.IsIncapacitated())
+		//{
 			OutAttackDirection = Normal(TargetLocation - SourceLocation);
 			OutAttackDirection.Z = 0.0f;
 			StartLocation = bUseTargetLocation ? TargetLocation : SourceLocation;
@@ -112,7 +113,7 @@ private function GetTilesEnteredArray(XComGameStateContext_Ability AbilityContex
 					if((!CanBeDestroyed(XComInteractiveLevelActor(TraceHitInfo.HitActor), DamageAmount) && XComFracLevelActor(TraceHitInfo.HitActor) == none) || !bKnockbackDestroysNonFragile)
 					{
 						//We hit an indestructible object
-						//`LOG("X2Effect_ForcePush Hitting undestructible actor",, 'JediClass');
+						`LOG("X2Effect_ForcePush Hitting undestructible actor",, 'JediClass');
 						KnockbackToLocation = TraceHitInfo.HitLocation + (-OutAttackDirection * 16.0f); //Scoot the hit back a bit and use that as the knockback location
 						break;
 					}
@@ -144,7 +145,7 @@ private function GetTilesEnteredArray(XComGameStateContext_Ability AbilityContex
 			//Move the target unit to the knockback location
 			WorldData.GetFloorTileForPosition(TestLocation, MoveToTile, true);
 			OutTilesEntered.AddItem(MoveToTile);
-		}
+		//}
 	}
 }
 
@@ -245,11 +246,12 @@ simulated function ApplyEffectToWorld(const out EffectAppliedData ApplyEffectPar
 							DamageEvent.HitLocationTile = HitTile;
 							DamageEvent.Momentum = AttackDirection;
 							DamageEvent.DamageDirection = AttackDirection; //Limit environmental damage to the attack direction( ie. spare floors )
-							DamageEvent.PhysImpulse = 100;
+							DamageEvent.PhysImpulse = 500;
 							DamageEvent.DamageRadius = KnockbackRadius;
 							DamageEvent.DamageCause = ApplyEffectParameters.SourceStateObjectRef;
 							DamageEvent.DamageSource = DamageEvent.DamageCause;
 							DamageEvent.bRadialDamage = false;
+							DamageEvent.bIsHit = true;
 							NewGameState.AddStateObject(DamageEvent);
 							//`LOG("X2Effect_ForcePush Add DamageEvent",, 'JediClass');
 						}
@@ -330,7 +332,7 @@ defaultproperties
 
 	DamageTypes.Add("KnockbackDamage");
 
-	DefaultDamage=1000.0
+	DefaultDamage=100000.0
 	DefaultRadius=16.0
 
 	OverrideRagdollFinishTimerSec=-1

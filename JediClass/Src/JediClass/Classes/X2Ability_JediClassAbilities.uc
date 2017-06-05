@@ -1,6 +1,8 @@
 class X2Ability_JediClassAbilities extends X2Ability
 	dependson (XComGameStateContext_Ability) config(JediClass);
 
+var config int FORCE_SPEED_COOLDOWN;
+
 var config int MIND_CONTROL_CHARGES;
 var config int MIND_CONTROL_COOLDOWN;
 
@@ -13,17 +15,17 @@ var config int MIND_TRICKS_RADIUS;
 var config int MIND_TRICKS_TURNS;
 
 var config int FORCE_PUSH_COOLDOWN;
-var config int FORCE_PUSH_STUNNED_ACTIONS;
-var config int FORCE_PUSH_STUN_CHANCE;
 var config int FORCE_PUSH_KNOCKBACK_DISTANCE;
 
 var config int FORCE_WIND_COOLDOWN;
-var config int FORCE_WIND_STUNNED_ACTIONS;
-var config int FORCE_WIND_STUN_CHANCE;
 var config int FORCE_WIND_KNOCKBACK_DISTANCE;
 var config int FORCE_WIND_RADIUS;
 var config int FORCE_WIND_RANGE;
 
+var config int FORCE_LIGHTNING_STUNNED_ACTIONS;
+var config int FORCE_LIGHTNING_STUN_CHANCE;
+var config int FORCE_CHAIN_LIGHTNING_STUNNED_ACTIONS;
+var config int FORCE_CHAIN_LIGHTNING_STUN_CHANCE;
 var config int FORCE_LIGHTNING_COOLDOWN;
 var config int FORCE_CHAIN_LIGHTNING_COOLDOWN;
 var config WeaponDamageValue FORCE_LIGHTNING_BASEDAMAGE;
@@ -36,6 +38,7 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> AbilityTemplates;
 
+	AbilityTemplates.AddItem(ForceSpeed());
 	AbilityTemplates.AddItem(MindControl());
 	AbilityTemplates.AddItem(ForceHeal());
 	AbilityTemplates.AddItem(MindTricks());
@@ -50,6 +53,61 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(ForceAbilitiesAnimSet());
 
 	return AbilityTemplates;
+}
+
+static function X2AbilityTemplate ForceSpeed()
+{
+	local X2AbilityTemplate						Template;
+	local X2AbilityCooldown						Cooldown;
+	local X2Effect_GrantActionPoints			PointEffect;
+	local X2Effect_Persistent					ActionPointPersistEffect;
+	local X2Effect_Persistent					ForceSpeedEffect;
+	local X2Condition_AbilityProperty			AbilityCondition;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceSpeed');
+
+	Cooldown = new class'X2AbilityCooldown';
+	Cooldown.iNumTurns = default.FORCE_SPEED_COOLDOWN;
+	Template.AbilityCooldown = Cooldown;
+
+	Template.AbilityCosts.AddItem(default.FreeActionCost);
+
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.Hostility = eHostility_Neutral;
+	Template.IconImage = "img:///UILibrary_DLC3Images.UIPerk_spark_overdrive";
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	PointEffect = new class'X2Effect_GrantActionPoints';
+	PointEffect.NumActionPoints = 1;
+	PointEffect.PointType = class'X2CharacterTemplateManager'.default.StandardActionPoint;
+	Template.AddTargetEffect(PointEffect);
+
+	// A persistent effect for the effects code to attach a duration to
+	ActionPointPersistEffect = new class'X2Effect_Persistent';
+	ActionPointPersistEffect.EffectName = 'ForceSpeedPerk';
+	ActionPointPersistEffect.BuildPersistentEffect( 1, false, true, false, eGameRule_PlayerTurnEnd );
+	Template.AddTargetEffect(ActionPointPersistEffect);
+
+	ForceSpeedEffect = new class'X2Effect_Persistent';
+	ForceSpeedEffect.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
+	ForceSpeedEffect.SetDisplayInfo(ePerkBuff_Bonus, Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage, , , Template.AbilitySourceName);
+	ForceSpeedEffect.EffectName = 'ForceSpeed';
+	Template.AddTargetEffect(ForceSpeedEffect);
+
+	Template.CustomFireAnim = 'FF_Overdrive';
+	Template.bShowActivation = true;
+	Template.bSkipExitCoverWhenFiring = true;
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+
+	Template.PostActivationEvents.AddItem('OverdriveActivated');
+	
+	return Template;
 }
 
 static function X2AbilityTemplate MindControl()
@@ -249,6 +307,7 @@ static function X2AbilityTemplate MindTricks()
 	local X2AbilityCost_ActionPoints		ActionPointCost;
 	local array<name>						SkipExclusions;
 	local X2Effect_MindTricks				MindTricksEffect;
+	local X2Effect_RemoveActionPoints		RemoveActionPointsEffect;
 	local X2AbilityCooldown					Cooldown;
 	local X2AbilityTarget_Cursor			CursorTarget;
 	local X2AbilityMultiTarget_Radius		RadiusMultiTarget;
@@ -315,6 +374,10 @@ static function X2AbilityTemplate MindTricks()
 	MindTricksEffect.BuildPersistentEffect(default.MIND_TRICKS_TURNS, false, true,, eGameRule_PlayerTurnBegin);
 	MindTricksEffect.SetDisplayInfo(ePerkBuff_Penalty, Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage, true);
 	Template.AddMultiTargetEffect(MindTricksEffect);
+
+	RemoveActionPointsEffect = new class'X2Effect_RemoveActionPoints';
+	RemoveActionPointsEffect.BuildPersistentEffect(default.MIND_TRICKS_TURNS, false, true,, eGameRule_PlayerTurnBegin);
+	Template.AddMultiTargetEffect(RemoveActionPointsEffect);
 
 	// MAKE IT LIVE!
 	//Template.bSkipFireAction = true;
@@ -385,7 +448,7 @@ static function X2AbilityTemplate ForceWind()
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceWind');
 
 	// Icon Properties
-	//Template.IconImage = "img:///";
+	Template.IconImage = "img:///JediClassUI.UIPerk_ForcePushMulti";
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_CAPTAIN_PRIORITY;
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.DisplayTargetHitChance = true;
@@ -435,12 +498,13 @@ static function X2AbilityTemplate ForceWind()
 	Template.AddMultiTargetEffect(KnockBackEffect);
 
 	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	DamageEffect.EnvironmentalDamageAmount = 20;
 	DamageEffect.bIgnoreBaseDamage = true;
 	DamageEffect.bBypassShields = true;
 	DamageEffect.EffectDamageValue = default.FORCE_WIND_BASEDAMAGE;
 	Template.AddMultiTargetEffect(DamageEffect);
 
-	Template.AddMultiTargetEffect(StunEffect(default.FORCE_WIND_STUNNED_ACTIONS, default.FORCE_WIND_STUN_CHANCE, false));
+	Template.AddMultiTargetEffect(DisorientEffect());
 
 	RemoveEffects = new class'X2Effect_RemoveEffects';
 	RemoveEffects.EffectNamesToRemove.AddItem('Suppression');
@@ -487,7 +551,7 @@ static function X2AbilityTemplate ForcePush()
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForcePush');
 
 	// Icon Properties
-	//Template.IconImage = "img:///";
+	Template.IconImage = "img:///JediClassUI.UIPerk_ForcePushSingle";
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SERGEANT_PRIORITY;
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.DisplayTargetHitChance = true;
@@ -535,12 +599,13 @@ static function X2AbilityTemplate ForcePush()
 	Template.AddTargetEffect(KnockBackEffect);
 
 	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	DamageEffect.EnvironmentalDamageAmount = 20;
 	DamageEffect.bIgnoreBaseDamage = true;
 	DamageEffect.bBypassShields = true;
 	DamageEffect.EffectDamageValue = default.FORCE_PUSH_BASEDAMAGE;
 	Template.AddTargetEffect(DamageEffect);
 
-	Template.AddTargetEffect(StunEffect(default.FORCE_PUSH_STUNNED_ACTIONS, default.FORCE_PUSH_STUN_CHANCE, false));
+	Template.AddTargetEffect(DisorientEffect());
 
 	RemoveEffects = new class'X2Effect_RemoveEffects';
 	RemoveEffects.EffectNamesToRemove.AddItem('Suppression');
@@ -824,7 +889,7 @@ static function X2AbilityTemplate ForceLightning()
 	Template.AddTargetEffect(DamageEffect);
 
 	Template.AssociatedPassives.AddItem('Electroshock');
-	Template.AddTargetEffect(ElectroshockDisorientEffect());
+	Template.AddTargetEffect(StunEffect(default.FORCE_LIGHTNING_STUNNED_ACTIONS, default.FORCE_LIGHTNING_STUN_CHANCE, false));
 
 	// Hit Calculation (Different weapons now have different calculations for range)
 	//ToHitCalc = new class'X2AbilityToHitCalc_StandardAim';
@@ -923,27 +988,15 @@ static function X2AbilityTemplate ForceChainLightning()
 	Template.AddMultiTargetEffect(DamageEffect);
 
 	Template.AssociatedPassives.AddItem('Electroshock');
-	Template.AddTargetEffect(ElectroshockDisorientEffect());
-	Template.AddMultiTargetEffect(ElectroshockDisorientEffect());
+	Template.AddTargetEffect(StunEffect(default.FORCE_CHAIN_LIGHTNING_STUNNED_ACTIONS, default.FORCE_CHAIN_LIGHTNING_STUN_CHANCE, false));
+	Template.AddMultiTargetEffect(StunEffect(default.FORCE_CHAIN_LIGHTNING_STUNNED_ACTIONS, default.FORCE_CHAIN_LIGHTNING_STUN_CHANCE, false));
 
-	// Hit Calculation (Different weapons now have different calculations for range)
-	//ToHitCalc = new class'X2AbilityToHitCalc_StandardAim';
-	//ToHitCalc.bGuaranteedHit = true;
-	//ToHitCalc.bMeleeAttack = true;
-	//ToHitCalc.bAllowCrit = false;
-	//Template.AbilityToHitCalc = ToHitCalc;
-	//Template.AbilityToHitOwnerOnMissCalc = ToHitCalc;
-	//ToHitCalc.bOnlyMultiHitWithSuccess = false;
 	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StatCheck_UnitVsUnit';
 	
-
 	// Targeting Method
 	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
-	//Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
-	//Template.CinescriptCameraType = "Psionic_FireAtLocation";
 	Template.bOverrideAim = true;
 	Template.bUseSourceLocationZToAim = true;
-	//Template.ActivationSpeech = 'StunTarget';
 
 	// MAKE IT LIVE!
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
@@ -1015,7 +1068,7 @@ static function X2AbilityTemplate ForceAbilitiesAnimSet()
 
 
 
-static function X2Effect_Persistent ElectroshockDisorientEffect()
+static function X2Effect_Persistent DisorientEffect()
 {
 	local X2Effect_PersistentStatChange DisorientedEffect;
 	local X2Condition_AbilityProperty   AbilityCondition;
@@ -1026,8 +1079,6 @@ static function X2Effect_Persistent ElectroshockDisorientEffect()
 	DisorientedEffect.bApplyOnMiss = false;
 
 	AbilityCondition = new class'X2Condition_AbilityProperty';
-	//AbilityCondition.OwnerHasSoldierAbilities.AddItem('Electroshock');
-	//DisorientedEffect.TargetConditions.AddItem(AbilityCondition);
 
 	Condition_UnitProperty = new class'X2Condition_UnitProperty';
 	Condition_UnitProperty.ExcludeOrganic = false;

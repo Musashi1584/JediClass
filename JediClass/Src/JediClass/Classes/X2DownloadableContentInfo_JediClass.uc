@@ -78,6 +78,37 @@ static event OnExitPostMissionSequence()
 static event OnPostTemplatesCreated()
 {
 	//`LOG("ForceLightning Ability" @ class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager().FindAbilityTemplate('ForceLightning'),, 'JediClass');
+	OnPostAbilityTemplatesCreated();
+}
+
+static function OnPostAbilityTemplatesCreated()
+{
+	local array<name> TemplateNames;
+	local array<X2AbilityTemplate> AbilityTemplates;
+	local name TemplateName;
+	local X2AbilityTemplateManager AbilityMgr;
+	local X2AbilityTemplate AbilityTemplate;
+	local X2AbilityCost Cost;
+	local X2AbilityCost_ActionPoints ActionPointCost;
+
+
+	AbilityMgr = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+	AbilityMgr.GetTemplateNames(TemplateNames);
+	foreach TemplateNames(TemplateName)
+	{
+		AbilityMgr.FindAbilityTemplateAllDifficulties(TemplateName, AbilityTemplates);
+		foreach AbilityTemplates(AbilityTemplate)
+		{
+			foreach AbilityTemplate.AbilityCosts(Cost)
+			{
+				ActionPointCost = X2AbilityCost_ActionPoints(Cost);
+				if (ActionPointCost != None)
+				{
+					ActionPointCost.DoNotConsumeAllEffects.AddItem('ForceSpeed');
+				}
+			}
+		}
+	}
 }
 
 /// <summary>

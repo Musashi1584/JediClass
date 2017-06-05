@@ -186,8 +186,8 @@ Begin:
 		//`LOG("X2Action_ForcePush" @ DistanceToTargetSquared @ iTries,, 'JediClass');
 	}
 
-	if(!NewUnitState.IsDead() && !NewUnitState.IsIncapacitated())
-	{		
+	//if(!NewUnitState.IsDead() && !NewUnitState.IsIncapacitated())
+	//{		
 		//Reset visualizers for primary weapon, in case it was dropped
 		Unit.GetInventory().GetPrimaryWeapon().Destroy(); //Aggressively get rid of the primary weapon, because dropping it can really screw things up
 		Unit.ApplyLoadoutFromGameState(NewUnitState, None);
@@ -220,7 +220,7 @@ Begin:
 
 		Unit.ProcessNewPosition();
 		Unit.IdleStateMachine.CheckForStanceUpdate();
-	}
+	//}
 	
 	CompleteAction();	
 }
