@@ -1,6 +1,20 @@
 class X2Ability_JediClassAbilities extends X2Ability
 	dependson (XComGameStateContext_Ability) config(JediClass);
 
+var config int FORCE_DRAIN_RADIUS;
+var config int FORCE_DRAIN_CHARGES;
+
+var config int FORCE_SENSE_RADIUS;
+
+var config int BATTLE_MEDITATION_COOLDOWN;
+
+var config int ENERGY_ABSORPTION_SHIELD_POINTS;
+
+var config int FORCE_FEAR_COOLDOWN;
+var config int FORCE_FEAR_CONE_LENGTH_TILES;
+var config int FORCE_FEAR_CONE_END_DIAMETER_TILES;
+var config int FORCE_FEAR_TURNS;
+
 var config int FORCE_SPEED_COOLDOWN;
 
 var config int MIND_CONTROL_CHARGES;
@@ -19,8 +33,9 @@ var config int FORCE_PUSH_KNOCKBACK_DISTANCE;
 
 var config int FORCE_WIND_COOLDOWN;
 var config int FORCE_WIND_KNOCKBACK_DISTANCE;
-var config int FORCE_WIND_RADIUS;
-var config int FORCE_WIND_RANGE;
+var config int FORCE_WIND_CONE_LENGTH_TILES;
+var config int FORCE_WIND_CONE_END_DIAMETER_TILES;
+var config int FORCE_WIND_ENVIRONMENTAL_DAMAGE;
 
 var config int FORCE_LIGHTNING_STUNNED_ACTIONS;
 var config int FORCE_LIGHTNING_STUN_CHANCE;
@@ -28,16 +43,28 @@ var config int FORCE_CHAIN_LIGHTNING_STUNNED_ACTIONS;
 var config int FORCE_CHAIN_LIGHTNING_STUN_CHANCE;
 var config int FORCE_LIGHTNING_COOLDOWN;
 var config int FORCE_CHAIN_LIGHTNING_COOLDOWN;
+
 var config WeaponDamageValue FORCE_LIGHTNING_BASEDAMAGE;
 var config WeaponDamageValue FORCE_CHAIN_LIGHTNING_BASEDAMAGE;
 var config WeaponDamageValue FORCE_CHOKE_BASEDAMAGE;
 var config WeaponDamageValue FORCE_PUSH_BASEDAMAGE;
 var config WeaponDamageValue FORCE_WIND_BASEDAMAGE;
+var config WeaponDamageValue FORCE_DRAIN_BASEDAMAGE;
+
+var privatewrite name ForceDrainEventName;
+var privatewrite name ForceDrainUnitValue;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> AbilityTemplates;
 
+	AbilityTemplates.AddItem(ForceDrain());
+	AbilityTemplates.AddItem(LightsaberSlash());
+	AbilityTemplates.AddItem(ForceProtection());
+	AbilityTemplates.AddItem(ForceSense());
+	AbilityTemplates.AddItem(BattleMeditation());
+	AbilityTemplates.AddItem(EnergyAbsorption());
+	AbilityTemplates.AddItem(ForceFear());
 	AbilityTemplates.AddItem(ForceSpeed());
 	AbilityTemplates.AddItem(MindControl());
 	AbilityTemplates.AddItem(ForceHeal());
@@ -48,11 +75,577 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(ForceChoke());
 	AbilityTemplates.AddItem(ForceLightning());
 	AbilityTemplates.AddItem(ForceChainLightning());
+	AbilityTemplates.AddItem(LeapStrikeFleche());
+	AbilityTemplates.AddItem(LeapStrike());
 
+	// Helper abilities, should not assigned directly
+	AbilityTemplates.AddItem(ForceDrainTriggered());
+	AbilityTemplates.AddItem(ForceSenseTrigger());
+	AbilityTemplates.AddItem(ForceSenseSpawnTrigger());
 	AbilityTemplates.AddItem(ForcLightningAnimSets());
 	AbilityTemplates.AddItem(ForceAbilitiesAnimSet());
 
 	return AbilityTemplates;
+}
+
+static function X2AbilityTemplate ForceDrain()
+{
+	local X2AbilityTemplate					Template;
+	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2AbilityMultiTarget_Radius		RadiusMultiTarget;
+	local X2AbilityCost_Charges				ChargeCost;
+	local X2Condition_UnitProperty			CivilianProperty;
+	local X2Effect_ApplyWeaponDamage		DamageEffect;
+	local X2AbilityCharges					Charges;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceDrain');
+
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_sensorsweep";
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.Hostility = eHostility_Neutral;
+	Template.bDisplayInUITacticalText = false;
+
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_LIEUTENANT_PRIORITY;
+
+	Charges = new class'X2AbilityCharges';
+	Charges.InitialCharges = default.FORCE_DRAIN_CHARGES;
+	Template.AbilityCharges = Charges;
+
+	ChargeCost = new class'X2AbilityCost_Charges';
+	ChargeCost.NumCharges = 1;
+	Template.AbilityCosts.AddItem(ChargeCost);
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StatCheck_UnitVsUnit';
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	Template.AddShooterEffectExclusions();
+
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	Template.AbilityTargetStyle = default.SelfTarget;
+
+	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
+	RadiusMultiTarget.bUseWeaponRadius = false;
+	RadiusMultiTarget.fTargetRadius = default.FORCE_DRAIN_RADIUS;
+	RadiusMultiTarget.bIgnoreBlockingCover = true; // skip the cover checks, the squad viewer will handle this once selected
+	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
+
+	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	DamageEffect.bIgnoreBaseDamage = true;
+	DamageEffect.bBypassShields = true;
+	DamageEffect.EffectDamageValue = default.FORCE_DRAIN_BASEDAMAGE;
+	CivilianProperty = new class'X2Condition_UnitProperty';
+	CivilianProperty.ExcludeNonCivilian = false;
+	CivilianProperty.ExcludeHostileToSource = false;
+	CivilianProperty.ExcludeFriendlyToSource = false;
+	DamageEffect.TargetConditions.AddItem(CivilianProperty);
+	Template.AddMultiTargetEffect(DamageEffect);
+
+	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
+
+	Template.bStationaryWeapon = true;
+	Template.bSkipFireAction = true;
+	Template.bShowActivation = true;
+	Template.bSkipPerkActivationActions = true;
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+
+	Template.PostActivationEvents.AddItem(default.ForceDrainEventName);
+	Template.AdditionalAbilities.AddItem('ForceDrainTriggered');
+
+	return Template;
+}
+
+static function X2AbilityTemplate ForceDrainTriggered()
+{
+	local X2AbilityTemplate                 Template;
+	local X2AbilityTrigger_EventListener    EventListener;
+	local X2Condition_UnitProperty          ShooterProperty;
+	local X2Effect_SoulSteal                StealEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceDrainTriggered');
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_soulsteal";
+	Template.Hostility = eHostility_Neutral;
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+
+	ShooterProperty = new class'X2Condition_UnitProperty';
+	ShooterProperty.ExcludeAlive = false;
+	ShooterProperty.ExcludeDead = true;
+	ShooterProperty.ExcludeFriendlyToSource = false;
+	ShooterProperty.ExcludeHostileToSource = true;
+	ShooterProperty.ExcludeFullHealth = true;
+	Template.AbilityShooterConditions.AddItem(ShooterProperty);
+
+	EventListener = new class'X2AbilityTrigger_EventListener';
+	EventListener.ListenerData.Deferral = ELD_OnStateSubmitted;
+	EventListener.ListenerData.EventFn = class'X2Ability_JediClassAbilities'.static.ForceDrainListener;
+	EventListener.ListenerData.EventID = default.ForceDrainEventName;
+	EventListener.ListenerData.Filter = eFilter_Unit;
+	Template.AbilityTriggers.AddItem(EventListener);
+
+	StealEffect = new class'X2Effect_SoulSteal';
+	StealEffect.UnitValueToRead = default.ForceDrainUnitValue;
+	Template.AddShooterEffect(StealEffect);
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	Template.FrameAbilityCameraType = eCameraFraming_Never;
+	Template.bShowActivation = true;
+	Template.bSkipExitCoverWhenFiring = true;
+	Template.CustomFireAnim = 'ADD_NO_Psi_CastAdditive';
+	Template.ActionFireClass = class'X2Action_Fire_AdditiveAnim';
+
+	return Template;
+}
+
+static function EventListenerReturn ForceDrainListener(Object EventData, Object EventSource, XComGameState GameState, Name EventID)
+{
+	local XComGameStateContext_Ability AbilityContext;
+	local XComGameState_Ability AbilityState;
+	local XComGameState NewGameState;
+	local XComGameState_Unit NewSourceUnit, TargetUnit, SourceUnit;
+	local int DamageDealt, DmgIdx;
+	local float StolenHP;
+	local StateObjectReference TargetRef;
+	local StateObjectReference ForceDrainTriggeredRef;
+
+	AbilityContext = XComGameStateContext_Ability(GameState.GetContext());
+	AbilityState = XComGameState_Ability(`XCOMHISTORY.GetGameStateForObjectID(AbilityContext.InputContext.AbilityRef.ObjectID));
+
+	SourceUnit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(AbilityState.OwnerStateObject.ObjectID));
+
+	ForceDrainTriggeredRef = SourceUnit.FindAbility('ForceDrainTriggered');
+	if (ForceDrainTriggeredRef.ObjectID == 0)
+		return ELR_NoInterrupt;
+
+	AbilityState = XComGameState_Ability(`XCOMHISTORY.GetGameStateForObjectID(ForceDrainTriggeredRef.ObjectID));
+	if (AbilityState == None)
+		return ELR_NoInterrupt;
+
+	if (AbilityContext != none && AbilityContext.InterruptionStatus != eInterruptionStatus_Interrupt)
+	{
+		foreach AbilityContext.InputContext.MultiTargets(TargetRef)
+		{
+			TargetUnit = XComGameState_Unit(GameState.GetGameStateForObjectID(TargetRef.ObjectID));
+
+			if (TargetUnit != none)
+			{
+				DamageDealt = 0;
+				for (DmgIdx = 0; DmgIdx < TargetUnit.DamageResults.Length; ++DmgIdx)
+				{
+					if (TargetUnit.DamageResults[DmgIdx].Context == AbilityContext)
+					{
+						DamageDealt += TargetUnit.DamageResults[DmgIdx].DamageAmount;
+					}
+				}
+				if (DamageDealt > 0)
+				{
+					//`LOG("TargetUnit" @ TargetUnit.GetMyTemplateName() @ DamageDealt,, 'JediClass');
+					StolenHP += Round(float(DamageDealt) * 1);
+				}
+			}
+		}
+
+		if (StolenHP > 0)
+		{
+			NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(string(GetFuncName()));
+			NewSourceUnit = XComGameState_Unit(GameState.GetGameStateForObjectID(AbilityState.OwnerStateObject.ObjectID));
+			if (NewSourceUnit != none)
+			{
+				//  Submit a game state that saves the Force Drained value on the source unit
+				NewSourceUnit = XComGameState_Unit(NewGameState.CreateStateObject(NewSourceUnit.Class, NewSourceUnit.ObjectID));
+				NewSourceUnit.SetUnitFloatValue(class'X2Ability_JediClassAbilities'.default.ForceDrainUnitValue, StolenHP, eCleanup_BeginTurn);
+				NewGameState.AddStateObject(NewSourceUnit);
+				`TACTICALRULES.SubmitGameState(NewGameState);
+				//  Activate this ability to steal the HP
+				//`LOG("ForceDrainListener AbilityTriggerAgainstSingleTarget" @ AbilityState.ObjectID,, 'JediClass');
+				TargetRef.ObjectID = NewSourceUnit.ObjectID;
+				AbilityState.AbilityTriggerAgainstSingleTarget(TargetRef, false);
+			}
+		}
+	}
+
+	return ELR_NoInterrupt;
+}
+
+
+static function X2AbilityTemplate LightsaberSlash()
+{
+	local X2AbilityTemplate                 Template;
+	local X2AbilityCost_ActionPoints        ActionPointCost;
+	local X2AbilityToHitCalc_StandardMelee  StandardMelee;
+	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
+	local array<name>                       SkipExclusions;
+	local X2Condition_UnitProperty			AdjacencyCondition;	
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberSlash');
+
+	Template.AbilitySourceName = 'eAbilitySource_Standard';
+	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_AlwaysShow;
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_swordSlash";
+	Template.bHideOnClassUnlock = false;
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SQUADDIE_PRIORITY;
+	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
+	Template.bCrossClassEligible = false;
+	Template.bDisplayInUITooltip = true;
+    Template.bDisplayInUITacticalText = true;
+    Template.DisplayTargetHitChance = true;
+	Template.bShowActivation = true;
+	Template.bSkipFireAction = false;
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = false;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+	
+	StandardMelee = new class'X2AbilityToHitCalc_StandardMelee';
+	Template.AbilityToHitCalc = StandardMelee;
+
+    Template.AbilityTargetStyle = default.SimpleSingleMeleeTarget;
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	// Target Conditions
+	Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);
+	Template.AbilityTargetConditions.AddItem(default.MeleeVisibilityCondition);
+	AdjacencyCondition = new class'X2Condition_UnitProperty';
+	AdjacencyCondition.RequireWithinRange = true;
+	AdjacencyCondition.WithinRange = 144; //1.5 tiles in Unreal units, allows attacks on the diag
+	Template.AbilityTargetConditions.AddItem(AdjacencyCondition);
+
+	// Shooter Conditions
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName); //okay when disoriented
+	Template.AddShooterEffectExclusions(SkipExclusions);
+	
+	// Damage Effect
+	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	Template.AddTargetEffect(WeaponDamageEffect);
+	Template.bAllowBonusWeaponEffects = true;
+	
+	// VGamepliz matters
+	Template.SourceMissSpeech = 'SwordMiss';
+	Template.bSkipMoveStop = true;
+
+	Template.CinescriptCameraType = "Ranger_Reaper";
+    Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
+	Template.BuildInterruptGameStateFn = TypicalMoveEndAbility_BuildInterruptGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+
+	return Template;
+}
+
+static function X2AbilityTemplate ForceProtection()
+{
+	local X2AbilityTemplate             Template;
+	local X2Effect_Persistent           PersistentEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceProtection');
+
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_fortress";
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Neutral;
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	PersistentEffect = new class'X2Effect_Fortress';
+	PersistentEffect.BuildPersistentEffect(1, true, false);
+	PersistentEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.GetMyLongDescription(), Template.IconImage, true,, Template.AbilitySourceName);
+	Template.AddTargetEffect(PersistentEffect);
+
+	Template.bSkipFireAction = true;
+	Template.bSkipPerkActivationActions = true; // we'll trigger this perk manually based on tile movement
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+
+	return Template;
+}
+
+static function X2AbilityTemplate ForceSense()
+{
+	local X2AbilityTemplate						Template;
+	Template = PurePassive('ForceSense', "img:///", true);
+	Template.AdditionalAbilities.AddItem('ForceSenseTrigger');
+	Template.AdditionalAbilities.AddItem('ForceSenseSpawnTrigger');
+
+	return Template;
+}
+
+static function X2AbilityTemplate ForceSenseTrigger()
+{
+	local X2AbilityTemplate					Template;
+	local X2AbilityMultiTarget_Radius		RadiusMultiTarget;
+	local X2Effect_RevealUnit				TrackingEffect;
+	local X2Condition_UnitProperty			TargetProperty;
+	local X2Condition_UnitEffects			EffectsCondition;
+	local X2AbilityTrigger_EventListener	EventListener;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceSenseTrigger');
+
+	Template.IconImage = "img:///";
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Neutral;
+	Template.bDisplayInUITacticalText = false;
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	Template.AddShooterEffectExclusions();
+
+	EffectsCondition = new class'X2Condition_UnitEffects';
+	EffectsCondition.AddExcludeEffect(class'X2Effect_MindControl'.default.EffectName, 'AA_UnitIsNotPlayerControlled');
+	Template.AbilityShooterConditions.AddItem(EffectsCondition);
+
+	Template.AbilityTargetStyle = default.SelfTarget;
+
+	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
+	RadiusMultiTarget.fTargetRadius = default.FORCE_SENSE_RADIUS;
+	RadiusMultiTarget.bIgnoreBlockingCover = true;
+	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
+
+	TargetProperty = new class'X2Condition_UnitProperty';
+	TargetProperty.ExcludeDead = true;
+	TargetProperty.FailOnNonUnits = true;
+	TargetProperty.ExcludeFriendlyToSource = false;
+	Template.AbilityMultiTargetConditions.AddItem(TargetProperty);
+
+	EffectsCondition = new class'X2Condition_UnitEffects';
+	EffectsCondition.AddExcludeEffect(class'X2Effect_Burrowed'.default.EffectName, 'AA_UnitIsBurrowed');
+	Template.AbilityMultiTargetConditions.AddItem(EffectsCondition);
+
+	TrackingEffect = new class'X2Effect_RevealUnit';
+	TrackingEffect.BuildPersistentEffect(1, false, false, false, eGameRule_PlayerTurnEnd);
+	Template.AddMultiTargetEffect(TrackingEffect);
+
+	EventListener = new class'X2AbilityTrigger_EventListener';
+	EventListener.ListenerData.Deferral = ELD_OnStateSubmitted;
+	EventListener.ListenerData.EventID = 'UnitMoveFinished';
+	EventListener.ListenerData.EventFn = class'XComGameState_Ability'.static.AbilityTriggerEventListener_Self;
+	EventListener.ListenerData.Filter = eFilter_Unit;
+	Template.AbilityTriggers.AddItem(EventListener);
+
+	EventListener = new class'X2AbilityTrigger_EventListener';
+	EventListener.ListenerData.Deferral = ELD_OnStateSubmitted;
+	EventListener.ListenerData.EventID = 'PlayerTurnBegun';
+	EventListener.ListenerData.EventFn = class'XComGameState_Ability'.static.AbilityTriggerEventListener_Self;
+	EventListener.ListenerData.Filter = eFilter_Player;
+	Template.AbilityTriggers.AddItem(EventListener);
+
+	Template.bSkipFireAction = true;
+	Template.bSkipPerkActivationActions = true;
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+
+	return Template;
+}
+
+// This triggers whenever a unit is spawned within tracking radius. The most likely
+// reason for this to happen is a Faceless transforming due to tracking being applied.
+// The newly spawned Faceless unit won't have the tracking effect when this happens,
+// so we apply it here.
+static function X2AbilityTemplate ForceSenseSpawnTrigger()
+{
+	local X2AbilityTemplate					Template;
+	local X2Effect_RevealUnit				TrackingEffect;
+	local X2Condition_UnitProperty			TargetProperty;
+	local X2AbilityTrigger_EventListener	EventListener;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceSenseSpawnTrigger');
+
+	Template.IconImage = "img:///";
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Neutral;
+	Template.bDisplayInUITacticalText = false;
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	Template.AddShooterEffectExclusions();
+
+	Template.AbilityTargetStyle = default.SimpleSingleTarget;
+
+	TargetProperty = new class'X2Condition_UnitProperty';
+	TargetProperty.ExcludeDead = true;
+	TargetProperty.FailOnNonUnits = true;
+	TargetProperty.ExcludeFriendlyToSource = false;
+	TargetProperty.RequireWithinRange = true;
+	TargetProperty.WithinRange = default.FORCE_SENSE_RADIUS * class'XComWorldData'.const.WORLD_METERS_TO_UNITS_MULTIPLIER;
+	Template.AbilityTargetConditions.AddItem(TargetProperty);
+
+	TrackingEffect = new class'X2Effect_RevealUnit';
+	TrackingEffect.BuildPersistentEffect(1, false, false, false, eGameRule_PlayerTurnEnd);
+	Template.AddTargetEffect(TrackingEffect);
+
+	EventListener = new class'X2AbilityTrigger_EventListener';
+	EventListener.ListenerData.Deferral = ELD_OnStateSubmitted;
+	EventListener.ListenerData.EventID = 'UnitSpawned';
+	EventListener.ListenerData.EventFn = class'XComGameState_Ability'.static.VoidRiftInsanityListener;
+	EventListener.ListenerData.Filter = eFilter_None;
+	Template.AbilityTriggers.AddItem(EventListener);
+
+	Template.bSkipFireAction = true;
+	Template.bSkipPerkActivationActions = true;
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+
+	return Template;
+}
+
+
+static function X2AbilityTemplate BattleMeditation()
+{
+	local X2AbilityTemplate						Template;
+	local X2AbilityCooldown						Cooldown;
+	local X2Effect_Persistent					BattleMeditationEffect;
+	local X2Condition_AbilityProperty			AbilityCondition;
+	local X2AbilityCost_ActionPoints			ActionPointCost;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'BattleMeditation');
+
+	Cooldown = new class'X2AbilityCooldown';
+	Cooldown.iNumTurns = default.BATTLE_MEDITATION_COOLDOWN;
+	Template.AbilityCooldown = Cooldown;
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = true;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.Hostility = eHostility_Neutral;
+	//Template.IconImage = "img:///";
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	// A persistent effect for the effects code to attach a duration to
+	BattleMeditationEffect = new class'X2Effect_Persistent';
+	BattleMeditationEffect.EffectName = 'BattleMeditation';
+	BattleMeditationEffect.BuildPersistentEffect(2, false, true, false, eGameRule_PlayerTurnEnd);
+	Template.AddTargetEffect(BattleMeditationEffect);
+
+	Template.bShowActivation = true;
+	Template.bSkipExitCoverWhenFiring = true;
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	
+	return Template;
+}
+
+static function X2AbilityTemplate EnergyAbsorption()
+{
+	local X2AbilityTemplate         Template;
+
+	Template = PurePassive('EnergyAbsorption', "img:///UILibrary_PerkIcons.UIPerk_adventshieldbearer_energyshield");
+	Template.AddTargetEffect(EnergyShieldEffect(default.ENERGY_ABSORPTION_SHIELD_POINTS));
+
+	return Template;
+}
+
+static function X2AbilityTemplate ForceFear()
+{
+	local X2AbilityTemplate					Template;
+	local X2Condition_UnitProperty			UnitPropertyCondition;
+	local X2AbilityToHitCalc_StandardAim	ToHitCalc;
+	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local array<name>						SkipExclusions;
+	local X2Effect_Panicked					PanicEffect;
+	local X2AbilityCooldown					Cooldown;
+	local X2AbilityTarget_Cursor			CursorTarget;
+	local X2AbilityMultiTarget_Cone			ConeMultiTarget;
+
+	// Macro to do localisation and stuffs
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceFear');
+
+	// Icon Properties
+	//Template.IconImage = "img:///";
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SERGEANT_PRIORITY;
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.DisplayTargetHitChance = true;
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.Hostility = eHostility_Neutral;
+	Template.ConcealmentRule = eConceal_Always;
+
+	Cooldown = new class'X2AbilityCooldown';
+	Cooldown.iNumTurns = default.FORCE_FEAR_COOLDOWN;
+	Template.AbilityCooldown = Cooldown;
+
+	// Activated by a button press; additionally, tells the AI this is an activatable
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	// *** VALIDITY CHECKS *** //
+	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName);
+	Template.AddShooterEffectExclusions(SkipExclusions);
+
+	// Targeting Details
+	// Can only shoot visible enemies
+	Template.AbilityTargetConditions.AddItem(default.GameplayVisibilityCondition);
+	// Can't target dead; Can't target friendlies
+	UnitPropertyCondition = new class'X2Condition_UnitProperty';
+	UnitPropertyCondition.ExcludeRobotic = true;
+	UnitPropertyCondition.ExcludeOrganic = false;
+	UnitPropertyCondition.ExcludeDead = true;
+	UnitPropertyCondition.ExcludeFriendlyToSource = false;
+	UnitPropertyCondition.RequireWithinRange = true;
+	Template.AbilityTargetConditions.AddItem(UnitPropertyCondition);
+
+	// Can't shoot while dead
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+
+	CursorTarget = new class'X2AbilityTarget_Cursor';
+	CursorTarget.FixedAbilityRange = default.FORCE_FEAR_CONE_LENGTH_TILES * class'XComWorldData'.const.WORLD_StepSize;
+	Template.AbilityTargetStyle = CursorTarget;
+
+	ConeMultiTarget = new class'X2AbilityMultiTarget_Cone';
+	ConeMultiTarget.bUseWeaponRadius = false;
+	ConeMultiTarget.bIgnoreBlockingCover = true;
+	ConeMultiTarget.ConeEndDiameter = default.FORCE_FEAR_CONE_END_DIAMETER_TILES  * class'XComWorldData'.const.WORLD_StepSize; // 32
+	ConeMultiTarget.ConeLength = default.FORCE_FEAR_CONE_LENGTH_TILES  * class'XComWorldData'.const.WORLD_StepSize; // 60
+	ConeMultiTarget.fTargetRadius = Sqrt( Square(ConeMultiTarget.ConeEndDiameter / 2) + Square(ConeMultiTarget.ConeLength) ) * class'XComWorldData'.const.WORLD_UNITS_TO_METERS_MULTIPLIER;
+	Template.AbilityMultiTargetStyle = ConeMultiTarget;
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = true;
+	Template.AbilityCosts.AddItem(ActionPointCost);	
+
+	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StatCheck_UnitVsUnit';
+
+	// Targeting Method
+	Template.TargetingMethod = class'X2TargetingMethod_Cone';
+	Template.bOverrideAim = true;
+	//Template.bUseSourceLocationZToAim = true;
+
+	Template.AddMultiTargetEffect(PanickedStatusEffect(default.FORCE_FEAR_TURNS));
+
+	// MAKE IT LIVE!
+	//Template.bSkipFireAction = true;
+
+	Template.CustomFireAnim = 'FF_MindTricksA';
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+
+	Template.AdditionalAbilities.AddItem('ForceAbilitiesAnimSet');
+	
+	return Template;
 }
 
 static function X2AbilityTemplate ForceSpeed()
@@ -75,7 +668,7 @@ static function X2AbilityTemplate ForceSpeed()
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.Hostility = eHostility_Neutral;
-	Template.IconImage = "img:///UILibrary_DLC3Images.UIPerk_spark_overdrive";
+	Template.IconImage = "img:///JediClassUI.UIPerk_ForceSpeed";
 
 	Template.AbilityToHitCalc = default.DeadEye;
 	Template.AbilityTargetStyle = default.SelfTarget;
@@ -98,14 +691,12 @@ static function X2AbilityTemplate ForceSpeed()
 	ForceSpeedEffect.EffectName = 'ForceSpeed';
 	Template.AddTargetEffect(ForceSpeedEffect);
 
-	Template.CustomFireAnim = 'FF_Overdrive';
+	//Template.CustomFireAnim = 'FF_Overdrive';
 	Template.bShowActivation = true;
 	Template.bSkipExitCoverWhenFiring = true;
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
-
-	Template.PostActivationEvents.AddItem('OverdriveActivated');
 	
 	return Template;
 }
@@ -125,7 +716,7 @@ static function X2AbilityTemplate MindControl()
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'MindControl');
 
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_domination";
+	Template.IconImage = "img:///JediClassUI.UIPerk_MindControl";
 	Template.AbilitySourceName = 'eAbilitySource_Psionic';
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_MAJOR_PRIORITY;
 	Template.Hostility = eHostility_Offensive;
@@ -258,7 +849,7 @@ static function X2AbilityTemplate ForceHeal()
 
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_medicalprotocol";
+	Template.IconImage = "img:///JediClassUI.UIPerk_ForceHeal";
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_CORPORAL_PRIORITY;
 	Template.Hostility = eHostility_Defensive;
 	Template.bDisplayInUITooltip = false;
@@ -316,7 +907,7 @@ static function X2AbilityTemplate MindTricks()
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'MindTricks');
 
 	// Icon Properties
-	//Template.IconImage = "img:///";
+	Template.IconImage = "img:///JediClassUI.UIPerk_MindTricks";
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SERGEANT_PRIORITY;
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.DisplayTargetHitChance = true;
@@ -401,7 +992,7 @@ static function X2AbilityTemplate ForceJump()
 	
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceJump');
 	Template.IconImage = "img:///JediClassUI.UIPerk_jump";
-	Template.AbilitySourceName = 'eAbilitySource_Standard';
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
 	Template.Hostility = eHostility_Neutral;
 	Template.bIsPassive = true;
@@ -414,14 +1005,13 @@ static function X2AbilityTemplate ForceJump()
 
 	JumpEffect = new class'X2Effect_PersistentTraversalChange';
 	JumpEffect.BuildPersistentEffect(1, true, false, false, eGameRule_TacticalGameStart);
-	JumpEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage, true);
+	JumpEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage, true,, Template.AbilitySourceName);
 	JumpEffect.AddTraversalChange(eTraversal_JumpUp, true);
 	Template.AddTargetEffect(JumpEffect);
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	//Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 
-	//Template.bShowActivation = true;
+	Template.bShowActivation = false;
 	Template.bCrossClassEligible = false;
 
 	Template.AdditionalAbilities.AddItem('ForceAbilitiesAnimSet');
@@ -441,7 +1031,7 @@ static function X2AbilityTemplate ForceWind()
 	local X2Effect_RemoveEffects			RemoveEffects;
 	local X2Effect_RemoveOverwatch			RemoveOverwatchEffect;
 	local X2AbilityTarget_Cursor			CursorTarget;
-	local X2AbilityMultiTarget_Radius		RadiusMultiTarget;
+	local X2AbilityMultiTarget_Cone			ConeMultiTarget;
 	local X2AbilityCooldown					Cooldown;
 
 	// Macro to do localisation and stuffs
@@ -464,8 +1054,6 @@ static function X2AbilityTemplate ForceWind()
 
 	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName);
 	Template.AddShooterEffectExclusions(SkipExclusions);
-
-	Template.AbilityTargetConditions.AddItem(default.GameplayVisibilityCondition);
 	
 	UnitPropertyCondition = new class'X2Condition_UnitProperty';
 	UnitPropertyCondition.ExcludeRobotic = false;
@@ -478,12 +1066,16 @@ static function X2AbilityTemplate ForceWind()
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
 	
 	CursorTarget = new class'X2AbilityTarget_Cursor';
-	CursorTarget.FixedAbilityRange = default.FORCE_WIND_RANGE;
+	CursorTarget.FixedAbilityRange = default.FORCE_WIND_CONE_LENGTH_TILES * class'XComWorldData'.const.WORLD_StepSize;
 	Template.AbilityTargetStyle = CursorTarget;
 
-	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
-	RadiusMultiTarget.fTargetRadius = default.FORCE_WIND_RADIUS;
-	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
+	ConeMultiTarget = new class'X2AbilityMultiTarget_Cone';
+	ConeMultiTarget.bUseWeaponRadius = false;
+	ConeMultiTarget.bIgnoreBlockingCover = true;
+	ConeMultiTarget.ConeEndDiameter = default.FORCE_WIND_CONE_END_DIAMETER_TILES  * class'XComWorldData'.const.WORLD_StepSize; // 32
+	ConeMultiTarget.ConeLength = default.FORCE_WIND_CONE_LENGTH_TILES  * class'XComWorldData'.const.WORLD_StepSize; // 60
+	ConeMultiTarget.fTargetRadius = Sqrt( Square(ConeMultiTarget.ConeEndDiameter / 2) + Square(ConeMultiTarget.ConeLength) ) * class'XComWorldData'.const.WORLD_UNITS_TO_METERS_MULTIPLIER;
+	Template.AbilityMultiTargetStyle = ConeMultiTarget;
 
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
 	ActionPointCost.iNumPoints = 1;
@@ -493,12 +1085,12 @@ static function X2AbilityTemplate ForceWind()
 	KnockBackEffect = new class'X2Effect_ForcePush';
 	KnockBackEffect.KnockbackDistance = default.FORCE_WIND_KNOCKBACK_DISTANCE;
 	KnockBackEffect.bKnockbackDestroysNonFragile = true;
-	KnockBackEffect.ForcePushAnimSequence = 'FF_ForcceWindA';
+	KnockBackEffect.ForcePushAnimSequence = 'FF_ForceWindA';
 	//KnockBackEffect.bUseTargetLocation = true;
 	Template.AddMultiTargetEffect(KnockBackEffect);
 
 	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
-	DamageEffect.EnvironmentalDamageAmount = 20;
+	DamageEffect.EnvironmentalDamageAmount = default.FORCE_WIND_ENVIRONMENTAL_DAMAGE;
 	DamageEffect.bIgnoreBaseDamage = true;
 	DamageEffect.bBypassShields = true;
 	DamageEffect.EffectDamageValue = default.FORCE_WIND_BASEDAMAGE;
@@ -518,7 +1110,7 @@ static function X2AbilityTemplate ForceWind()
 	Template.AbilityToHitCalc = default.DeadEye;
 
 	// Targeting Method
-	Template.TargetingMethod = class'X2TargetingMethod_GremlinAOE';
+	Template.TargetingMethod = class'X2TargetingMethod_Cone';
 	Template.bOverrideAim = true;
 
 	Template.SourceMissSpeech = 'SwordMiss';
@@ -654,7 +1246,7 @@ static function X2AbilityTemplate ForceChoke()
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceChoke');
 
 	// Icon Properties
-	//Template.IconImage = "img:///";
+	Template.IconImage = "img:///JediClassUI.UIPerk_ForceChoke";
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_CAPTAIN_PRIORITY;
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.DisplayTargetHitChance = true;
@@ -1009,6 +1601,658 @@ static function X2AbilityTemplate ForceChainLightning()
 	return Template;
 }
 
+
+static function X2AbilityTemplate LeapStrikeFleche()
+{
+	local X2AbilityTemplate						Template;
+	local X2Effect_FlecheBonusDamage			FlecheBonusDamageEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'LeapStrikeFleche');
+	Template.IconImage = "img:///UILibrary_LW_PerkPack.LW_AbilityFleche";
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
+	Template.bDisplayInUITacticalText = false;
+	Template.Hostility = eHostility_Neutral;
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+	Template.bIsPassive = true;
+	Template.bHideOnClassUnlock = true;
+	Template.bCrossClassEligible = false;
+
+	// Fleche
+	FlecheBonusDamageEffect = new class 'X2Effect_FlecheBonusDamage';
+	FlecheBonusDamageEffect.AbilityNames.AddItem('LeapStrike');
+	FlecheBonusDamageEffect.BuildPersistentEffect (1, true, true);
+	Template.AddTargetEffect(FlecheBonusDamageEffect);
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+
+	return Template;
+}
+
+static function X2AbilityTemplate LeapStrike()
+{
+	local X2AbilityTemplate									Template;
+	local X2AbilityToHitCalc_StandardMelee					StandardMelee;
+	local X2AbilityTarget_MovingMelee						MeleeTarget;
+	local X2Effect_ApplyWeaponDamage						WeaponDamageEffect;
+	local array<name>										SkipExclusions;
+	local X2AbilityCost_ActionPoints						ActionPointCost;
+	local X2Effect_Persistent								ShadowStepEffect;
+	local X2Effect_LeapStrikeReaper							LeapStrikeReaperEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'LeapStrike');
+
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	
+	Template.CinescriptCameraType = "Ranger_Reaper";
+	Template.IconImage = "img:///MusashAnimations.Icons.UIPerk_void_strike";
+	Template.bHideOnClassUnlock = false;
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SQUADDIE_PRIORITY;
+	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
+	
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = true;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	StandardMelee = new class'X2AbilityToHitCalc_StandardMelee';
+	Template.AbilityToHitCalc = StandardMelee;
+	
+	MeleeTarget = new class'X2AbilityTarget_MovingMelee';
+	Template.AbilityTargetStyle = MeleeTarget;
+	Template.TargetingMethod = class'X2TargetingMethod_MeleePath';
+
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+	Template.AbilityTriggers.AddItem(new class'X2AbilityTrigger_EndOfMove');
+
+	// Target Conditions
+	//
+	Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);
+	Template.AbilityTargetConditions.AddItem(default.MeleeVisibilityCondition);
+
+	// Shooter Conditions
+	//
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	SkipExclusions.AddItem(class'X2StatusEffects'.default.BurningName);
+	Template.AddShooterEffectExclusions(SkipExclusions);
+
+	// Do not trigger overwatch
+	ShadowStepEffect = new class'X2Effect_Persistent';
+	ShadowStepEffect.EffectName = 'Shadowstep';
+	ShadowStepEffect.DuplicateResponse = eDupe_Ignore;
+	ShadowStepEffect.BuildPersistentEffect(1, false, false);
+	Template.AddShooterEffect(ShadowStepEffect);
+
+	// One additional action point for reaper
+	LeapStrikeReaperEffect = new class'X2Effect_LeapStrikeReaper';
+	LeapStrikeReaperEffect.EffectName = 'VoidReaper';
+	LeapStrikeReaperEffect.BuildPersistentEffect(1, false, false);
+	Template.AddShooterEffect(LeapStrikeReaperEffect);
+
+	// Damage Effect
+	//
+	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	Template.AddTargetEffect(WeaponDamageEffect);
+	
+	Template.bAllowBonusWeaponEffects = true;
+	Template.bSkipMoveStop = true;
+	
+	// Voice events
+	//
+	Template.SourceMissSpeech = 'SwordMiss';
+
+	Template.ModifyNewContextFn = Teleport_ModifyActivatedAbilityContext;
+	Template.BuildNewGameStateFn = Teleport_BuildGameState;
+	Template.BuildVisualizationFn = Teleport_BuildVisualization;
+
+	Template.AdditionalAbilities.AddItem('ForceAbilitiesAnimSet');
+	Template.AdditionalAbilities.AddItem('LeapStrikeFleche');
+	
+	return Template;
+}
+
+static simulated function Teleport_ModifyActivatedAbilityContext(XComGameStateContext Context)
+{
+	local XComGameState_Unit UnitState;
+	local XComGameStateContext_Ability AbilityContext;
+	local XComGameStateHistory History;
+	local PathPoint NextPoint, EmptyPoint;
+	local PathingInputData InputData;
+	local XComWorldData World;
+	local vector NewLocation;
+	local TTile NewTileLocation;
+	local array<TTile> PathTiles;
+
+	History = `XCOMHISTORY;
+	World = `XWORLD;
+	
+	AbilityContext = XComGameStateContext_Ability(Context);
+	`assert(AbilityContext.InputContext.TargetLocations.Length > 0);
+	
+	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+	
+	// Build the MovementData for the path
+	// First posiiton is the current location
+	InputData.MovementTiles.AddItem(UnitState.TileLocation);
+	
+	NextPoint.Position = World.GetPositionFromTileCoordinates(UnitState.TileLocation);
+	NextPoint.Traversal = eTraversal_Teleport;
+	//NextPoint.Traversal = eTraversal_Phasing;
+	
+	NextPoint.PathTileIndex = 0;
+	InputData.MovementData.AddItem(NextPoint);
+
+	`PRES.GetTacticalHUD().GetTargetingMethod().GetPreAbilityPath(PathTiles);
+	//`LOG("Teleport_ModifyActivatedAbilityContext" @ PathTiles.Length,, 'KatanaMod');
+	if (PathTiles.Length > 0)
+	{
+		NewTileLocation = PathTiles[PathTiles.Length - 1];
+		NewLocation = World.GetPositionFromTileCoordinates(NewTileLocation);
+	}
+	else
+	{
+		// Second posiiton is the cursor position
+		`assert(AbilityContext.InputContext.TargetLocations.Length == 1);
+		NewLocation = AbilityContext.InputContext.TargetLocations[0];
+		NewTileLocation = World.GetTileCoordinatesFromPosition(NewLocation);
+		NewLocation = World.GetPositionFromTileCoordinates(NewTileLocation);
+
+		//NewTileLocation = AbilityContext.InputContext.MovementPaths[0].MovementTiles[AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length -1];
+		//NewLocation = World.GetPositionFromTileCoordinates(NewTileLocation);
+	}
+	NextPoint = EmptyPoint;
+	NextPoint.Position = NewLocation;
+	NextPoint.Traversal = eTraversal_Landing;
+	NextPoint.PathTileIndex = 1;
+	InputData.MovementData.AddItem(NextPoint);
+	InputData.MovementTiles.AddItem(NewTileLocation);
+	
+    //Now add the path to the input context
+	InputData.MovingUnitRef = UnitState.GetReference();
+	AbilityContext.InputContext.MovementPaths.Length = 0;
+	AbilityContext.InputContext.MovementPaths[0] = InputData;
+}
+
+static simulated function XComGameState Teleport_BuildGameState(XComGameStateContext Context)
+{
+	local XComGameState NewGameState;
+	local XComGameState_Unit UnitState;
+	local XComGameStateContext_Ability AbilityContext;
+	local vector NewLocation;
+	local TTile NewTileLocation;
+	local XComWorldData World;
+	local X2EventManager EventManager;
+	local int LastElementIndex;
+
+	World = `XWORLD;
+	EventManager = `XEVENTMGR;
+
+	//Build the new game state frame
+	NewGameState = TypicalAbility_BuildGameState(Context);
+
+	AbilityContext = XComGameStateContext_Ability(NewGameState.GetContext());	
+	UnitState = XComGameState_Unit(NewGameState.CreateStateObject(class'XComGameState_Unit', AbilityContext.InputContext.SourceObject.ObjectID));
+
+	LastElementIndex = AbilityContext.InputContext.MovementPaths[0].MovementData.Length - 1;
+
+	// Set the unit's new location
+	// The last position in MovementData will be the end location
+	`assert(LastElementIndex > 0);
+	NewLocation = AbilityContext.InputContext.MovementPaths[0].MovementData[LastElementIndex].Position;
+	NewTileLocation = World.GetTileCoordinatesFromPosition(NewLocation);
+	UnitState.SetVisibilityLocation(NewTileLocation);
+
+	NewGameState.AddStateObject(UnitState);
+
+	AbilityContext.ResultContext.bPathCausesDestruction = false;//MoveAbility_StepCausesDestruction(UnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
+	MoveAbility_AddTileStateObjects(NewGameState, UnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
+
+	EventManager.TriggerEvent('ObjectMoved', UnitState, UnitState, NewGameState);
+	EventManager.TriggerEvent('UnitMoveFinished', UnitState, UnitState, NewGameState);
+
+	//Return the game state we have created
+	return NewGameState;
+}
+
+function Teleport_BuildVisualization(XComGameState VisualizeGameState, out array<VisualizationTrack> OutVisualizationTracks)
+{		
+	local X2AbilityTemplate						AbilityTemplate;
+	local XComGameStateContext_Ability			Context;
+	local AbilityInputContext					AbilityContext;
+	local StateObjectReference					ShootingUnitRef;	
+	local X2Action								AddedAction;
+	local XComGameState_BaseObject				TargetStateObject;//Container for state objects within VisualizeGameState	
+	local XComGameState_Item					SourceWeapon;
+	local X2GrenadeTemplate						GrenadeTemplate;
+	local X2AmmoTemplate						AmmoTemplate;
+	local X2WeaponTemplate						WeaponTemplate;
+	local array<X2Effect>						MultiTargetEffects;
+	local bool									bSourceIsAlsoTarget;
+	local Actor									TargetVisualizer, ShooterVisualizer;
+	local X2VisualizerInterface					TargetVisualizerInterface, ShooterVisualizerInterface;
+	local int									EffectIndex;
+	local XComGameState_EnvironmentDamage		EnvironmentDamageEvent;
+	local XComGameState_WorldEffectTileData		WorldDataUpdate;
+	local VisualizationTrack					EmptyTrack;
+	local VisualizationTrack					BuildTrack;
+	local VisualizationTrack					SourceTrack, InterruptTrack;
+	local int									TrackIndex;
+	local XComGameStateHistory					History;
+	local X2Action_MoveTurn						MoveTurnAction;
+	local XComGameStateContext_Ability			CounterAttackContext;
+	local X2AbilityTemplate						CounterattackTemplate;
+	local array<VisualizationTrack>				OutCounterattackVisualizationTracks;
+	local int									ActionIndex;
+	local X2Action_PlaySoundAndFlyOver			SoundAndFlyover;
+	local name									ApplyResult;
+	local XComGameState_InteractiveObject		InteractiveObject;
+	local XComGameState_Ability					AbilityState;
+	local bool									bInterruptPath;
+	local X2Action_ExitCover					ExitCoverAction;
+	local XComGameState_Unit					SourceUnitState;
+	local UnitValue								SilentMelee;
+			
+	History = `XCOMHISTORY;
+	Context = XComGameStateContext_Ability(VisualizeGameState.GetContext());
+	AbilityContext = Context.InputContext;
+	AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityContext.AbilityRef.ObjectID));
+	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager().FindAbilityTemplate(AbilityContext.AbilityTemplateName);
+	ShootingUnitRef = Context.InputContext.SourceObject;
+	SourceUnitState = XComGameState_Unit(History.GetGameStateForObjectID(ShootingUnitRef.ObjectID));
+	bInterruptPath = false;
+
+	//Configure the visualization track for the shooter, part I. We split this into two parts since
+	//in some situations the shooter can also be a target
+	//****************************************************************************************
+	ShooterVisualizer = History.GetVisualizer(ShootingUnitRef.ObjectID);
+	ShooterVisualizerInterface = X2VisualizerInterface(ShooterVisualizer);
+
+	SourceTrack = EmptyTrack;
+	SourceTrack.StateObject_OldState = History.GetGameStateForObjectID(ShootingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
+	SourceTrack.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(ShootingUnitRef.ObjectID);
+	if (SourceTrack.StateObject_NewState == none)
+		SourceTrack.StateObject_NewState = SourceTrack.StateObject_OldState;
+	SourceTrack.TrackActor = ShooterVisualizer;
+
+	SourceTrack.AbilityName = AbilityTemplate.DataName;
+
+	SourceWeapon = XComGameState_Item(History.GetGameStateForObjectID(AbilityContext.ItemObject.ObjectID));
+	if (SourceWeapon != None)
+	{
+		WeaponTemplate = X2WeaponTemplate(SourceWeapon.GetMyTemplate());
+		AmmoTemplate = X2AmmoTemplate(SourceWeapon.GetLoadedAmmoTemplate(AbilityState));
+	}
+	if(AbilityTemplate.bShowPostActivation)
+	{
+		//Show the text flyover at the end of the visualization after the camera pans back
+		Context.PostBuildVisualizationFn.AddItem(ActivationFlyOver_PostBuildVisualization);
+	}
+	if (AbilityTemplate.bShowActivation || AbilityTemplate.ActivationSpeech != '')
+	{
+		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTrack(SourceTrack, Context));
+
+		if (SourceWeapon != None)
+		{
+			GrenadeTemplate = X2GrenadeTemplate(SourceWeapon.GetMyTemplate());
+		}
+
+		if (GrenadeTemplate != none)
+		{
+			SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", GrenadeTemplate.OnThrowBarkSoundCue, eColor_Good);
+		}
+		else
+		{
+			SoundAndFlyOver.SetSoundAndFlyOverParameters(None, AbilityTemplate.bShowActivation ? AbilityTemplate.LocFriendlyName : "", AbilityTemplate.ActivationSpeech, eColor_Good, AbilityTemplate.bShowActivation ? AbilityTemplate.IconImage : "");
+		}
+	}
+
+	if( Context.IsResultContextMiss() && AbilityTemplate.SourceMissSpeech != '' )
+	{
+		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTrack(BuildTrack, Context));
+		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", AbilityTemplate.SourceMissSpeech, eColor_Bad);
+	}
+	else if( Context.IsResultContextHit() && AbilityTemplate.SourceHitSpeech != '' )
+	{
+		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTrack(BuildTrack, Context));
+		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", AbilityTemplate.SourceHitSpeech, eColor_Good);
+	}
+
+	if( !AbilityTemplate.bSkipFireAction || Context.InputContext.MovementPaths.Length > 0 )
+	{
+		ExitCoverAction = X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTrack(SourceTrack, Context));
+		ExitCoverAction.bSkipExitCoverVisualization = AbilityTemplate.bSkipExitCoverWhenFiring;
+
+		// move action
+		class'X2VisualizerHelpers'.static.ParsePath(Context, SourceTrack, OutVisualizationTracks, AbilityTemplate.bSkipMoveStop);
+		
+		// if this ability has a built in move, do it right before we do the fire action
+		if(Context.InputContext.MovementPaths.Length > 0)
+		{
+
+			if( !AbilityTemplate.bSkipFireAction )
+			{
+				// add our fire action
+				AddedAction = AbilityTemplate.ActionFireClass.static.AddToVisualizationTrack(SourceTrack, Context);
+			}
+			
+			if (!bInterruptPath)
+			{
+				// swap the fire action for the end move action, so that we trigger it just before the end. This sequences any moving fire action
+				// correctly so that it blends nicely before the move end.
+				for (TrackIndex = 0; TrackIndex < SourceTrack.TrackActions.Length; ++TrackIndex)
+				{
+					if (X2Action_MoveEnd(SourceTrack.TrackActions[TrackIndex]) != none)
+					{
+						break;
+					}
+				}
+				if(TrackIndex >= SourceTrack.TrackActions.Length)
+				{
+					`Redscreen("X2Action_MoveEnd not found when building Typical Ability path. @gameplay @dburchanowski @jbouscher");
+				}
+				else
+				{
+					SourceTrack.TrackActions[TrackIndex + 1] = SourceTrack.TrackActions[TrackIndex];
+					SourceTrack.TrackActions[TrackIndex] = AddedAction;
+				}
+			}
+			//else
+			//{
+			//	//  prompt the target to play their hit reacts after the attack
+			//	InterruptMsg = X2Action_SendInterTrackMessage(class'X2Action_SendInterTrackMessage'.static.AddToVisualizationTrack(SourceTrack, Context));
+			//	InterruptMsg.SendTrackMessageToRef = InterruptContext.InputContext.SourceObject;
+			//}
+		}
+		else if( !AbilityTemplate.bSkipFireAction )
+		{
+			// no move, just add the fire action
+			AddedAction = AbilityTemplate.ActionFireClass.static.AddToVisualizationTrack(SourceTrack, Context);
+		}
+
+		if( !AbilityTemplate.bSkipFireAction )
+		{
+			if( AbilityTemplate.AbilityToHitCalc != None )
+			{
+				X2Action_Fire(AddedAction).SetFireParameters(Context.IsResultContextHit());
+			}
+
+			//Process a potential counter attack from the target here
+			if( Context.ResultContext.HitResult == eHit_CounterAttack )
+			{
+				CounterAttackContext = class'X2Ability'.static.FindCounterAttackGameState(Context, XComGameState_Unit(SourceTrack.StateObject_OldState));
+				if( CounterAttackContext != none )
+				{
+					//Entering this code block means that we were the target of a counter attack to our original attack. Here, we look forward in the history
+					//and append the necessary visualization tracks so that the counter attack can happen visually as part of our original attack.
+
+					//Get the ability template for the counter attack against us
+					CounterattackTemplate = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager().FindAbilityTemplate(CounterAttackContext.InputContext.AbilityTemplateName);
+					CounterattackTemplate.BuildVisualizationFn(CounterAttackContext.AssociatedState, OutCounterattackVisualizationTracks);
+
+					//Take the visualization actions from the counter attack game state ( where we are the target )
+					for( TrackIndex = 0; TrackIndex < OutCounterattackVisualizationTracks.Length; ++TrackIndex )
+					{
+						if( OutCounterattackVisualizationTracks[TrackIndex].StateObject_OldState.ObjectID == SourceTrack.StateObject_OldState.ObjectID )
+						{
+							for( ActionIndex = 0; ActionIndex < OutCounterattackVisualizationTracks[TrackIndex].TrackActions.Length; ++ActionIndex )
+							{
+								//Don't include waits
+								if( !OutCounterattackVisualizationTracks[TrackIndex].TrackActions[ActionIndex].IsA('X2Action_WaitForAbilityEffect') )
+								{
+									SourceTrack.TrackActions.AddItem(OutCounterattackVisualizationTracks[TrackIndex].TrackActions[ActionIndex]);
+								}
+							}
+							break;
+						}
+					}
+
+					//Notify the visualization mgr that the counter attack visualization is taken care of, so it can be skipped
+					`XCOMVISUALIZATIONMGR.SkipVisualization(CounterAttackContext.AssociatedState.HistoryIndex);
+				}
+			}
+		}
+	}
+
+	//If there are effects added to the shooter, add the visualizer actions for them
+	for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityShooterEffects.Length; ++EffectIndex)
+	{
+		AbilityTemplate.AbilityShooterEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, SourceTrack, Context.FindShooterEffectApplyResult(AbilityTemplate.AbilityShooterEffects[EffectIndex]));		
+	}
+	//****************************************************************************************
+
+	//Configure the visualization track for the target(s). This functionality uses the context primarily
+	//since the game state may not include state objects for misses.
+	//****************************************************************************************	
+	bSourceIsAlsoTarget = AbilityContext.PrimaryTarget.ObjectID == AbilityContext.SourceObject.ObjectID; //The shooter is the primary target
+	if (AbilityTemplate.AbilityTargetEffects.Length > 0 &&			//There are effects to apply
+		AbilityContext.PrimaryTarget.ObjectID > 0)				//There is a primary target
+	{
+		TargetVisualizer = History.GetVisualizer(AbilityContext.PrimaryTarget.ObjectID);
+		TargetVisualizerInterface = X2VisualizerInterface(TargetVisualizer);
+
+		if( bSourceIsAlsoTarget )
+		{
+			BuildTrack = SourceTrack;
+		}
+		else
+		{
+			BuildTrack = InterruptTrack;        //  interrupt track will either be empty or filled out correctly
+		}
+
+		BuildTrack.TrackActor = TargetVisualizer;
+
+		TargetStateObject = VisualizeGameState.GetGameStateForObjectID(AbilityContext.PrimaryTarget.ObjectID);
+		if( TargetStateObject != none )
+		{
+			History.GetCurrentAndPreviousGameStatesForObjectID(AbilityContext.PrimaryTarget.ObjectID, 
+															   BuildTrack.StateObject_OldState, BuildTrack.StateObject_NewState,
+															   eReturnType_Reference,
+															   VisualizeGameState.HistoryIndex);
+			`assert(BuildTrack.StateObject_NewState == TargetStateObject);
+		}
+		else
+		{
+			//If TargetStateObject is none, it means that the visualize game state does not contain an entry for the primary target. Use the history version
+			//and show no change.
+			BuildTrack.StateObject_OldState = History.GetGameStateForObjectID(AbilityContext.PrimaryTarget.ObjectID);
+			BuildTrack.StateObject_NewState = BuildTrack.StateObject_OldState;
+		}
+
+		// if this is a melee attack, make sure the target is facing the location he will be melee'd from
+		if(!AbilityTemplate.bSkipFireAction 
+			&& !bSourceIsAlsoTarget 
+			&& AbilityContext.MovementPaths.Length > 0
+			&& AbilityContext.MovementPaths[0].MovementData.Length > 0
+			&& XGUnit(TargetVisualizer) != none)
+		{
+			MoveTurnAction = X2Action_MoveTurn(class'X2Action_MoveTurn'.static.AddToVisualizationTrack(BuildTrack, Context));
+			MoveTurnAction.m_vFacePoint = AbilityContext.MovementPaths[0].MovementData[AbilityContext.MovementPaths[0].MovementData.Length - 1].Position;
+			MoveTurnAction.m_vFacePoint.Z = TargetVisualizerInterface.GetTargetingFocusLocation().Z;
+			MoveTurnAction.UpdateAimTarget = true;
+		}
+
+		//Make the target wait until signaled by the shooter that the projectiles are hitting
+		if (!AbilityTemplate.bSkipFireAction && !bSourceIsAlsoTarget)
+		{
+			class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTrack(BuildTrack, Context);
+		}
+		
+		//Add any X2Actions that are specific to this effect being applied. These actions would typically be instantaneous, showing UI world messages
+		//playing any effect specific audio, starting effect specific effects, etc. However, they can also potentially perform animations on the 
+		//track actor, so the design of effect actions must consider how they will look/play in sequence with other effects.
+		for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityTargetEffects.Length; ++EffectIndex)
+		{
+			ApplyResult = Context.FindTargetEffectApplyResult(AbilityTemplate.AbilityTargetEffects[EffectIndex]);
+
+			// Target effect visualization
+			AbilityTemplate.AbilityTargetEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, BuildTrack, ApplyResult);
+
+			// Source effect visualization
+			AbilityTemplate.AbilityTargetEffects[EffectIndex].AddX2ActionsForVisualizationSource(VisualizeGameState, SourceTrack, ApplyResult);
+		}
+
+		//the following is used to handle Rupture flyover text
+		if (XComGameState_Unit(BuildTrack.StateObject_OldState).GetRupturedValue() == 0 &&
+			XComGameState_Unit(BuildTrack.StateObject_NewState).GetRupturedValue() > 0)
+		{
+			//this is the frame that we realized we've been ruptured!
+			class 'X2StatusEffects'.static.RuptureVisualization(VisualizeGameState, BuildTrack);
+		}
+
+		if (AbilityTemplate.bAllowAmmoEffects && AmmoTemplate != None)
+		{
+			for (EffectIndex = 0; EffectIndex < AmmoTemplate.TargetEffects.Length; ++EffectIndex)
+			{
+				ApplyResult = Context.FindTargetEffectApplyResult(AmmoTemplate.TargetEffects[EffectIndex]);
+				AmmoTemplate.TargetEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, BuildTrack, ApplyResult);
+				AmmoTemplate.TargetEffects[EffectIndex].AddX2ActionsForVisualizationSource(VisualizeGameState, SourceTrack, ApplyResult);
+			}
+		}
+		if (AbilityTemplate.bAllowBonusWeaponEffects && WeaponTemplate != none)
+		{
+			for (EffectIndex = 0; EffectIndex < WeaponTemplate.BonusWeaponEffects.Length; ++EffectIndex)
+			{
+				ApplyResult = Context.FindTargetEffectApplyResult(WeaponTemplate.BonusWeaponEffects[EffectIndex]);
+				WeaponTemplate.BonusWeaponEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, BuildTrack, ApplyResult);
+				WeaponTemplate.BonusWeaponEffects[EffectIndex].AddX2ActionsForVisualizationSource(VisualizeGameState, SourceTrack, ApplyResult);
+			}
+		}
+
+		if (Context.IsResultContextMiss() && (AbilityTemplate.LocMissMessage != "" || AbilityTemplate.TargetMissSpeech != ''))
+		{
+			SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTrack(BuildTrack, Context));
+			SoundAndFlyOver.SetSoundAndFlyOverParameters(None, AbilityTemplate.LocMissMessage, AbilityTemplate.TargetMissSpeech, eColor_Bad);
+		}
+		else if( Context.IsResultContextHit() && (AbilityTemplate.LocHitMessage != "" || AbilityTemplate.TargetHitSpeech != '') )
+		{
+			SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTrack(BuildTrack, Context));
+			SoundAndFlyOver.SetSoundAndFlyOverParameters(None, AbilityTemplate.LocHitMessage, AbilityTemplate.TargetHitSpeech, eColor_Good);
+		}
+
+		if( TargetVisualizerInterface != none )
+		{
+			//Allow the visualizer to do any custom processing based on the new game state. For example, units will create a death action when they reach 0 HP.
+			TargetVisualizerInterface.BuildAbilityEffectsVisualization(VisualizeGameState, BuildTrack);
+		}
+
+		if (!bSourceIsAlsoTarget && BuildTrack.TrackActions.Length > 0)
+		{
+			OutVisualizationTracks.AddItem(BuildTrack);
+		}
+
+		if( bSourceIsAlsoTarget )
+		{
+			SourceTrack = BuildTrack;
+		}
+	}
+
+	//Finish adding the shooter's track
+	//****************************************************************************************
+	if( !bSourceIsAlsoTarget && ShooterVisualizerInterface != none)
+	{
+		ShooterVisualizerInterface.BuildAbilityEffectsVisualization(VisualizeGameState, SourceTrack);				
+	}	
+
+	if (!AbilityTemplate.bSkipFireAction)
+	{
+		if (!AbilityTemplate.bSkipExitCoverWhenFiring)
+		{
+			class'X2Action_EnterCover'.static.AddToVisualizationTrack(SourceTrack, Context);
+		}
+	}	
+
+	OutVisualizationTracks.AddItem(SourceTrack);
+
+	//  Handle redirect visualization
+	TypicalAbility_AddEffectRedirects(VisualizeGameState, OutVisualizationTracks, SourceTrack);
+
+	//****************************************************************************************
+
+	//Configure the visualization tracks for the environment
+	//****************************************************************************************
+	foreach VisualizeGameState.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamageEvent)
+	{
+		BuildTrack = EmptyTrack;
+		BuildTrack.TrackActor = none;
+		BuildTrack.StateObject_NewState = EnvironmentDamageEvent;
+		BuildTrack.StateObject_OldState = EnvironmentDamageEvent;
+
+		//Wait until signaled by the shooter that the projectiles are hitting
+		if (!AbilityTemplate.bSkipFireAction)
+			class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTrack(BuildTrack, Context);
+
+		for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityShooterEffects.Length; ++EffectIndex)
+		{
+			AbilityTemplate.AbilityShooterEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, BuildTrack, 'AA_Success');		
+		}
+
+		for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityTargetEffects.Length; ++EffectIndex)
+		{
+			AbilityTemplate.AbilityTargetEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, BuildTrack, 'AA_Success');
+		}
+
+		for (EffectIndex = 0; EffectIndex < MultiTargetEffects.Length; ++EffectIndex)
+		{
+			MultiTargetEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, BuildTrack, 'AA_Success');	
+		}
+
+		OutVisualizationTracks.AddItem(BuildTrack);
+	}
+
+	foreach VisualizeGameState.IterateByClassType(class'XComGameState_WorldEffectTileData', WorldDataUpdate)
+	{
+		BuildTrack = EmptyTrack;
+		BuildTrack.TrackActor = none;
+		BuildTrack.StateObject_NewState = WorldDataUpdate;
+		BuildTrack.StateObject_OldState = WorldDataUpdate;
+
+		//Wait until signaled by the shooter that the projectiles are hitting
+		if (!AbilityTemplate.bSkipFireAction)
+			class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTrack(BuildTrack, Context);
+
+		for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityShooterEffects.Length; ++EffectIndex)
+		{
+			AbilityTemplate.AbilityShooterEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, BuildTrack, 'AA_Success');		
+		}
+
+		for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityTargetEffects.Length; ++EffectIndex)
+		{
+			AbilityTemplate.AbilityTargetEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, BuildTrack, 'AA_Success');
+		}
+
+		for (EffectIndex = 0; EffectIndex < MultiTargetEffects.Length; ++EffectIndex)
+		{
+			MultiTargetEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, BuildTrack, 'AA_Success');	
+		}
+
+		OutVisualizationTracks.AddItem(BuildTrack);
+	}
+	//****************************************************************************************
+
+	//Process any interactions with interactive objects
+	foreach VisualizeGameState.IterateByClassType(class'XComGameState_InteractiveObject', InteractiveObject)
+	{
+		// Add any doors that need to listen for notification
+		if (InteractiveObject.IsDoor() && InteractiveObject.HasDestroyAnim()) //Is this a closed door?
+		{
+			BuildTrack = EmptyTrack;
+			//Don't necessarily have a previous state, so just use the one we know about
+			BuildTrack.StateObject_OldState = InteractiveObject;
+			BuildTrack.StateObject_NewState = InteractiveObject;
+			BuildTrack.TrackActor = History.GetVisualizer(InteractiveObject.ObjectID);
+
+			if (!AbilityTemplate.bSkipFireAction)
+				class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTrack(BuildTrack, Context);
+
+			class'X2Action_BreakInteractActor'.static.AddToVisualizationTrack(BuildTrack, Context);
+
+			OutVisualizationTracks.AddItem(BuildTrack);
+		}
+	}
+}
+
 static function X2AbilityTemplate ForcLightningAnimSets()
 {
 	local X2AbilityTemplate                 Template;	
@@ -1066,7 +2310,16 @@ static function X2AbilityTemplate ForceAbilitiesAnimSet()
 	return Template;
 }
 
+static function X2Effect_PersistentStatChange EnergyShieldEffect(int ShieldHPAmount)
+{
+	local X2Effect_EnergyShield ShieldedEffect;
 
+	ShieldedEffect = new class'X2Effect_EnergyShield';
+	ShieldedEffect.BuildPersistentEffect(1, true, false);
+	ShieldedEffect.AddPersistentStatChange(eStat_ShieldHP, ShieldHPAmount);
+
+	return ShieldedEffect;
+}
 
 static function X2Effect_Persistent DisorientEffect()
 {
@@ -1093,7 +2346,7 @@ static function X2Effect_Stunned StunEffect(int StunLevel, int Chance, optional 
 	local X2Effect_Stunned StunEffect;
 	local X2Condition_UnitProperty Condition_UnitProperty;
 
-	StunEffect = class'X2StatusEffects'.static.CreateStunnedStatusEffect(StunLevel,Chance, bIsMentalDamage);
+	StunEffect = class'X2StatusEffects'.static.CreateStunnedStatusEffect(StunLevel, Chance, bIsMentalDamage);
 	StunEffect.bApplyOnHit = true;
 	StunEffect.bApplyOnMiss = false;
 
@@ -1103,4 +2356,30 @@ static function X2Effect_Stunned StunEffect(int StunLevel, int Chance, optional 
 	StunEffect.TargetConditions.AddItem(Condition_UnitProperty);
 	
 	return StunEffect;
+}
+
+static function X2Effect_Panicked PanickedStatusEffect(int PanickTurns, float DelayVisualizationSec=0.0f)
+{
+	local X2Effect_Panicked     PanickedEffect;
+
+	PanickedEffect = new class'X2Effect_Panicked';
+	PanickedEffect.EffectName = class'X2AbilityTemplateManager'.default.PanickedName;
+	PanickedEffect.DuplicateResponse = eDupe_Ignore;
+	PanickedEffect.BuildPersistentEffect(PanickTurns, , , , eGameRule_PlayerTurnBegin);  // Because the effect is removed at Begin turn, we add 1 to duration.
+	PanickedEffect.SetDisplayInfo(ePerkBuff_Penalty, class'X2StatusEffects'.default.PanickedFriendlyName, class'X2StatusEffects'.default.PanickedFriendlyDesc, "img:///UILibrary_PerkIcons.UIPerk_panic");
+	PanickedEffect.AddPersistentStatChange(eStat_Offense, class'X2StatusEffects'.default.PANICKED_AIM_ADJUST);
+	PanickedEffect.EffectHierarchyValue = class'X2StatusEffects'.default.PANICKED_HIERARCHY_VALUE;
+	PanickedEffect.VisualizationFn = class'X2StatusEffects'.static.PanickedVisualization;
+	PanickedEffect.EffectTickedVisualizationFn = class'X2StatusEffects'.static.PanickedVisualizationTicked;
+	PanickedEffect.EffectRemovedVisualizationFn = class'X2StatusEffects'.static.PanickedVisualizationRemoved;
+	PanickedEffect.bRemoveWhenTargetDies = true;
+	PanickedEffect.DelayVisualizationSec = DelayVisualizationSec;
+
+	return PanickedEffect;
+}
+
+DefaultProperties
+{
+	ForceDrainEventName="ForceDrainTriggered"
+	ForceDrainUnitValue="ForceDrainAmount"
 }

@@ -14,6 +14,7 @@ function Init(const out VisualizationTrack InTrack)
 	super.Init(InTrack);
 
 	TargetUnitPawn = TargetUnit.GetPawn();
+
 	SourceToTarget = TargetUnitPawn.Location - UnitPawn.Location;
 }
 
@@ -68,7 +69,6 @@ Begin:
 		Sleep(TimeUntilRagdoll);
 		//TargetUnitPawn.StartRagDoll();
 	}
-
 	//FinishAnim(StopUnitSequence);
 
 
