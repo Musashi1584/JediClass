@@ -30,18 +30,29 @@ simulated function AddX2ActionsForVisualization(XComGameState VisualizeGameState
 {
 	local X2Action_PlaySoundAndFlyOver SoundAndFlyOver;
 	local XComGameStateContext_Ability  Context;
+	local XComGameState_Unit UnitState;
+	local X2Action_CameraLookAt LookAtAction;
+
+	super.AddX2ActionsForVisualization(VisualizeGameState, BuildTrack, EffectApplyResult);
+	UnitState = XComGameState_Unit(BuildTrack.StateObject_NewState);
 
 	Context = XComGameStateContext_Ability(VisualizeGameState.GetContext());
 
-	if(Context.IsResultContextMiss() && EffectApplyResult != 'AA_Success')
-	{
-		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTrack(BuildTrack, Context));
-		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "Resisted Mind Trick", '', eColor_Bad);
-	}
-	else if(Context.IsResultContextHit() && EffectApplyResult == 'AA_Success')
+	if(Context.IsResultContextHit() && EffectApplyResult == 'AA_Success')
 	{
 		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTrack(BuildTrack, Context));
 		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "Mind Trick", '', eColor_Good);
 	}
+	else
+	{
+		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTrack(BuildTrack, Context));
+		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "Resisted Mind Trick", '', eColor_Bad);
+	}
+
+	LookAtAction = X2Action_CameraLookAt(class'X2Action_CameraLookAt'.static.AddToVisualizationTrack(BuildTrack, VisualizeGameState.GetContext()));
+	LookAtAction.UseTether = false;
+	LookAtAction.LookAtObject = UnitState;
+	LookAtAction.BlockUntilActorOnScreen = true;
+
 }
 

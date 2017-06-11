@@ -8,7 +8,9 @@
 //  Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
 //---------------------------------------------------------------------------------------
 
-class X2DownloadableContentInfo_JediClass extends X2DownloadableContentInfo;
+class X2DownloadableContentInfo_JediClass extends X2DownloadableContentInfo config (JediClass);
+
+var config array<Name> IgnoreAbilitiesForForceSpeed;
 
 /// <summary>
 /// This method is run if the player loads a saved game that was created prior to this DLC / Mod being installed, and allows the 
@@ -96,6 +98,11 @@ static function OnPostAbilityTemplatesCreated()
 	AbilityMgr.GetTemplateNames(TemplateNames);
 	foreach TemplateNames(TemplateName)
 	{
+		if (default.IgnoreAbilitiesForForceSpeed.Find(TemplateName) != INDEX_NONE)
+		{
+			continue;
+		}
+
 		AbilityMgr.FindAbilityTemplateAllDifficulties(TemplateName, AbilityTemplates);
 		foreach AbilityTemplates(AbilityTemplate)
 		{
