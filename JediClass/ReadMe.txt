@@ -85,7 +85,7 @@ Initiate: Force Jump, Lightsaber Slash, Leap Strike, Force Speed
 	[*]Force Heal (Heal allies or self with the force. Also removes negative status effects and revives bleeding out squadmates.)
 	[*]Bladestorm (Like vanilla)
 	[*]Force Drain (Drain the life of targets around you to heal yourself. Can also target civilians and squad mates. This shifts your force alignment to the dark side.)
-	[*]Lightsaber Reflect (Reflect the first incoming shot with your lightsaber to your nearest enemy. Replaces Lightsaber Deflect if present.)
+	[*]Lightsaber Reflect (Reflect the first incoming shot with your lightsaber to your nearest enemy. Replaces Lightsaber Deflect if present but grants a second reflect when the soldier has both perks.)
 	[*]Energy Absorption (You are skilled at absorbing incoming energy with the force. You are granted 5 energy shield points.)
 	[*]Force Choke (Telekintec strangle the victim with this dark force power from afar. Can also target civilians and squad mates. This shifts your force alignment to the dark side.)
 	[*]Force Protection (A power only achieved by high-rank Jedi, Force Protection made the bearer invulnerable to a wide range of attacks. The Jedi is immune to fire, poison, acid, and explosive damage.)
@@ -112,6 +112,19 @@ Luke: Vader... Is the dark side stronger?
 Yoda: No, no, no. Quicker, easier, more seductive.
 [/i]
 
+[h1]FAQ[/h1]
+
+[b]How can i use "Commanders Choice" or train Jedi in the GTS?[/b]
+In {Drive}\Program Files (x86)\Steam\steamapps/workshop/content/268500/944207594/config/XComClassData.ini change NumInForcedDeck to
+[code]
++NumInForcedDeck=1
+[/code]
+[b]How can i have a regular rookie distribution for the Jedi?[/b]
+In XComClassData.ini change NumInDeck to
+[code]
++NumInDeck=4
+[/code]
+
 [h1]Credits[/h1]
 
 [i]"You do have your moments. Not many, but you have them."[/i]
@@ -126,7 +139,3 @@ Yoda: No, no, no. Quicker, easier, more seductive.
 	[*]LeaderEnemyBoss - Ragdoll Expert and Force Push Code Guide
 	[*]Pavonis Interactive - Fleche code
 [/list]
-
-Donations
-Please feel in no way obliged to donate anything. Also note any donation doesnt entitle you to demand any feature/bugfix/whatever. See it as a tip if you really like my work.
-[url=https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=5PPVEBYPKGKBN]donate link[/url]

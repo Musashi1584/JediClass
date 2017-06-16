@@ -1720,6 +1720,8 @@ static function X2AbilityTemplate LeapStrike()
 	//
 	Template.SourceMissSpeech = 'SwordMiss';
 
+	Template.CustomFireKillAnim = 'MV_MeleeKill';
+
 	Template.ModifyNewContextFn = Teleport_ModifyActivatedAbilityContext;
 	Template.BuildNewGameStateFn = Teleport_BuildGameState;
 	Template.BuildVisualizationFn = Teleport_BuildVisualization;
@@ -1741,6 +1743,7 @@ static simulated function Teleport_ModifyActivatedAbilityContext(XComGameStateCo
 	local vector NewLocation;
 	local TTile NewTileLocation;
 	local array<TTile> PathTiles;
+	local XComPlayerController PC;
 
 	History = `XCOMHISTORY;
 	World = `XWORLD;
@@ -1761,24 +1764,17 @@ static simulated function Teleport_ModifyActivatedAbilityContext(XComGameStateCo
 	NextPoint.PathTileIndex = 0;
 	InputData.MovementData.AddItem(NextPoint);
 
-	`PRES.GetTacticalHUD().GetTargetingMethod().GetPreAbilityPath(PathTiles);
-	//`LOG("Teleport_ModifyActivatedAbilityContext" @ PathTiles.Length,, 'KatanaMod');
-	if (PathTiles.Length > 0)
+	if(`PRES.GetTacticalHUD().GetTargetingMethod().GetPreAbilityPath(PathTiles))
 	{
 		NewTileLocation = PathTiles[PathTiles.Length - 1];
 		NewLocation = World.GetPositionFromTileCoordinates(NewTileLocation);
 	}
 	else
 	{
-		// Second posiiton is the cursor position
-		`assert(AbilityContext.InputContext.TargetLocations.Length == 1);
-		NewLocation = AbilityContext.InputContext.TargetLocations[0];
-		NewTileLocation = World.GetTileCoordinatesFromPosition(NewLocation);
+		NewTileLocation = XComTacticalController(`PRES.GetTacticalHUD().PC).m_kPathingPawn.LastDestinationTile;
 		NewLocation = World.GetPositionFromTileCoordinates(NewTileLocation);
-
-		//NewTileLocation = AbilityContext.InputContext.MovementPaths[0].MovementTiles[AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length -1];
-		//NewLocation = World.GetPositionFromTileCoordinates(NewTileLocation);
 	}
+
 	NextPoint = EmptyPoint;
 	NextPoint.Position = NewLocation;
 	NextPoint.Traversal = eTraversal_Landing;

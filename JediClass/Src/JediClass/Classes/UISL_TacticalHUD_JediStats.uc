@@ -42,13 +42,19 @@ static function OnActiveUnitChanged()
 
 	if (UnitState.IsUnitAffectedByEffectName('ForceSpeed'))
 	{
-		`LOG("UISL_TacticalHUD_JediStats" @ class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier @ "active ForceSpeed on" @ UnitState.GetFullName(),, 'JediClass');
-		class'WorldInfo'.static.GetWorldInfo().Game.SetGameSpeed(class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier);
+		if (class'WorldInfo'.static.GetWorldInfo().Game.GameSpeed != class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier)
+		{
+			class'WorldInfo'.static.GetWorldInfo().Game.SetGameSpeed(class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier);
+			`LOG("UISL_TacticalHUD_JediStats" @ class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier @ "active ForceSpeed on" @ UnitState.GetFullName(),, 'JediClass');
+		}
 	}
 	else
 	{
-		`LOG("UISL_TacticalHUD_JediStats SetGameSpeed 1" @ UnitState.GetFullName(),, 'JediClass');
-		class'WorldInfo'.static.GetWorldInfo().Game.SetGameSpeed(1);
+		if (class'WorldInfo'.static.GetWorldInfo().Game.GameSpeed != 1.0f)
+		{
+			class'WorldInfo'.static.GetWorldInfo().Game.SetGameSpeed(1.0f);
+			`LOG("UISL_TacticalHUD_JediStats SetGameSpeed 1" @ UnitState.GetFullName(),, 'JediClass');
+		}
 	}
 }
 
@@ -61,10 +67,21 @@ function EventListenerReturn OnAbilityActivated(Object EventData, Object EventSo
 	UnitState = XComGameState_Unit(AbilityContext.AssociatedState.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
 	if (UnitState.IsUnitAffectedByEffectName('ForceSpeed'))
 	{
-		`LOG("UISL_TacticalHUD_JediStats OnAbilityActivated" @ class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier @ "active ForceSpeed on" @ UnitState.GetFullName(),, 'JediClass');
-		class'WorldInfo'.static.GetWorldInfo().Game.SetGameSpeed(class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier);
+		if (class'WorldInfo'.static.GetWorldInfo().Game.GameSpeed != class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier)
+		{
+			class'WorldInfo'.static.GetWorldInfo().Game.SetGameSpeed(class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier);
+			`LOG("UISL_TacticalHUD_JediStats OnAbilityActivated" @ class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier @ "active ForceSpeed on" @ UnitState.GetFullName(),, 'JediClass');
+		}
 	}
-
+	else
+	{
+		if (class'WorldInfo'.static.GetWorldInfo().Game.GameSpeed != 1.0f)
+		{
+			class'WorldInfo'.static.GetWorldInfo().Game.SetGameSpeed(1.0f);
+			`LOG("UISL_TacticalHUD_JediStats OnAbilityActivated SetGameSpeed 1" @ UnitState.GetFullName(),, 'JediClass');
+		}
+	}
+	return ELR_NoInterrupt;
 }
 
 function EventListenerReturn OnKillMail(Object EventData, Object EventSource, XComGameState GameState, Name EventID)
