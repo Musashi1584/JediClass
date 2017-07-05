@@ -73,9 +73,6 @@ private function GetTilesEnteredArray(XComGameStateContext_Ability AbilityContex
 	local ActorTraceHitInfo TraceHitInfo;
 	local array<ActorTraceHitInfo> Hits;
 
-	local X2AbilityTemplate AbilityTemplate;
-	local bool bCursorTargetFound;
-
 	WorldData = `XWORLD;
 	History = `XCOMHISTORY;
 
@@ -83,8 +80,6 @@ private function GetTilesEnteredArray(XComGameStateContext_Ability AbilityContex
 
 	if(AbilityContext != none)
 	{
-		AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager().FindAbilityTemplate(AbilityContext.InputContext.AbilityTemplateName);
-
 		TargetUnit = XComGameState_Unit(kNewTargetState);
 		TargetUnit.GetKeystoneVisibilityLocation(TempTile);
 		TargetLocation = WorldData.GetPositionFromTileCoordinates(TempTile);
@@ -160,9 +155,6 @@ simulated function ApplyEffectToWorld(const out EffectAppliedData ApplyEffectPar
 	local TTile HitTile;
 	local array<TTile> TilesEntered;
 	local Vector AttackDirection;
-	local XComGameState_Item SourceItemStateObject;
-	local XComGameStateHistory History;
-	local X2WeaponTemplate WeaponTemplate;
 	local array<StateObjectReference> Targets;
 	local StateObjectReference CurrentTarget;
 	local XComGameState_Unit TargetUnit;
@@ -214,8 +206,6 @@ simulated function ApplyEffectToWorld(const out EffectAppliedData ApplyEffectPar
 
 		foreach Targets(CurrentTarget)
 		{
-			History = `XCOMHISTORY;
-			
 			KnockbackDamage = default.DefaultDamage;
 			KnockbackRadius = default.DefaultRadius;
 

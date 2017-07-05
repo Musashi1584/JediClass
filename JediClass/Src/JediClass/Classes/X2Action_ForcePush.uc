@@ -19,7 +19,6 @@ var private XComUnitPawn SourceUnitPawn;
 
 function Init(const out VisualizationTrack InTrack)
 {
-	local XComGameState_Ability AbilityState;
 	local Actor SourceVisualizer;
 	local XGUnit SourceUnit;
 

@@ -2,11 +2,11 @@
 
 [i]"For over a thousand generations, the Jedi were the guardians of peace and justice in the Old Republic — before the dark times. Before the Empire."[/i]
 
-Vanilla and Long War 2 compatible. 
+Vanilla and Long War 2 / Long War Perk Pack compatible. 
 
-[b]IMPORTANT Accidentally i chose the same mod id as the old jedi class mod by Marweezy. This means you can only run either this or the old mod not both at the same time.[/b]
+[b]IMPORTANT 1 For vanilla (Not LW2 or LWPP user) use my [url=steamcommunity.com/sharedfiles/filedetails/?id=923981897]LW Promotion Screen For Vanilla[/url] which allows you to display the third perk column and the grand master rank.[/b]
 
-For vanilla use my [url=steamcommunity.com/sharedfiles/filedetails/?id=923981897]LW Promotion Screen For Vanilla[/url] to display all perk ranks and columns.
+[b]IMPORTANT 2 Accidentally i chose the same mod id as the old jedi class mod by Marweezy. This means you can only run either this or the old mod not both at the same time.[/b]
 
 Jedi can't be trained in the Guerilla Training School and they are rare to get on rookie promotion.
 
@@ -16,88 +16,9 @@ Jedi can't be trained in the Guerilla Training School and they are rare to get o
 
 A preview of the force powers can be seen here https://youtu.be/TXoFliFNDNM
 
-Initiate: Force Jump, Lightsaber Slash, Leap Strike, Force Speed
-
-[table]
-	[tr]
-        [th]Rank[/th]
-        [th]Light[/th]
-		[th]Grey[/th]
-		[th]Dark[/th]
-    [/tr]
-	[tr]
-        [td]Padawan[/td]
-        [td]Lightsaber Deflect[/td]
-		[td]Lightsaber Toss[/td]
-        [td]Force Lightning[/td]
-    [/tr]
-	[tr]
-        [td]Knight[/td]
-        [td]Force Push[/td]
-		[td]Blademaster[/td]
-        [td]Phantom[/td]
-    [/tr]
-	[tr]
-        [td]Guardian[/td]
-        [td]Force Heal[/td]
-		[td]Bladestorm[/td]
-        [td]Force Drain[/td]
-    [/tr]
-	[tr]
-        [td]Sentinel[/td]
-        [td]Lightsaber Reflect[/td]
-		[td]Energy Absorbtion[/td]
-        [td]Force Choke[/td]
-    [/tr]
-	[tr]
-        [td]Consular[/td]
-        [td]Force Protection[/td]
-		[td]Force Sense[/td]
-        [td]Mind Control[/td]
-    [/tr]
-	[tr]
-        [td]Master[/td]
-        [td]Force Wind[/td]
-		[td]Jedi Mind Tricks[/td]
-        [td]Force Fear[/td]
-    [/tr]
-	[tr]
-        [td]Grand Master[/td]
-        [td]Battle Meditation[/td]
-		[td]Lightsaber Telekinesis[/td]
-        [td]Force Chain Lightning[/td]
-    [/tr]
-[/table]
+The full list of the perks with description can be found here [url=steamcommunity.com/workshop/filedetails/discussion/944207594/2592234299557734947/]Force Powers[/url]
 
 [i]"Don't be too proud of this technological terror you've constructed. The ability to destroy a planet is insignificant next to the power of the Force."[/i]
-
-[list]
-	[*]Force Jump (The Jedi can jump incredible heights with the help of the force)
-	[*]Lightsaber Slash (Attack an adjacent target with your Lightsaber. Uses one action.)
-	[*]Leap Strike (The Jedi uses the force to leap to the target and immediately attack with the lightsaber without triggering reaction fire.)
-	[*]Force Speed (Take three actions this turn, and no action is turn-ending.)
-	[*]Lightsaber Deflect (Deflect the first incoming shot with your lightsaber)
-	[*]Lightsaber Toss (Throw the lightsaber at an enemy and return it with the force)
-	[*]Force Lightning (Channel you hatred and anger and realease a devastating force lightning. Can also target civilians and squad mates. This shifts your force alignment to the dark side.)
-	[*]Force Push (Use the force to push a target away from you. This basic force power will always hit, can cancel overwatch, has a chance to stun the target and applies minimal damage.)
-	[*]Blademaster (Like vanilla or LW2)
-	[*]Phantom (Like vanilla)
-	[*]Force Heal (Heal allies or self with the force. Also removes negative status effects and revives bleeding out squadmates.)
-	[*]Bladestorm (Like vanilla)
-	[*]Force Drain (Drain the life of targets around you to heal yourself. Can also target civilians and squad mates. This shifts your force alignment to the dark side.)
-	[*]Lightsaber Reflect (Reflect the first incoming shot with your lightsaber to your nearest enemy. Replaces Lightsaber Deflect if present but grants a second reflect when the soldier has both perks.)
-	[*]Energy Absorption (You are skilled at absorbing incoming energy with the force. You are granted 5 energy shield points.)
-	[*]Force Choke (Telekintec strangle the victim with this dark force power from afar. Can also target civilians and squad mates. This shifts your force alignment to the dark side.)
-	[*]Force Protection (A power only achieved by high-rank Jedi, Force Protection made the bearer invulnerable to a wide range of attacks. The Jedi is immune to fire, poison, acid, and explosive damage.)
-	[*]Force Sense (Sense nearby units even without line of sight. Force sense will reveal concealed and burrowed enemies.)
-	[*]Mind Control (Gain complete control over your friends and enemies. Can also target civilians and squad mates. This shifts your force alignment to the dark side.)
-	[*]Force Wind (Use the force to push multiple targets away from you and cause environment devastation. This advanced force power will always hit, can cancel overwatch, has a chance to stun the target and applies some damage.)
-	[*]Mind Tricks (Affect the mind of the weak reducing the move, sight and detection range to zero. This force power does not break concealment.)
-	[*]Force Fear (The wielder strikes directly at the deepest parts of the target's mind, causing an uncontrollable shaking fear that wreak havoc with the target's capabilities. This power is so subtle that its use does not break concealment. Can also target civilians and squad mates. This shifts your force alignment to the dark side.)
-	[*]Battle Meditation (When in the state of battle meditation the jedi is capable of of deflecting or reflecting every incoming shot.)
-	[*]Lightsaber Telekinesis (Throw the lightsaber at all visible enemies and return it with the force)
-	[*]Force Chain Lightning (Channel you hatred and anger and realease a devastating force lightning that hit multiple enemies. Can also target civilians and squad mates. This shifts your force alignment to the dark side.)
-[/list]
 
 [h1]Force Alignment[/h1]
 
@@ -114,8 +35,18 @@ Yoda: No, no, no. Quicker, easier, more seductive.
 
 [h1]FAQ[/h1]
 
+[b]I don't see the dark side perk column / I have only two perk choice per rank[/b]
+Subscribe to [url=steamcommunity.com/sharedfiles/filedetails/?id=923981897]LW Promotion Screen For Vanilla[/url]
+
+[b]My Lightsabers doesn't glow[/b]
+Possible problem #1: your graphical settings are too low
+Solution: Try to turn on FXAA, Bloom, and Medium Textures
+
+Possible problem #2: you are missing the shader cache file.
+Solution: Try to unsub, start the game once, exit the game and resub again.
+
 [b]How can i use "Commanders Choice" or train Jedi in the GTS?[/b]
-In {Drive}\Program Files (x86)\Steam\steamapps/workshop/content/268500/944207594/config/XComClassData.ini change NumInForcedDeck to
+In {DriveLetter}:\Program Files (x86)\Steam\SteamApps\workshop\content\268500\944207594\config\XComClassData.ini change NumInForcedDeck to
 [code]
 +NumInForcedDeck=1
 [/code]

@@ -1,4 +1,4 @@
-class X2Effect_FlecheBonusDamage extends X2Effect_Persistent config(VoidStrike);
+class X2Effect_FlecheBonusDamage extends X2Effect_Persistent config(JediClass);
 
 var config float BonusDmgPerTile;
 var array<name> AbilityNames;

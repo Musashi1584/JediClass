@@ -29,9 +29,3 @@ function bool ChangeHitResultForAttacker(XComGameState_Unit Attacker, XComGameSt
 
 	return false;
 }
-
-
-defaultproperties
-{
-	iHitBonus = 50
-}

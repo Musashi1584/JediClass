@@ -513,7 +513,6 @@ static function X2AbilityTemplate BattleMeditation()
 	local X2AbilityTemplate						Template;
 	local X2AbilityCooldown						Cooldown;
 	local X2Effect_Persistent					BattleMeditationEffect;
-	local X2Condition_AbilityProperty			AbilityCondition;
 	local X2AbilityCost_ActionPoints			ActionPointCost;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'BattleMeditation');
@@ -565,10 +564,8 @@ static function X2AbilityTemplate ForceFear()
 {
 	local X2AbilityTemplate					Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
-	local X2AbilityToHitCalc_StandardAim	ToHitCalc;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
 	local array<name>						SkipExclusions;
-	local X2Effect_Panicked					PanicEffect;
 	local X2AbilityCooldown					Cooldown;
 	local X2AbilityTarget_Cursor			CursorTarget;
 	local X2AbilityMultiTarget_Cone			ConeMultiTarget;
@@ -660,7 +657,6 @@ static function X2AbilityTemplate ForceSpeed()
 	local X2Effect_GrantActionPoints			PointEffect;
 	local X2Effect_Persistent					ActionPointPersistEffect;
 	local X2Effect_ForceSpeed					ForceSpeedEffect;
-	local X2Condition_AbilityProperty			AbilityCondition;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceSpeed');
 
@@ -800,13 +796,10 @@ static function X2AbilityTemplate ForceHeal()
 	local X2AbilityCost_Charges				ChargeCost;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
 	local X2Condition_UnitStatCheck			UnitStatCheckCondition;
-	local X2Condition_UnitEffects			UnitEffectsCondition;
 	local X2Effect_ApplyMedikitHeal			MedikitHeal;
 	local X2AbilityCharges					ForceHealCharges;
 	local X2Effect_Revive					ReviveEffect;
-	local X2Effect_Persistent				UnconciousEffect;
 	local array<name>						SkipExclusions;
-	local X2Effect_RemoveEffects			RemoveEffects;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceHeal');
 
@@ -908,7 +901,6 @@ static function X2AbilityTemplate MindTricks()
 {
 	local X2AbilityTemplate					Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
-	local X2AbilityToHitCalc_StandardAim	ToHitCalc;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
 	local array<name>						SkipExclusions;
 	local X2Effect_MindTricks				MindTricksEffect;
@@ -998,7 +990,6 @@ static function X2AbilityTemplate MindTricks()
 static function X2AbilityTemplate ForceJump()
 {
 	local X2AbilityTemplate						Template;
-	local X2AbilityTargetStyle					TargetStyle;
 	local X2AbilityTrigger						Trigger;
 	local X2Effect_PersistentTraversalChange	JumpEffect;
 	
@@ -1010,7 +1001,7 @@ static function X2AbilityTemplate ForceJump()
 	Template.bIsPassive = true;
 
 	Template.AbilityToHitCalc = default.DeadEye;
-	TargetStyle = new class'X2AbilityTarget_Self';
+	Template.AbilityTargetStyle = default.SelfTarget;
 
 	Trigger = new class'X2AbilityTrigger_UnitPostBeginPlay';
 	Template.AbilityTriggers.AddItem(Trigger);
@@ -1036,7 +1027,6 @@ static function X2AbilityTemplate ForceWind()
 {
 	local X2AbilityTemplate					Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
-	local X2AbilityToHitCalc_StandardAim	ToHitCalc;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
 	local X2Effect_ApplyWeaponDamage		DamageEffect;
 	local array<name>						SkipExclusions;
@@ -1143,7 +1133,6 @@ static function X2AbilityTemplate ForcePush()
 {
 	local X2AbilityTemplate					Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
-	local X2AbilityToHitCalc_StandardAim	ToHitCalc;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
 	local X2Effect_ApplyWeaponDamage		DamageEffect;
 	local array<name>						SkipExclusions;
@@ -1249,7 +1238,6 @@ static function X2AbilityTemplate ForceChoke()
 	//local X2AbilityCooldown                 Cooldown;
 	local X2AbilityTemplate                 Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
-	local X2AbilityToHitCalc_StandardAim    ToHitCalc;
 	local X2AbilityCost_ActionPoints        ActionPointCost;
 	local X2Effect_ApplyWeaponDamage		DamageEffect;
 	local array<name>                       SkipExclusions;
@@ -1337,12 +1325,10 @@ simulated function ForceChoke_BuildVisualization(XComGameState VisualizeGameStat
 	local VisualizationTrack					EmptyTrack;
 	local VisualizationTrack					BuildTrack;
 	local X2Action_PlaySoundAndFlyOver			SoundAndFlyOver;
-	local X2Action_ApplyWeaponDamageToUnit		WeaponDamageAction;
 	local XComGameState_Ability					AbilityState;
 	local X2AbilityTemplate						AbilityTemplate;
 	local X2VisualizerInterface					TargetVisualizerInterface;
 	local X2Action_PlayAnimation				PlayAnimationAction;
-	local X2Action_MoveTurn						MoveTurnAction;
 	local int i;
 
 	History = `XCOMHISTORY;
@@ -1437,7 +1423,6 @@ static function X2AbilityTemplate ForceLightning()
 	local X2AbilityCooldown                 Cooldown;
 	local X2AbilityTemplate                 Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
-	local X2AbilityToHitCalc_StandardAim    ToHitCalc;
 	local X2AbilityCost_ActionPoints        ActionPointCost;
 	local X2Effect_ApplyWeaponDamage		DamageEffect;
 	local array<name>                       SkipExclusions;
@@ -1528,7 +1513,6 @@ static function X2AbilityTemplate ForceChainLightning()
 	local X2AbilityCooldown						Cooldown;
 	local X2AbilityTemplate						Template;
 	local X2Condition_UnitProperty				UnitPropertyCondition;
-	local X2AbilityToHitCalc_StandardAim		ToHitCalc;
 	local X2AbilityCost_ActionPoints			ActionPointCost;
 	local X2Effect_ApplyWeaponDamage			DamageEffect;
 	local X2AbilityMultiTarget_AllAllies		MultiTargetStyle;
@@ -1743,7 +1727,6 @@ static simulated function Teleport_ModifyActivatedAbilityContext(XComGameStateCo
 	local vector NewLocation;
 	local TTile NewTileLocation;
 	local array<TTile> PathTiles;
-	local XComPlayerController PC;
 
 	History = `XCOMHISTORY;
 	World = `XWORLD;
@@ -1864,8 +1847,6 @@ function Teleport_BuildVisualization(XComGameState VisualizeGameState, out array
 	local XComGameState_Ability					AbilityState;
 	local bool									bInterruptPath;
 	local X2Action_ExitCover					ExitCoverAction;
-	local XComGameState_Unit					SourceUnitState;
-	local UnitValue								SilentMelee;
 			
 	History = `XCOMHISTORY;
 	Context = XComGameStateContext_Ability(VisualizeGameState.GetContext());
@@ -1873,7 +1854,6 @@ function Teleport_BuildVisualization(XComGameState VisualizeGameState, out array
 	AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityContext.AbilityRef.ObjectID));
 	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager().FindAbilityTemplate(AbilityContext.AbilityTemplateName);
 	ShootingUnitRef = Context.InputContext.SourceObject;
-	SourceUnitState = XComGameState_Unit(History.GetGameStateForObjectID(ShootingUnitRef.ObjectID));
 	bInterruptPath = false;
 
 	//Configure the visualization track for the shooter, part I. We split this into two parts since
@@ -2351,14 +2331,11 @@ static function X2Effect_PersistentStatChange EnergyShieldEffect(int ShieldHPAmo
 static function X2Effect_Persistent DisorientEffect()
 {
 	local X2Effect_PersistentStatChange DisorientedEffect;
-	local X2Condition_AbilityProperty   AbilityCondition;
 	local X2Condition_UnitProperty Condition_UnitProperty;
 
 	DisorientedEffect = class'X2StatusEffects'.static.CreateDisorientedStatusEffect();
 	DisorientedEffect.bApplyOnHit = true;
 	DisorientedEffect.bApplyOnMiss = false;
-
-	AbilityCondition = new class'X2Condition_AbilityProperty';
 
 	Condition_UnitProperty = new class'X2Condition_UnitProperty';
 	Condition_UnitProperty.ExcludeOrganic = false;

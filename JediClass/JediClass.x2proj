@@ -47,6 +47,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Content\Perk_Force_Lightning_Assets.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="ForcePowers.txt">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Localization\JediClass.int">
       <SubType>Content</SubType>
     </Content>
