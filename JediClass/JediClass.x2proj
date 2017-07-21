@@ -32,6 +32,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Config\XComJediClass.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\Holocrons.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\JediClassAbilities.upk">
       <SubType>Content</SubType>
     </Content>
@@ -89,9 +92,6 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\JediClass\Classes\X2Effect_GrantLightSidePoint.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\JediClass\Classes\X2Effect_LeapStrikeReaper.uc">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Src\JediClass\Classes\X2Effect_MindTricks.uc">
       <SubType>Content</SubType>
     </Content>
@@ -124,6 +124,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\JediClass\Classes\X2Effect_Revive.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClass\Classes\X2Item_Holocrons.uc">
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>

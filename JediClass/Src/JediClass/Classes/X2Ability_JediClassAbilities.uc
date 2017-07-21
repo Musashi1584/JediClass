@@ -1640,7 +1640,6 @@ static function X2AbilityTemplate LeapStrike()
 	local array<name>										SkipExclusions;
 	local X2AbilityCost_ActionPoints						ActionPointCost;
 	local X2Effect_Persistent								ShadowStepEffect;
-	local X2Effect_LeapStrikeReaper							LeapStrikeReaperEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'LeapStrike');
 
@@ -1685,12 +1684,6 @@ static function X2AbilityTemplate LeapStrike()
 	ShadowStepEffect.DuplicateResponse = eDupe_Ignore;
 	ShadowStepEffect.BuildPersistentEffect(1, false, false);
 	Template.AddShooterEffect(ShadowStepEffect);
-
-	// One additional action point for reaper
-	LeapStrikeReaperEffect = new class'X2Effect_LeapStrikeReaper';
-	LeapStrikeReaperEffect.EffectName = 'VoidReaper';
-	LeapStrikeReaperEffect.BuildPersistentEffect(1, false, false);
-	Template.AddShooterEffect(LeapStrikeReaperEffect);
 
 	// Damage Effect
 	//

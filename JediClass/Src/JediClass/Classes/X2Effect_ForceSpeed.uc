@@ -8,8 +8,8 @@ simulated protected function OnEffectAdded(const out EffectAppliedData ApplyEffe
 	//class'WorldInfo'.static.GetWorldInfo().Game.SetGameSpeed(default.ForceSpeedGameSpeedMutliplier);
 
 	UnitState = XComGameState_Unit(kNewTargetState);
-	XComHumanPawn(XGUnit(UnitState.GetVisualizer()).GetPawn()).Mesh.GlobalAnimRateScale = 2;
-
+	XComHumanPawn(XGUnit(UnitState.GetVisualizer()).GetPawn()).Mesh.GlobalAnimRateScale = default.ForceSpeedGameSpeedMutliplier;
+	XComHumanPawn(XGUnit(UnitState.GetVisualizer()).GetPawn()).Mesh.bPerBoneMotionBlur = true;
 	`LOG("X2Effect_ForceSpeed.OnEffectAdded" @ class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier @ "active ForceSpeed on" @ XComGameState_Unit(kNewTargetState).GetFullName(),, 'JediClass');
 }
 
@@ -20,6 +20,7 @@ simulated function OnEffectRemoved(const out EffectAppliedData ApplyEffectParame
 	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(ApplyEffectParameters.SourceStateObjectRef.ObjectID));
 	`LOG("X2Effect_ForceSpeed.OnEffectRemoved SetGameSpeed 1",, 'JediClass');
 	XComHumanPawn(XGUnit(UnitState.GetVisualizer()).GetPawn()).Mesh.GlobalAnimRateScale = 1;
+	XComHumanPawn(XGUnit(UnitState.GetVisualizer()).GetPawn()).Mesh.bPerBoneMotionBlur = false;
 }
 
 DefaultProperties
