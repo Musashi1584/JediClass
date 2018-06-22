@@ -51,6 +51,10 @@ var config WeaponDamageValue FORCE_PUSH_BASEDAMAGE;
 var config WeaponDamageValue FORCE_WIND_BASEDAMAGE;
 var config WeaponDamageValue FORCE_DRAIN_BASEDAMAGE;
 
+var config int LIGHTSABER_MULTI_TOSS_COOLDOWN;
+var config int LIGHTSABER_MULTI_TOSS_MAX_TARGETS;
+var config float LIGHTSABER_MULTI_TOSS_NEXT_TARGET_MAXLENGTH;
+
 var privatewrite name ForceDrainEventName;
 var privatewrite name ForceDrainUnitValue;
 
@@ -76,6 +80,13 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(ForceLightning());
 	AbilityTemplates.AddItem(ForceChainLightning());
 	AbilityTemplates.AddItem(LeapStrike());
+
+	// Pulled from PrimaryMeleeWeapons
+	AbilityTemplates.AddItem(LightsaberTelekinesis());
+	AbilityTemplates.AddItem(LightsaberToss());
+	AbilityTemplates.AddItem(LightsaberDeflect());
+	AbilityTemplates.AddItem(LightsaberReflect());
+	AbilityTemplates.AddItem(LightsaberReflectShot());
 
 	// Helper abilities, should not be assigned directly
 	AbilityTemplates.AddItem(LeapStrikeFleche());
@@ -1501,10 +1512,16 @@ static function X2AbilityTemplate ForceLightning()
 	Template.AbilityTargetConditions.AddItem(default.GameplayVisibilityCondition);
 	// Can't target dead; Can't target friendlies
 	UnitPropertyCondition = new class'X2Condition_UnitProperty';
-	UnitPropertyCondition.ExcludeRobotic = false;
-	UnitPropertyCondition.ExcludeOrganic = false;
+	UnitPropertyCondition.ExcludeAlive = false;
 	UnitPropertyCondition.ExcludeDead = true;
 	UnitPropertyCondition.ExcludeFriendlyToSource = false;
+	UnitPropertyCondition.ExcludeHostileToSource = false;
+	UnitPropertyCondition.TreatMindControlledSquadmateAsHostile = true;
+	UnitPropertyCondition.FailOnNonUnits = true;
+	UnitPropertyCondition.ExcludeCivilian = false;
+	UnitPropertyCondition.ExcludeCosmetic = true;
+	UnitPropertyCondition.ExcludeRobotic = false;
+	UnitPropertyCondition.ExcludeOrganic = false;
 	UnitPropertyCondition.RequireWithinRange = true;
 	Template.AbilityTargetConditions.AddItem(UnitPropertyCondition);
 
@@ -1525,7 +1542,6 @@ static function X2AbilityTemplate ForceLightning()
 	DamageEffect.EffectDamageValue = default.FORCE_LIGHTNING_BASEDAMAGE;
 	Template.AddTargetEffect(DamageEffect);
 
-	Template.AssociatedPassives.AddItem('Electroshock');
 	Template.AddTargetEffect(StunEffect(default.FORCE_LIGHTNING_STUNNED_ACTIONS, default.FORCE_LIGHTNING_STUN_CHANCE, false));
 
 	// Hit Calculation (Different weapons now have different calculations for range)
@@ -1541,7 +1557,7 @@ static function X2AbilityTemplate ForceLightning()
 	Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
 	Template.bOverrideAim = true;
 	Template.bUseSourceLocationZToAim = true;
-	Template.CinescriptCameraType = "Psionic_FireAtLocation";
+	Template.CinescriptCameraType = "Psionic_FireAtUnit";
 
 	// MAKE IT LIVE!
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
@@ -1877,10 +1893,10 @@ function Teleport_BuildVisualization(XComGameState VisualizeGameState/*, out arr
 	local X2Action_MoveTurn						MoveTurnAction;
 	local X2Action_PlaySoundAndFlyOver			SoundAndFlyover;
 	local X2Action_ExitCover					ExitCoverAction;
-	local X2Action_MoveTeleport					TeleportMoveAction;
+	//local X2Action_MoveTeleport					TeleportMoveAction;
 	local X2Action_Delay						MoveDelay;
-	local array<X2Action>						MoveEndNodes;
-	local X2Action_MoveEnd						MoveEnd;
+	//local array<X2Action>						MoveEndNodes;
+	//local X2Action_MoveEnd						MoveEnd;
 	local X2Action_MarkerNamed					JoinActions;
 	local array<X2Action>						LeafNodes;
 	local X2Action_WaitForAnotherAction			WaitForFireAction;
@@ -2425,6 +2441,363 @@ static function X2Effect_Panicked PanickedStatusEffect(int PanickTurns, float De
 	PanickedEffect.EffectAppliedEventName = 'PanickedEffectApplied';
 
 	return PanickedEffect;
+}
+
+static function X2AbilityTemplate LightsaberTelekinesis()
+{
+	local X2AbilityTemplate						Template;
+	local X2AbilityCooldown						Cooldown;
+	local X2AbilityCost_ActionPoints			ActionPointCost;
+	local X2Effect_ApplyWeaponDamage			WeaponDamageEffect;
+	//local array<name>							SkipExclusions;
+	//local X2AbilityCost_Ammo					AmmoCost;
+	local X2AbilityMultiTarget_AllUnits			MultiTargetLightsaber;
+	local X2AbilityToHitCalc_StandardAim		StandardAim;
+	local X2Condition_UnitProperty				UnitPropertyCondition;
+	//local X2AbilityTarget_Cursor				CursorTarget;
+	//local X2AbilityTarget_Single				SingleTarget;
+	local X2Effect_PrimaryTargetGuaranteedHit	PrimaryTargetGuaranteedHitEffect;
+	
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberTelekinesis');
+
+	// Icon Properties
+	Template.IconImage = "img:///LightSaber_CV.UI.UIPerk_TossMulti";
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_MAJOR_PRIORITY;
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.DisplayTargetHitChance = true;
+	Template.AbilitySourceName = 'eAbilitySource_Standard';
+	Template.AbilityConfirmSound = "TacticalUI_ActivateAbility";
+
+	Cooldown = new class'X2AbilityCooldown';
+	Cooldown.iNumTurns = default.LIGHTSABER_MULTI_TOSS_COOLDOWN;
+	Template.AbilityCooldown = Cooldown;
+
+	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
+
+	// Only at single targets that are in range.
+	Template.AbilityTargetStyle = default.SimpleSingleTarget;
+	
+	MultiTargetLightsaber = new class'X2AbilityMultiTarget_AllUnits';
+	Template.AbilityMultiTargetStyle = MultiTargetLightsaber;
+
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = true;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	PrimaryTargetGuaranteedHitEffect = new class'X2Effect_PrimaryTargetGuaranteedHit';
+	PrimaryTargetGuaranteedHitEffect.BuildPersistentEffect(1, false, false, false);
+	PrimaryTargetGuaranteedHitEffect.Ability = 'LightsaberTelekinesis';
+	Template.AddShooterEffect(PrimaryTargetGuaranteedHitEffect);
+	
+	Template.AbilityTargetConditions.AddItem(default.GameplayVisibilityCondition);
+
+	UnitPropertyCondition = new class'X2Condition_UnitProperty';
+	UnitPropertyCondition.ExcludeRobotic = false;
+	UnitPropertyCondition.ExcludeOrganic = false;
+	UnitPropertyCondition.ExcludeDead = true;
+	UnitPropertyCondition.ExcludeFriendlyToSource = true;
+	UnitPropertyCondition.RequireWithinRange = true;
+	Template.AbilityTargetConditions.AddItem(UnitPropertyCondition);
+
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+
+	Template.bAllowBonusWeaponEffects = true;
+
+	// Damage Effect
+	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	Template.AddTargetEffect(WeaponDamageEffect);
+	Template.AddMultiTargetEffect(WeaponDamageEffect);
+	
+	StandardAim = new class'X2AbilityToHitCalc_StandardAim';
+	//StandardAim.bIndirectFire = true;
+	//StandardAim.LOW_COVER_BONUS = 0;
+	//StandardAim.HIGH_COVER_BONUS = 0;
+	Template.AbilityToHitCalc = StandardAim;
+	Template.AbilityToHitOwnerOnMissCalc = StandardAim;
+
+	Template.bUsesFiringCamera = true;
+	Template.bHideWeaponDuringFire = true;
+	Template.SkipRenderOfTargetingTemplate = true;
+	//Template.CinescriptCameraType = "Huntman_ThrowAxe";
+	
+	Template.SourceMissSpeech = 'SwordMiss';
+
+	Template.CustomFireAnim = 'FF_LightsaberTossA';
+	Template.CustomFireKillAnim = 'FF_LightsaberTossA';
+	Template.ActionFireClass = class'X2Action_LightsaberToss';
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	//Template.DamagePreviewFn = NormalDamagePreview;
+	return Template;
+}
+
+static function X2AbilityTemplate LightsaberToss()
+{
+	local X2AbilityTemplate                 Template;
+	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
+	local array<name>                       SkipExclusions;
+	//local X2AbilityCost_Ammo                AmmoCost;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberToss');
+
+	// Icon Properties
+	Template.IconImage = "img:///LightSaber_CV.UI.UIPerk_TossSingle";
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_MAJOR_PRIORITY;
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.DisplayTargetHitChance = true;
+	Template.AbilitySourceName = 'eAbilitySource_Standard';
+	Template.AbilityConfirmSound = "TacticalUI_ActivateAbility";
+
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+	
+	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName);
+	Template.AddShooterEffectExclusions(SkipExclusions);
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = true;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+	
+	// Targeting Details
+	// Can only shoot visible enemies
+	Template.AbilityTargetConditions.AddItem(default.GameplayVisibilityCondition);
+	// Can't target dead; Can't target friendlies
+	Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);
+	// Can't shoot while dead
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+
+	// Only at single targets that are in range.
+	Template.AbilityTargetStyle = default.SimpleSingleTarget;
+	Template.bAllowBonusWeaponEffects = true;
+
+	// Damage Effect
+	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	Template.AddTargetEffect(WeaponDamageEffect);
+
+	Template.AbilityToHitCalc = default.SimpleStandardAim;
+	Template.AbilityToHitOwnerOnMissCalc = default.SimpleStandardAim;
+
+	Template.bUsesFiringCamera = true;
+	Template.bHideWeaponDuringFire = true;
+	Template.SkipRenderOfTargetingTemplate = true;
+	Template.TargetingMethod = class'X2TargetingMethod_LightsaberToss';
+	Template.CinescriptCameraType = "Huntman_ThrowAxe";
+	
+	Template.SourceMissSpeech = 'SwordMiss';
+
+	Template.CustomFireAnim = 'FF_LightsaberTossA';
+	Template.CustomFireKillAnim = 'FF_LightsaberTossA';
+	Template.ActionFireClass = class'X2Action_LightsaberToss';
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+
+	return Template;
+}
+
+static function X2AbilityTemplate LightsaberDeflect()
+{
+	local X2AbilityTemplate						Template;
+	local X2Effect_LightsaberDeflect			RedirectEffect;
+
+	Template = PurePassive('LightsaberDeflect', "img:///LightSaber_CV.UI.UIPerk_Reflect", , 'eAbilitySource_Perk');
+	Template.AdditionalAbilities.AddItem('LightsaberDeflectShot');
+	Template.CustomFireAnim = 'HL_Idle';
+
+	RedirectEffect = new class'X2Effect_LightsaberDeflect';
+	RedirectEffect.BuildPersistentEffect(1, true, false);
+	RedirectEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage, true,, Template.AbilitySourceName);
+	Template.AddTargetEffect(RedirectEffect);
+
+	return Template;
+}
+
+static function X2AbilityTemplate LightsaberDeflectShot()
+{
+	local X2AbilityTemplate						Template;
+	local X2AbilityTrigger_EventListener		EventListener;
+	//local X2Effect_ApplyReflectDamage			DamageEffect;
+	
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberDeflectShot');
+
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Offensive;
+	Template.IconImage = "img:///LightSaber_CV.UI.UIPerk_Deflect";
+
+	// Deflect shots should always miss. Only Reflect shots should hit
+	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_LightsaberDeflect';
+	Template.AbilityTargetStyle = default.SimpleSingleTarget;
+
+	EventListener = new class'X2AbilityTrigger_EventListener';
+	EventListener.ListenerData.EventID = 'AbilityActivated';
+	EventListener.ListenerData.Filter = eFilter_None;
+	EventListener.ListenerData.Deferral = ELD_OnStateSubmitted;
+	EventListener.ListenerData.EventFn = class'XComGameState_Ability'.static.TemplarReflectListener;
+	Template.AbilityTriggers.AddItem(EventListener);
+
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	Template.AddShooterEffectExclusions();
+	Template.AbilityTargetConditions.AddItem(default.LivingHostileUnitDisallowMindControlProperty);
+	Template.AbilityTargetConditions.AddItem(default.GameplayVisibilityCondition);
+
+	// Since Deflect shots always miss, they don't need a damage effect. Hopefully this removes flyovers as well.
+	//DamageEffect = new class'X2Effect_ApplyReflectDamage';
+	//DamageEffect.EffectDamageValue.DamageType = 'Psi';
+	//Template.AddTargetEffect(DamageEffect);
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
+	Template.MergeVisualizationFn = LightsaberDeflectShotMergeVisualization;
+	
+	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
+	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
+
+	// The Action will fire off the animation at the right time, so leave the jedi idling until then
+	Template.bFrameEvenWhenUnitIsHidden = true;
+	Template.CustomFireAnim = 'HL_Idle';
+	Template.CustomFireKillAnim = 'HL_Idle';
+	Template.ActionFireClass = class'X2Action_LightsaberDeflect';
+
+	Template.bCrossClassEligible = false;
+
+	return Template;
+}
+
+static function X2AbilityTemplate LightsaberReflect()
+{
+	local X2AbilityTemplate						Template;
+	local X2Effect_LightsaberReflect			RedirectEffect;
+
+	Template = PurePassive('LightsaberReflect', "img:///LightSaber_CV.UI.UIPerk_Reflect", , 'eAbilitySource_Perk');
+	Template.PrerequisiteAbilities.AddItem('LightsaberDeflect');
+	Template.AdditionalAbilities.AddItem('LightsaberReflectShot');
+	Template.CustomFireAnim = 'HL_Idle';
+
+	RedirectEffect = new class'X2Effect_LightsaberReflect';
+	RedirectEffect.BuildPersistentEffect(1, true, false);
+	RedirectEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage, true,, Template.AbilitySourceName);
+	Template.AddTargetEffect(RedirectEffect);
+
+	return Template;
+}
+
+static function X2AbilityTemplate LightsaberReflectShot()
+{
+	local X2AbilityTemplate						Template;
+	local X2AbilityTrigger_EventListener		EventListener;
+	local X2Effect_ApplyReflectDamage			DamageEffect;
+	
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberReflectShot');
+
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Offensive;
+	Template.IconImage = "img:///LightSaber_CV.UI.UIPerk_Reflect";
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SimpleSingleTarget;
+
+	EventListener = new class'X2AbilityTrigger_EventListener';
+	EventListener.ListenerData.EventID = 'AbilityActivated';
+	EventListener.ListenerData.Filter = eFilter_None;
+	EventListener.ListenerData.Deferral = ELD_OnStateSubmitted;
+	EventListener.ListenerData.EventFn = class'XComGameState_Ability'.static.TemplarReflectListener;
+	Template.AbilityTriggers.AddItem(EventListener);
+
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	Template.AddShooterEffectExclusions();
+	Template.AbilityTargetConditions.AddItem(default.LivingHostileUnitDisallowMindControlProperty);
+	Template.AbilityTargetConditions.AddItem(default.GameplayVisibilityCondition);
+
+	DamageEffect = new class'X2Effect_ApplyReflectDamage';
+	DamageEffect.EffectDamageValue.DamageType = 'Psi';
+	Template.AddTargetEffect(DamageEffect);
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
+	Template.MergeVisualizationFn = LightsaberDeflectShotMergeVisualization;
+	
+	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
+	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
+	
+	// The Action will fire off the animation at the right time, so leave the jedi idling until then
+	Template.bFrameEvenWhenUnitIsHidden = true;
+	Template.CustomFireAnim = 'HL_Idle';
+	Template.CustomFireKillAnim = 'HL_Idle';
+	Template.ActionFireClass = class'X2Action_LightsaberDeflect';
+
+	Template.bCrossClassEligible = false;
+
+	return Template;
+}
+
+function LightsaberDeflectShotMergeVisualization(X2Action BuildTree, out X2Action VisualizationTree)
+{
+	local XComGameStateVisualizationMgr VisMgr;
+	local X2Action_ExitCover SourceExitCover;
+	//local Array<X2Action> SourceReacts;
+	local X2Action_LightsaberDeflect SourceFire;
+	local X2Action_ExitCover TargetExitCover;
+	local X2Action_Fire TargetFire;
+	local X2Action_EnterCover TargetEnterCover;
+	local X2Action_ApplyWeaponDamageToUnit TargetReact;
+	local X2Action_MarkerTreeInsertBegin InsertHere;
+	local Actor SourceUnit;
+	local Actor TargetUnit;
+	local XComGameState NewGameState;
+	local XComGameState_Unit DeflectUnit, NewDeflectUnitState;
+	local UnitValue DeflectValue;
+
+	VisMgr = `XCOMVISUALIZATIONMGR;
+
+	SourceFire = X2Action_LightsaberDeflect(VisMgr.GetNodeOfType(BuildTree, class'X2Action_LightsaberDeflect'));
+	SourceUnit = SourceFire.Metadata.VisualizeActor;
+	TargetReact = X2Action_ApplyWeaponDamageToUnit(VisMgr.GetNodeOfType(BuildTree, class'X2Action_ApplyWeaponDamageToUnit'));
+	TargetUnit = TargetReact.Metadata.VisualizeActor;
+
+	// Tell the unit how many times it's used a reflect/deflect ability
+	DeflectUnit = XComGameState_Unit(SourceFire.Metadata.StateObject_NewState);
+	DeflectUnit.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.DeflectUsed, DeflectValue);
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(String(GetFuncName()));
+	NewDeflectUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', DeflectUnit.ObjectID));
+	NewDeflectUnitState.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.DeflectUsed, int(DeflectValue.fValue) + 1, eCleanup_BeginTurn);
+	DeflectUnit.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.DeflectUsed, int(DeflectValue.fValue) + 1, eCleanup_BeginTurn);
+	`GAMERULES.SubmitGameState(NewGameState);
+
+	SourceExitCover = X2Action_ExitCover(VisMgr.GetNodeOfType(BuildTree, class'X2Action_ExitCover', SourceUnit));
+	//VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_ApplyWeaponDamageToUnit', SourceReacts, SourceUnit);
+
+	TargetExitCover = X2Action_ExitCover(VisMgr.GetNodeOfType(VisualizationTree, class'X2Action_ExitCover', TargetUnit));
+	TargetFire = X2Action_Fire(VisMgr.GetNodeOfType(VisualizationTree, class'X2Action_Fire', TargetUnit));
+	TargetEnterCover = X2Action_EnterCover(VisMgr.GetNodeOfType(VisualizationTree, class'X2Action_EnterCover', TargetUnit));
+
+	// Inject the shooter's projectile into the reflector's fire action
+	SourceFire.SetInstigatingAction(TargetFire);
+
+	// First let's link up the start of our trees
+	InsertHere = X2Action_MarkerTreeInsertBegin(VisMgr.GetNodeOfType(VisualizationTree, class'X2Action_MarkerTreeInsertBegin'));
+	VisMgr.ConnectAction(BuildTree, VisualizationTree, false, InsertHere);
+
+	// Now Make the Exit Covers happen at the same time
+	VisMgr.ConnectAction(SourceExitCover, VisualizationTree, false, , TargetExitCover.ParentActions);
+	VisMgr.ConnectAction(TargetExitCover, VisualizationTree, false, , SourceExitCover.ParentActions);
+
+	// Make the Target Fire wait for both exit covers
+	VisMgr.ConnectAction(TargetFire, VisualizationTree, false, SourceExitCover);
+
+	// Now the Source fire should wait for both exit covers as well. The action will delay itself until the proper time.
+	VisMgr.ConnectAction(SourceFire, VisualizationTree, false, TargetExitCover);
+
+	// The Target needs to wait to enter cover until after the attack
+	VisMgr.ConnectAction(TargetEnterCover, VisualizationTree, false, TargetReact);
 }
 
 DefaultProperties

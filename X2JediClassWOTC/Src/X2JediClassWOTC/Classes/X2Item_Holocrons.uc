@@ -9,7 +9,6 @@ static function array<X2DataTemplate> CreateTemplates()
 	return Items;
 }
 
-
 static function X2DataTemplate Holocron_CV()
 {
 	local X2WeaponTemplate Template;

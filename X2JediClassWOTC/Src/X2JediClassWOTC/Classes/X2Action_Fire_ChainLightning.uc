@@ -165,7 +165,7 @@ function SetFireParameters(bool bHit, optional int OverrideTargetID, optional bo
 
 function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
 {
-	`LOG("ProjectileNotifyHit",, 'JediClass');
+	`LOG("ProjectileNotifyHit",, 'X2JediClassWOTC');
 	super.ProjectileNotifyHit(bMainImpactNotify, HitLocation);
 	OnProjectileHit(HitLocation);
 }
@@ -176,7 +176,7 @@ function OnProjectileHit(vector vLocation)
 	local bool bShouldNotify;
 	bShouldNotify = true;
 	// the main projectile has hit! it gets notified automatically
-	`LOG("OnProjectileHit",, 'JediClass');
+	`LOG("OnProjectileHit",, 'X2JediClassWOTC');
 	if (!ChainHasStarted())
 	{
 		Targets[0].bHasNotified = true;
@@ -187,7 +187,7 @@ function OnProjectileHit(vector vLocation)
 	else
 	{
 		i = FindNearestTarget(vLocation);
-		`LOG("FindNearestTarget" @ i,, 'JediClass');
+		`LOG("FindNearestTarget" @ i,, 'X2JediClassWOTC');
 	}
 	if (i != INDEX_NONE)
 	{
@@ -225,6 +225,7 @@ function AdvanceChain(int iHitIdx, bool bDoNotifyTarget, vector vSourceLocation)
 {
 	local int i;
 	local StateObjectReference Target;
+	local XComGameState_Unit TargetState;
 	if (bDoNotifyTarget)
 	{
 		Targets[iHitIdx].bHasNotified = true;
@@ -232,7 +233,9 @@ function AdvanceChain(int iHitIdx, bool bDoNotifyTarget, vector vSourceLocation)
 		// out parameter, unrealscript dumb
 		Target = Targets[iHitIdx].TargetID;
 		//VisualizationMgr.SendInterTrackMessage(Target, CurrentHistoryIndex); - "VISUALIZATION REWRITE - MESSAGE" - InterTrack messages were removed, I guess something handles it directly without input now?
-		`LOG("SendInterTrackMessage" @ Target.ObjectID,, 'JediClass');
+		TargetState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Target.ObjectID));
+		`XEVENTMGR.TriggerEvent('Visualizer_ProjectileHit', TargetState, self);
+		`LOG(default.Class @ GetFuncName() @ "sent Visualizer_ProjectileHit to" @ TargetState,, 'X2JediClassWOTC');
 	}
 	for (i = 1; i < Targets.Length; i++)
 	{
@@ -254,7 +257,7 @@ function SendProjectile(vector Source, vector Target)
 	//WeaponEntity = XComWeapon(UnitPawn.Weapon);
 
 	ProjectileTemplate = X2UnifiedProjectile(`CONTENT.RequestGameArchetype("Perk_Force_Lightning_Assets.Archetypes.PJ_ForceLightning"));
-	`LOG("ProjectileTemplate" @ ProjectileTemplate,, 'JediClass');
+	`LOG("ProjectileTemplate" @ ProjectileTemplate,, 'X2JediClassWOTC');
 
 	FireVolleyNotify = new class'AnimNotify_FireWeaponVolley';
 	FireVolleyNotify.NumShots = 1;
@@ -288,8 +291,8 @@ Begin:
 
 	class'XComPerkContent'.static.GetAssociatedPerkInstances(Perks, UnitPawn, AbilityContext.InputContext.AbilityTemplateName);
 	
-	`LOG("Perks for" @ AbilityContext.InputContext.AbilityTemplateName @ Perks.Length,, 'JediClass');
-	`LOG("Unit.CurrentPerkAction" @ Unit.CurrentPerkAction,, 'JediClass');
+	`LOG("Perks for" @ AbilityContext.InputContext.AbilityTemplateName @ Perks.Length,, 'X2JediClassWOTC');
+	`LOG("Unit.CurrentPerkAction" @ Unit.CurrentPerkAction,, 'X2JediClassWOTC');
 	
 	for( x = 0; x < Perks.Length; ++x )
 	{

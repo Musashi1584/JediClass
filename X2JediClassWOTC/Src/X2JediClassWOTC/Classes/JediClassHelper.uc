@@ -128,4 +128,6 @@ static function int GetSuccessModifier(XComGameState_Unit Unit, name Ability)
 	{
 		return GetDarkSideModifier(Unit);
 	}
+
+	return 0;
 }
