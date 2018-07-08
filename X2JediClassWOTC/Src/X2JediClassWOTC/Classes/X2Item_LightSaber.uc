@@ -6,7 +6,6 @@ var config int  LIGHTSABER_CONVENTIONAL_CRITCHANCE;
 var config int  LIGHTSABER_CONVENTIONAL_ICLIPSIZE;
 var config int  LIGHTSABER_CONVENTIONAL_ISOUNDRANGE;
 var config int  LIGHTSABER_CONVENTIONAL_IENVIRONMENTDAMAGE;
-var config int  LIGHTSABER_CONVENTIONAL_UPGRADESLOTS;
 var config array<name> LIGHTSABER_CONVENTIONAL_ABILITIES;
 
 var config WeaponDamageValue LIGHTSABER_MAGNETIC_BASEDAMAGE;
@@ -15,7 +14,6 @@ var config int  LIGHTSABER_MAGNETIC_CRITCHANCE;
 var config int  LIGHTSABER_MAGNETIC_ICLIPSIZE;
 var config int  LIGHTSABER_MAGNETIC_ISOUNDRANGE;
 var config int  LIGHTSABER_MAGNETIC_IENVIRONMENTDAMAGE;
-var config int  LIGHTSABER_MAGNETIC_UPGRADESLOTS;
 var config array<name> LIGHTSABER_MAGNETIC_ABILITIES;
 
 var config WeaponDamageValue LIGHTSABER_BEAM_BASEDAMAGE;
@@ -24,8 +22,19 @@ var config int  LIGHTSABER_BEAM_CRITCHANCE;
 var config int  LIGHTSABER_BEAM_ICLIPSIZE;
 var config int  LIGHTSABER_BEAM_ISOUNDRANGE;
 var config int  LIGHTSABER_BEAM_IENVIRONMENTDAMAGE;
-var config int  LIGHTSABER_BEAM_UPGRADESLOTS;
 var config array<name> LIGHTSABER_BEAM_ABILITIES;
+
+var config name LIGHTSABER_DEFAULT_CRYSTAL;
+var config name LIGHTSABER_DEFAULT_CELL;
+var config name LIGHTSABER_DEFAULT_EMITTER;
+var config name LIGHTSABER_DEFAULT_LENS;
+
+var config array<name> LIGHTSABER_VALID_CRYSTALS;
+var config array<name> LIGHTSABER_VALID_CELLS;
+var config array<name> LIGHTSABER_VALID_EMITTERS;
+var config array<name> LIGHTSABER_VALID_LENSES;
+
+var config array<name> LIGHTSABER_TEMPLATE_NAMES;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -35,18 +44,15 @@ static function array<X2DataTemplate> CreateTemplates()
 	Weapons.AddItem(CreateTemplate_LightSaber_ConventionalPrimary());
 	Weapons.AddItem(CreateTemplate_LightSaber_MagneticPrimary());
 	Weapons.AddItem(CreateTemplate_LightSaber_BeamPrimary());
-
-	//Schematics
-	Weapons.AddItem(CreateTemplate_LightSaber_Magnetic_Schematic());
-	Weapons.AddItem(CreateTemplate_LightSaber_Beam_Schematic());
 	
 	return Weapons;
 }
+
 static function X2DataTemplate CreateTemplate_LightSaber_ConventionalPrimary()
 {
 	local X2WeaponTemplate Template;
 
-	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'LightSaber_CV_Primary');
+	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[0]);
 	Template.GameplayInstanceClass = class'XGLightSaber';
 	Template.WeaponPanelImage = "_Sword";                       // used by the UI. Probably determines iconview of the weapon.
 
@@ -61,9 +67,10 @@ static function X2DataTemplate CreateTemplate_LightSaber_ConventionalPrimary()
 	Template.GameArchetype = "LightSaber_CV.Archetypes.WP_LightSaber_CV";
 	//Template.AddDefaultAttachment('Sheath', "ConvSword.Meshes.SM_ConvSword_Sheath", true);
 	Template.Tier = 0;
+	Template.OnAcquiredFn = OnLightsaberAcquired;
 
 	Template.iRadius = 1;
-	Template.NumUpgradeSlots = default.LIGHTSABER_CONVENTIONAL_UPGRADESLOTS;
+	Template.NumUpgradeSlots = 4;
 	Template.InfiniteAmmo = true;
 	Template.iPhysicsImpulse = 0;
 
@@ -78,9 +85,10 @@ static function X2DataTemplate CreateTemplate_LightSaber_ConventionalPrimary()
 
 	AddConfigAbilities(Template, default.LIGHTSABER_CONVENTIONAL_ABILITIES);
 
-	Template.StartingItem = true;
+	Template.StartingItem = false;
 	Template.CanBeBuilt = false;
-	Template.bInfiniteItem = true;
+	Template.bInfiniteItem = false;
+	Template.bAlwaysUnique = true;
 
 	Template.DamageTypeTemplateName = 'Melee';
 
@@ -91,7 +99,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_MagneticPrimary()
 {
 	local X2WeaponTemplate Template;
 
-	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'LightSaber_MG_Primary');
+	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[1]);
 	Template.GameplayInstanceClass = class'XGLightSaber';
 	Template.WeaponPanelImage = "_Pistol";                       // used by the UI. Probably determines iconview of the weapon.
 
@@ -106,9 +114,10 @@ static function X2DataTemplate CreateTemplate_LightSaber_MagneticPrimary()
 	Template.GameArchetype = "LightSaber_CV.Archetypes.WP_LightSaber_CV";
 	//Template.AddDefaultAttachment('R_Back', "MagSword.Meshes.SM_MagSword_Sheath", false);
 	Template.Tier = 1;
+	Template.OnAcquiredFn = OnLightsaberAcquired;
 
 	Template.iRadius = 1;
-	Template.NumUpgradeSlots = default.LIGHTSABER_MAGNETIC_UPGRADESLOTS;
+	Template.NumUpgradeSlots = 4;
 	Template.InfiniteAmmo = true;
 	Template.iPhysicsImpulse = 0;
 
@@ -128,57 +137,11 @@ static function X2DataTemplate CreateTemplate_LightSaber_MagneticPrimary()
 	
 	Template.DamageTypeTemplateName = 'Melee';
 	Template.BaseDamage.DamageType = 'Melee';
-
+	
 	Template.StartingItem = false;
 	Template.CanBeBuilt = false;
-	Template.bInfiniteItem = true;
-
-	return Template;
-}
-
-static function X2DataTemplate CreateTemplate_LightSaber_Magnetic_Schematic()
-{
-	local X2SchematicTemplate Template;
-	local ArtifactCost Resources;
-	local ArtifactCost Artifacts;
-
-	`CREATE_X2TEMPLATE(class'X2SchematicTemplate', Template, 'LightSaber_MG_Schematic');
-
-	Template.ItemCat = 'weapon';
-	Template.strImage = "img:///LightSaber_CV.UI.LightsaberIcon";
-	Template.PointsToComplete = 0;
-	Template.Tier = 1;
-	Template.OnBuiltFn = class'X2Item_DefaultSchematics'.static.UpgradeItems;
-
-	// Reference Item
-	Template.ReferenceItemTemplate = 'LightSaber_MG_Primary';
-	Template.HideIfPurchased = 'LightSaber_CV_Primary';
-
-	// Requirements
-	Template.Requirements.RequiredTechs.AddItem('AutopsyAdventStunLancer');
-	Template.Requirements.RequiredEngineeringScore = 10;
-	Template.Requirements.bVisibleIfPersonnelGatesNotMet = true;
-
-	// Cost
-	Artifacts.ItemTemplateName = 'CorpseAdventStunLancer';
-	Artifacts.Quantity = 1;
-	Template.Cost.ArtifactCosts.AddItem(Artifacts);
-
-	Resources.ItemTemplateName = 'EleriumCore';
-	Resources.Quantity = 2;
-	Template.Cost.ArtifactCosts.AddItem(Resources);
-
-	Resources.ItemTemplateName = 'Supplies';
-	Resources.Quantity = 75;
-	Template.Cost.ResourceCosts.AddItem(Resources);
-
-	Resources.ItemTemplateName = 'AlienAlloy';
-	Resources.Quantity = 25;
-	Template.Cost.ResourceCosts.AddItem(Resources);
-
-	Resources.ItemTemplateName = 'EleriumDust';
-	Resources.Quantity = 10;
-	Template.Cost.ResourceCosts.AddItem(Resources);
+	Template.bInfiniteItem = false;
+	Template.bAlwaysUnique = true;
 
 	return Template;
 }
@@ -187,7 +150,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_BeamPrimary()
 {
 	local X2WeaponTemplate Template;
 
-	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'LightSaber_BM_Primary');
+	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[2]);
 	Template.GameplayInstanceClass = class'XGLightSaber';
 	Template.WeaponPanelImage = "_Pistol";                       // used by the UI. Probably determines iconview of the weapon.
 
@@ -202,9 +165,10 @@ static function X2DataTemplate CreateTemplate_LightSaber_BeamPrimary()
 	Template.GameArchetype = "LightSaber_CV.Archetypes.WP_LightSaber_CV";
 	//Template.AddDefaultAttachment('R_Back', "BeamSword.Meshes.SM_BeamSword_Sheath", false);
 	Template.Tier = 2;
+	Template.OnAcquiredFn = OnLightsaberAcquired;
 
 	Template.iRadius = 1;
-	Template.NumUpgradeSlots = default.LIGHTSABER_BEAM_UPGRADESLOTS;
+	Template.NumUpgradeSlots = 4;
 	Template.InfiniteAmmo = true;
 	Template.iPhysicsImpulse = 0;
 
@@ -222,58 +186,12 @@ static function X2DataTemplate CreateTemplate_LightSaber_BeamPrimary()
 	
 	Template.BaseDamage.DamageType='Melee';
 	Template.DamageTypeTemplateName = 'Melee';
-
+	
 	Template.StartingItem = false;
 	Template.CanBeBuilt = false;
-	Template.bInfiniteItem = true;
+	Template.bInfiniteItem = false;
+	Template.bAlwaysUnique = true;
 	
-	return Template;
-}
-
-static function X2DataTemplate CreateTemplate_LightSaber_Beam_Schematic()
-{
-	local X2SchematicTemplate Template;
-	local ArtifactCost Resources;
-	local ArtifactCost Artifacts;
-
-	`CREATE_X2TEMPLATE(class'X2SchematicTemplate', Template, 'LightSaber_BM_Schematic');
-
-	Template.ItemCat = 'weapon';
-	Template.strImage = "img:///LightSaber_CV.UI.LightsaberIcon";
-	Template.PointsToComplete = 0;
-	Template.Tier = 2;
-	Template.OnBuiltFn = class'X2Item_DefaultSchematics'.static.UpgradeItems;
-
-	// Reference Item
-	Template.ReferenceItemTemplate = 'LightSaber_BM_Primary';
-	Template.HideIfPurchased = 'LightSaber_MG_Primary';
-
-	// Requirements
-	Template.Requirements.RequiredTechs.AddItem('AutopsyArchon');
-	Template.Requirements.RequiredEngineeringScore = 20;
-	Template.Requirements.bVisibleIfPersonnelGatesNotMet = true;
-
-	// Cost
-	Artifacts.ItemTemplateName = 'CorpseArchon';
-	Artifacts.Quantity = 1;
-	Template.Cost.ArtifactCosts.AddItem(Artifacts);
-
-	Resources.ItemTemplateName = 'EleriumCore';
-	Resources.Quantity = 2;
-	Template.Cost.ArtifactCosts.AddItem(Resources);
-
-	Resources.ItemTemplateName = 'Supplies';
-	Resources.Quantity = 150;
-	Template.Cost.ResourceCosts.AddItem(Resources);
-
-	Resources.ItemTemplateName = 'AlienAlloy';
-	Resources.Quantity = 50;
-	Template.Cost.ResourceCosts.AddItem(Resources);
-
-	Resources.ItemTemplateName = 'EleriumDust';
-	Resources.Quantity = 25;
-	Template.Cost.ResourceCosts.AddItem(Resources);
-
 	return Template;
 }
 
@@ -284,6 +202,34 @@ static function AddConfigAbilities(out X2WeaponTemplate Template, array<name> Ab
 	{
 		Template.Abilities.AddItem(Ability);
 	}
+}
+
+static function bool OnLightsaberAcquired(XComGameState NewGameState, XComGameState_Item ItemState)
+{
+	local X2ItemTemplateManager ItemTemplateMgr;
+	local array<name> WeaponUpgradeNames;
+
+	ItemTemplateMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	WeaponUpgradeNames = ItemState.GetMyWeaponUpgradeTemplateNames();
+
+	if (default.LIGHTSABER_VALID_CRYSTALS.Find(WeaponUpgradeNames[0]) == INDEX_NONE)
+	{
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_CRYSTAL)), 0);
+	}
+	if (default.LIGHTSABER_VALID_CELLS.Find(WeaponUpgradeNames[1]) == INDEX_NONE)
+	{
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_CELL)), 1);
+	}
+	if (default.LIGHTSABER_VALID_EMITTERS.Find(WeaponUpgradeNames[2]) == INDEX_NONE)
+	{
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_EMITTER)), 2);
+	}
+	if (default.LIGHTSABER_VALID_LENSES.Find(WeaponUpgradeNames[3]) == INDEX_NONE)
+	{
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_LENS)), 3);
+	}
+
+	return true;
 }
 
 defaultproperties

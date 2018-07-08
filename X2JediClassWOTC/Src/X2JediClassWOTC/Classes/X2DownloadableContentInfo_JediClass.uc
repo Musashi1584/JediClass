@@ -12,6 +12,17 @@ class X2DownloadableContentInfo_JediClass extends X2DownloadableContentInfo conf
 
 var config array<Name> IgnoreAbilitiesForForceSpeed;
 
+var config array<LootTable> LOOT_TABLES;
+
+var config name BASIC_LOOT_ENTRIES_TO_TABLE;
+var config array<LootTableEntry> BASIC_LOOT_ENTRIES;
+
+var config name ADVANCED_LOOT_ENTRIES_TO_TABLE;
+var config array<LootTableEntry> ADVANCED_LOOT_ENTRIES;
+
+var config name SUPERIOR_LOOT_ENTRIES_TO_TABLE;
+var config array<LootTableEntry> SUPERIOR_LOOT_ENTRIES;
+
 /// <summary>
 /// This method is run if the player loads a saved game that was created prior to this DLC / Mod being installed, and allows the 
 /// DLC / Mod to perform custom processing in response. This will only be called once the first time a player loads a save that was
@@ -19,7 +30,7 @@ var config array<Name> IgnoreAbilitiesForForceSpeed;
 /// </summary>
 static event OnLoadedSavedGame()
 {
-
+	UpdateResearch();
 }
 
 /// <summary>
@@ -27,7 +38,56 @@ static event OnLoadedSavedGame()
 /// </summary>
 static event OnLoadedSavedGameToStrategy()
 {
+}
 
+static function UpdateResearch()
+{
+	local XComGameStateHistory History;
+	local XComGameState NewGameState;
+	local X2TechTemplate TechTemplate;
+	local X2StrategyElementTemplateManager StratMgr;
+	local name ResearchName;
+
+	StratMgr = class'X2StrategyElementTemplateManager'.static.GetStrategyElementTemplateManager();
+	History = `XCOMHISTORY;
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(default.class $ "::" $ GetFuncName());
+
+	foreach class'X2StrategyElement_LightsaberTech'.default.LIGHTSABER_PROJECT_NAMES(ResearchName)
+	{
+		if (!IsResearchInHistory(ResearchName))
+		{
+			`log(default.class @ GetFuncName() @ ResearchName @ "not found, creating...",, 'X2JediClassWOTC');
+			TechTemplate = X2TechTemplate(StratMgr.FindStrategyElementTemplate(ResearchName));
+			if (TechTemplate != none)
+			{
+				NewGameState.CreateNewStateObject(class'XComGameState_Tech', TechTemplate);
+			}
+		}
+	}
+
+	if (NewGameState.GetNumGameStateObjects() > 0)
+	{
+		`GAMERULES.SubmitGameState(NewGameState);
+	}
+	else
+	{
+		History.CleanupPendingGameState(NewGameState);
+	}
+}
+
+static function bool IsResearchInHistory(name ResearchName)
+{
+	// Check if we've already injected the tech templates
+	local XComGameState_Tech	TechState;
+	
+	foreach `XCOMHISTORY.IterateByClassType(class'XComGameState_Tech', TechState)
+	{
+		if ( TechState.GetMyTemplateName() == ResearchName )
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 /// <summary>
@@ -81,6 +141,7 @@ static event OnPostTemplatesCreated()
 {
 	//`LOG("ForceLightning Ability" @ class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager().FindAbilityTemplate('ForceLightning'),, 'JediClass');
 	OnPostAbilityTemplatesCreated();
+	OnPostLootTablesCreated();
 }
 
 static function OnPostAbilityTemplatesCreated()
@@ -116,6 +177,35 @@ static function OnPostAbilityTemplatesCreated()
 			}
 		}
 	}
+}
+
+static function OnPostLootTablesCreated()
+{
+	local LootTable CurrentLoot;
+	local LootTableEntry CurrentEntry;
+
+	foreach default.LOOT_TABLES(CurrentLoot)
+	{
+		class'X2LootTableManager'.static.AddLootTableStatic(CurrentLoot);
+	}
+
+	foreach default.BASIC_LOOT_ENTRIES(CurrentEntry)
+	{
+		class'X2LootTableManager'.static.AddEntryStatic(default.BASIC_LOOT_ENTRIES_TO_TABLE, CurrentEntry, false);
+	}
+	class'X2LootTableManager'.static.RecalculateLootTableChanceStatic(default.BASIC_LOOT_ENTRIES_TO_TABLE);
+
+	foreach default.ADVANCED_LOOT_ENTRIES(CurrentEntry)
+	{
+		class'X2LootTableManager'.static.AddEntryStatic(default.ADVANCED_LOOT_ENTRIES_TO_TABLE, CurrentEntry, false);
+	}
+	class'X2LootTableManager'.static.RecalculateLootTableChanceStatic(default.ADVANCED_LOOT_ENTRIES_TO_TABLE);
+
+	foreach default.SUPERIOR_LOOT_ENTRIES(CurrentEntry)
+	{
+		class'X2LootTableManager'.static.AddEntryStatic(default.SUPERIOR_LOOT_ENTRIES_TO_TABLE, CurrentEntry, false);
+	}
+	class'X2LootTableManager'.static.RecalculateLootTableChanceStatic(default.SUPERIOR_LOOT_ENTRIES_TO_TABLE);
 }
 
 /// <summary>

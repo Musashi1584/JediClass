@@ -27,6 +27,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Config\XComClassData.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\XComGameCore.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Config\XComGameData.ini">
       <SubType>Content</SubType>
     </Content>
@@ -40,6 +43,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\JediClassUI.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\JediClassWeaponUpgrades.upk">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Content\LightSaber_CV.upk">
@@ -78,6 +84,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\X2AbilityToHitCalc_StatCheck_UnitVsUnitForce.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Ability_LightsaberComponent.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Action_ForceVisibility.uc">
       <SubType>Content</SubType>
     </Content>
@@ -88,6 +97,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Action_Revive.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ExtraDeflectChance.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_FlecheBonusDamage.uc">
@@ -145,10 +157,19 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_Revive.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2EventListener_JediClass_SquaddieLoadout.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Item_Holocrons.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Item_LightSaber.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Item_WeaponUpgrade_Lightsaber.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2StrategyElement_LightsaberTech.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2TargetingMethod_LightsaberToss.uc">

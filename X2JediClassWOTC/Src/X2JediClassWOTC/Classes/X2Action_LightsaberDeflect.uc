@@ -163,7 +163,7 @@ simulated state Executing
 	{
 		ActionTimer += fDeltaT;
 
-		`log(default.Class @ GetFuncName() @ "bSendProjectiles" @ bSendProjectiles,, 'X2JediClassWOTC');
+		//`log(default.Class @ GetFuncName() @ "bSendProjectiles" @ bSendProjectiles,, 'X2JediClassWOTC');
 		if (bSendProjectiles && !bProjectilesFired)
 		{
 			if (FireVolleyNotifies.Length == 0)
