@@ -18,6 +18,15 @@ function Init()
 	SourceToTarget = TargetUnitPawn.Location - UnitPawn.Location;
 }
 
+function debug()
+{
+	local AnimSet IterateAnimSet;
+	foreach TargetUnitPawn.Mesh.AnimSets(IterateAnimSet)
+	{
+		`LOG(IterateAnimSet,, 'JediClass');
+	}
+}
+
 simulated state Executing
 {
 Begin:
@@ -28,6 +37,8 @@ Begin:
 	TargetUnitPawn.EnableRMAInteractPhysics(true);
 	TargetUnitPawn.bSkipIK = true;
 	TargetUnit.IdleStateMachine.GoDormant(UnitPawn);
+
+	debug();
 
 	TargetUnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
 	Params = default.Params;

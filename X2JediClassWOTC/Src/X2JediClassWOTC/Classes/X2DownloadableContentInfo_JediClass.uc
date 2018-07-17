@@ -10,6 +10,16 @@
 
 class X2DownloadableContentInfo_JediClass extends X2DownloadableContentInfo config (JediClass);
 
+struct SocketReplacementInfo
+{
+	var name TorsoName;
+	var string SocketMeshString;
+	var bool Female;
+};
+
+
+var config array<SocketReplacementInfo> SocketReplacements;
+
 var config array<Name> IgnoreAbilitiesForForceSpeed;
 
 var config array<LootTable> LOOT_TABLES;
@@ -23,6 +33,7 @@ var config array<LootTableEntry> ADVANCED_LOOT_ENTRIES;
 var config name SUPERIOR_LOOT_ENTRIES_TO_TABLE;
 var config array<LootTableEntry> SUPERIOR_LOOT_ENTRIES;
 
+
 /// <summary>
 /// This method is run if the player loads a saved game that was created prior to this DLC / Mod being installed, and allows the 
 /// DLC / Mod to perform custom processing in response. This will only be called once the first time a player loads a save that was
@@ -31,13 +42,6 @@ var config array<LootTableEntry> SUPERIOR_LOOT_ENTRIES;
 static event OnLoadedSavedGame()
 {
 	UpdateResearch();
-}
-
-/// <summary>
-/// This method is run when the player loads a saved game directly into Strategy while this DLC is installed
-/// </summary>
-static event OnLoadedSavedGameToStrategy()
-{
 }
 
 static function UpdateResearch()
@@ -90,49 +94,6 @@ static function bool IsResearchInHistory(name ResearchName)
 	return false;
 }
 
-/// <summary>
-/// Called when the player starts a new campaign while this DLC / Mod is installed. When a new campaign is started the initial state of the world
-/// is contained in a strategy start state. Never add additional history frames inside of InstallNewCampaign, add new state objects to the start state
-/// or directly modify start state objects
-/// </summary>
-static event InstallNewCampaign(XComGameState StartState)
-{
-
-}
-
-/// <summary>
-/// Called just before the player launches into a tactical a mission while this DLC / Mod is installed.
-/// Allows dlcs/mods to modify the start state before launching into the mission
-/// </summary>
-static event OnPreMission(XComGameState StartGameState, XComGameState_MissionSite MissionState)
-{
-
-}
-
-/// <summary>
-/// Called when the player completes a mission while this DLC / Mod is installed.
-/// </summary>
-static event OnPostMission()
-{
-
-}
-
-/// <summary>
-/// Called when the player is doing a direct tactical->tactical mission transfer. Allows mods to modify the
-/// start state of the new transfer mission if needed
-/// </summary>
-static event ModifyTacticalTransferStartState(XComGameState TransferStartState)
-{
-
-}
-
-/// <summary>
-/// Called after the player exits the post-mission sequence while this DLC / Mod is installed.
-/// </summary>
-static event OnExitPostMissionSequence()
-{
-
-}
 
 /// <summary>
 /// Called after the Templates have been created (but before they are validated) while this DLC / Mod is installed.
@@ -208,37 +169,54 @@ static function OnPostLootTablesCreated()
 	class'X2LootTableManager'.static.RecalculateLootTableChanceStatic(default.SUPERIOR_LOOT_ENTRIES_TO_TABLE);
 }
 
-/// <summary>
-/// Called when the difficulty changes and this DLC is active
-/// </summary>
-static event OnDifficultyChanged()
-{
 
+static function string DLCAppendSockets(XComUnitPawn Pawn)
+{
+	local SocketReplacementInfo SocketReplacement;
+	local name TorsoName;
+	local bool bIsFemale;
+	local string DefaultString, ReturnString;
+	local XComHumanPawn HumanPawn;
+
+	//`LOG("DLCAppendSockets" @ Pawn,, 'DualWieldMelee');
+
+	HumanPawn = XComHumanPawn(Pawn);
+	if (HumanPawn == none) { return ""; }
+
+	TorsoName = HumanPawn.m_kAppearance.nmTorso;
+	bIsFemale = HumanPawn.m_kAppearance.iGender == eGender_Female;
+
+	//`LOG("DLCAppendSockets: Torso= " $ TorsoName $ ", Female= " $ string(bIsFemale),, 'DualWieldMelee');
+
+	foreach default.SocketReplacements(SocketReplacement)
+	{
+		if (TorsoName != 'None' && TorsoName == SocketReplacement.TorsoName && bIsFemale == SocketReplacement.Female)
+		{
+			ReturnString = SocketReplacement.SocketMeshString;
+			break;
+		}
+		else
+		{
+			if (SocketReplacement.TorsoName == 'Default' && SocketReplacement.Female == bIsFemale)
+			{
+				DefaultString = SocketReplacement.SocketMeshString;
+			}
+		}
+	}
+	if (ReturnString == "")
+	{
+		// did not find, so use default
+		ReturnString = DefaultString;
+	}
+
+	return ReturnString;
 }
 
-
-/// <summary>
-/// Called when viewing mission blades with the Shadow Chamber panel, used primarily to modify tactical tags for spawning
-/// Returns true when the mission's spawning info needs to be updated
-/// </summary>
-static function bool UpdateShadowChamberMissionInfo(StateObjectReference MissionRef)
+static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameState_Unit UnitState, XComUnitPawn Pawn)
 {
-	return false;
+	if (UnitState.IsAdvent() || UnitState.IsAlien())
+	{
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForceChokeTarget")));
+	}
 }
 
-/// <summary>
-/// Called from X2AbilityTag:ExpandHandler after processing the base game tags. Return true (and fill OutString correctly)
-/// to indicate the tag has been expanded properly and no further processing is needed.
-/// </summary>
-static function bool AbilityTagExpandHandler(string InString, out string OutString)
-{
-	return false;
-}
-/// <summary>
-/// Called from XComGameState_Unit:GatherUnitAbilitiesForInit after the game has built what it believes is the full list of
-/// abilities for the unit based on character, class, equipment, et cetera. You can add or remove abilities in SetupData.
-/// </summary>
-static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay)
-{
-
-}

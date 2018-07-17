@@ -171,8 +171,9 @@ simulated state Executing
 				GetAttackerWeaponVolleyNotify(FireVolleyNotifies, OutNotifyTimes);
 				`log("X2Action_LightsaberDeflect FireVolleyNotify" @ InstigatorUnitState.GetMyTemplateName() @ InstigatorUnitState @ FireVolleyNotifies.Length @ ProjectileTemplate,, 'X2JediClassWOTC');
 			}
-				if (FireVolleyNotifies.Length == 0)
-			{	
+
+			if (FireVolleyNotifies.Length == 0)
+			{
 				DummyNotify = new class'AnimNotify_FireWeaponVolley';
 				DummyNotify.NumShots = 3;
 				DummyNotify.ShotInterval = 0.15f;

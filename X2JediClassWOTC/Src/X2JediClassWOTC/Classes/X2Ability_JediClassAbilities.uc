@@ -1312,6 +1312,13 @@ static function X2AbilityTemplate ForceChoke()
 	// Activated by a button press; additionally, tells the AI this is an activatable
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 
+	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StatCheck_UnitVsUnitForce';
+
+	// Targeting Method
+	Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
+	Template.bOverrideAim = true;
+	Template.bUseSourceLocationZToAim = true;
+
 	// *** VALIDITY CHECKS *** //
 	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName);
 	Template.AddShooterEffectExclusions(SkipExclusions);
@@ -1342,7 +1349,6 @@ static function X2AbilityTemplate ForceChoke()
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);	
 
-	//Stun Effect
 	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
 	DamageEffect.bIgnoreBaseDamage = true;
 	DamageEffect.bBypassShields = true;
@@ -1350,15 +1356,9 @@ static function X2AbilityTemplate ForceChoke()
 	Template.AddTargetEffect(DamageEffect);
 
 	TargetAnimSet = new class'X2Effect_AdditionalAnimSets';
-	TargetAnimSet.AddAnimSetWithPath("AnimSet'JediClassAbilities.Anims.AS_ForceChokeTarget'");
+	TargetAnimSet.AddAnimSetWithPath("JediClassAbilities.Anims.AS_ForceChokeTarget");
+	TargetAnimSet.BuildPersistentEffect(1, false, false, false);
 	Template.AddTargetEffect(TargetAnimSet);
-	
-	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StatCheck_UnitVsUnitForce';
-
-	// Targeting Method
-	Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
-	Template.bOverrideAim = true;
-	Template.bUseSourceLocationZToAim = true;
 
 	Template.SourceMissSpeech = 'SwordMiss';
 
@@ -1380,17 +1380,14 @@ simulated function ForceChoke_BuildVisualization(XComGameState VisualizeGameStat
 	local XComGameStateHistory					History;
 	local XComGameStateContext_Ability			Context;
 	local StateObjectReference					InteractingUnitRef, TargetUnitRef;
-
-	// VisualizationActionMetadata replaced VisualizationTrack in WOTC
-	//local VisualizationTrack					EmptyTrack;
-	//local VisualizationTrack					BuildTrack;
 	local VisualizationActionMetadata			EmptyTrack, ActionMetadata;
-
 	local X2Action_PlaySoundAndFlyOver			SoundAndFlyOver;
 	local XComGameState_Ability					AbilityState;
 	local X2AbilityTemplate						AbilityTemplate;
 	local X2VisualizerInterface					TargetVisualizerInterface;
 	local X2Action_PlayAnimation				PlayAnimationAction;
+	local X2Action_ExitCover					ExitCoverAction;
+	local X2Action_Fire_ForceChoke				FireAction;
 	local int i;
 
 	History = `XCOMHISTORY;
@@ -1409,7 +1406,7 @@ simulated function ForceChoke_BuildVisualization(XComGameState VisualizeGameStat
 	ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(InteractingUnitRef.ObjectID);
 	ActionMetadata.VisualizeActor = History.GetVisualizer(InteractingUnitRef.ObjectID);
 
-	class'X2Action_ExitCover'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
+	ExitCoverAction = X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
 
 	if(Context.IsResultContextHit())
 	{
@@ -1419,7 +1416,7 @@ simulated function ForceChoke_BuildVisualization(XComGameState VisualizeGameStat
 			SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", AbilityTemplate.SourceHitSpeech, eColor_Bad);
 		}
 
-		class'X2Action_Fire_ForceChoke'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
+		FireAction = X2Action_Fire_ForceChoke(class'X2Action_Fire_ForceChoke'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
 	}
 	else
 	{
@@ -1430,9 +1427,6 @@ simulated function ForceChoke_BuildVisualization(XComGameState VisualizeGameStat
 		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "Force Choke failed", '', eColor_Bad);
 
 	}
-
-	//OutVisualizationTracks.AddItem(BuildTrack);
-
 
 	//Configure the visualization track for the target
 	//****************************************************************************************
@@ -1447,8 +1441,14 @@ simulated function ForceChoke_BuildVisualization(XComGameState VisualizeGameStat
 	//  Visualize effects from index 1 as index 0 should be the base game damage effect.
 	for (i = 1; i < AbilityTemplate.AbilityTargetEffects.Length; ++i)
 	{
+		// Parenting the X2Effect_AdditionalAnimSets.AddX2ActionsForVisualization to the parent of exit cover
+		// so it runs before the fire action
+		ActionMetadata.LastActionAdded = ExitCoverAction.ParentActions[0].ParentActions[0];
 		AbilityTemplate.AbilityTargetEffects[i].AddX2ActionsForVisualization(VisualizeGameState, ActionMetadata, Context.FindTargetEffectApplyResult(AbilityTemplate.AbilityTargetEffects[i]));
 	}
+
+	// the rest is parented to the fire action
+	ActionMetadata.LastActionAdded = FireAction;
 
 	if(Context.IsResultContextHit())
 	{
@@ -1458,6 +1458,9 @@ simulated function ForceChoke_BuildVisualization(XComGameState VisualizeGameStat
 			SoundAndFlyOver.SetSoundAndFlyOverParameters(None, AbilityTemplate.LocHitMessage, AbilityTemplate.TargetHitSpeech, eColor_Good);
 		}
 
+		//`LOG(AbilityTemplate.AbilityTargetEffects[0].Name @ Context.FindTargetEffectApplyResult(AbilityTemplate.AbilityTargetEffects[0]),, 'JediClass');
+		
+		// add the damage action after WaitForAbilityEffect
 		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
 		AbilityTemplate.AbilityTargetEffects[0].AddX2ActionsForVisualization(VisualizeGameState, ActionMetadata, Context.FindTargetEffectApplyResult(AbilityTemplate.AbilityTargetEffects[0]));
 
@@ -1716,6 +1719,7 @@ static function X2AbilityTemplate LeapStrike()
 	local X2AbilityCost_ActionPoints						ActionPointCost;
 	local X2Effect_Persistent								ShadowStepEffect;
 	local X2Condition_Visibility							VisibilityCondition;
+	local X2Effect_PersistentTraversalChange				TeleportEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'LeapStrike');
 
@@ -1762,6 +1766,11 @@ static function X2AbilityTemplate LeapStrike()
 	ShadowStepEffect.BuildPersistentEffect(1, false, false);
 	Template.AddShooterEffect(ShadowStepEffect);
 
+	TeleportEffect = new class'X2Effect_PersistentTraversalChange';
+	TeleportEffect.BuildPersistentEffect(1, false, false, false, eGameRule_PlayerTurnBegin);
+	TeleportEffect.AddTraversalChange(eTraversal_Teleport, true);
+	Template.AddShooterEffect(TeleportEffect);
+
 	// Damage Effect
 	//
 	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
@@ -1770,6 +1779,7 @@ static function X2AbilityTemplate LeapStrike()
 	Template.bAllowBonusWeaponEffects = true;
 	Template.bSkipMoveStop = true;
 	
+
 	// Voice events
 	//
 	Template.SourceMissSpeech = 'SwordMiss';
@@ -1778,7 +1788,7 @@ static function X2AbilityTemplate LeapStrike()
 
 	Template.ModifyNewContextFn = Teleport_ModifyActivatedAbilityContext;
 	Template.BuildNewGameStateFn = Teleport_BuildGameState;
-	Template.BuildVisualizationFn = Teleport_BuildVisualization;
+	Template.BuildVisualizationFn = Teleport_BuildVisualization; //TypicalAbility_BuildVisualization;
 
 	Template.AdditionalAbilities.AddItem('ForceAbilitiesAnimSet');
 	Template.AdditionalAbilities.AddItem('LeapStrikeFleche');
@@ -1840,7 +1850,8 @@ static simulated function Teleport_ModifyActivatedAbilityContext(XComGameStateCo
     //Now add the path to the input context
 	InputData.MovingUnitRef = UnitState.GetReference();
 	AbilityContext.InputContext.MovementPaths.Length = 0;
-	AbilityContext.InputContext.MovementPaths[0] = InputData;
+	AbilityContext.InputContext.MovementPaths.AddItem(InputData);
+	`LOG(GetFuncName() @ AbilityContext.InputContext.MovementPaths.Length,, 'JediClass');
 }
 
 static simulated function XComGameState Teleport_BuildGameState(XComGameStateContext Context)
@@ -1861,7 +1872,7 @@ static simulated function XComGameState Teleport_BuildGameState(XComGameStateCon
 	NewGameState = TypicalAbility_BuildGameState(Context);
 
 	AbilityContext = XComGameStateContext_Ability(NewGameState.GetContext());	
-	UnitState = XComGameState_Unit(NewGameState.CreateStateObject(class'XComGameState_Unit', AbilityContext.InputContext.SourceObject.ObjectID));
+	UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', AbilityContext.InputContext.SourceObject.ObjectID));
 
 	LastElementIndex = AbilityContext.InputContext.MovementPaths[0].MovementData.Length - 1;
 
@@ -1872,391 +1883,19 @@ static simulated function XComGameState Teleport_BuildGameState(XComGameStateCon
 	NewTileLocation = World.GetTileCoordinatesFromPosition(NewLocation);
 	UnitState.SetVisibilityLocation(NewTileLocation);
 
-	NewGameState.AddStateObject(UnitState);
-
-	AbilityContext.ResultContext.bPathCausesDestruction = false;
+	AbilityContext.ResultContext.bPathCausesDestruction = MoveAbility_StepCausesDestruction(UnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
 	MoveAbility_AddTileStateObjects(NewGameState, UnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
 
 	EventManager.TriggerEvent('ObjectMoved', UnitState, UnitState, NewGameState);
 	EventManager.TriggerEvent('UnitMoveFinished', UnitState, UnitState, NewGameState);
 
-	//Return the game state we have created
 	return NewGameState;
 }
 
 function Teleport_BuildVisualization(XComGameState VisualizeGameState)
 {
-	//general
-	local XComGameStateHistory					History;
-	local XComGameStateVisualizationMgr			VisualizationMgr;
-
-	//visualizers
-	local Actor									TargetVisualizer, ShooterVisualizer;
-
-	//actions
-	local X2Action								AddedAction;
-	local X2Action								FireAction;
-	local X2Action_MoveTurn						MoveTurnAction;
-	local X2Action_PlaySoundAndFlyOver			SoundAndFlyover;
-	local X2Action_ExitCover					ExitCoverAction;
-	//local X2Action_MoveTeleport					TeleportMoveAction;
-	local X2Action_Delay						MoveDelay;
-	local X2Action_MoveEnd						MoveEnd;
-	local X2Action_MarkerNamed					JoinActions;
-	local array<X2Action>						LeafNodes;
-	local X2Action_WaitForAnotherAction			WaitForFireAction;
-
-	//state objects
-	//local XComGameState_Ability					AbilityState;
-	local XComGameState_EnvironmentDamage		EnvironmentDamageEvent;
-	local XComGameState_WorldEffectTileData		WorldDataUpdate;
-	local XComGameState_InteractiveObject		InteractiveObject;
-	local XComGameState_BaseObject				TargetStateObject;
-	local XComGameState_Unit					TargetUnitState;
-	local XComGameState_Item					SourceWeapon;
-	local StateObjectReference					ShootingUnitRef;
-
-	//interfaces
-	local X2VisualizerInterface					TargetVisualizerInterface, ShooterVisualizerInterface;
-
-	//contexts
-	local XComGameStateContext_Ability			Context;
-	local AbilityInputContext					AbilityContext;
-
-	//templates
-	local X2AbilityTemplate						AbilityTemplate;
-	local X2WeaponTemplate						WeaponTemplate;
-
-	//vis metadata
-	local VisualizationActionMetadata			EmptyMetadata;
-	local VisualizationActionMetadata			ActionMetadata;
-	local VisualizationActionMetadata			SourceMetadata;
-	local name         ApplyResult;
-
-	//indices
-	local int	EffectIndex;
-	local int	TrackIndex;
-	local int	WindowBreakTouchIndex;
-
-	//flags
-	local bool  bPlayedAttackResultNarrative;
-	
-	// good/bad determination
-	local bool bGoodAbility;
-			
-	History = `XCOMHISTORY;
-	VisualizationMgr = `XCOMVISUALIZATIONMGR;
-	Context = XComGameStateContext_Ability(VisualizeGameState.GetContext());
-	AbilityContext = Context.InputContext;
-	//AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityContext.AbilityRef.ObjectID));
-	AbilityTemplate = class'XComGameState_Ability'.static.GetMyTemplateManager().FindAbilityTemplate(AbilityContext.AbilityTemplateName);
-	ShootingUnitRef = Context.InputContext.SourceObject;
-
-	//Configure the visualization track for the shooter, part I. We split this into two parts since
-	//in some situations the shooter can also be a target
-	//****************************************************************************************
-	ShooterVisualizer = History.GetVisualizer(ShootingUnitRef.ObjectID);
-	ShooterVisualizerInterface = X2VisualizerInterface(ShooterVisualizer);
-
-	SourceMetadata = EmptyMetadata;
-	SourceMetadata.StateObject_OldState = History.GetGameStateForObjectID(ShootingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
-	SourceMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(ShootingUnitRef.ObjectID);
-	if (SourceMetadata.StateObject_NewState == none)
-		SourceMetadata.StateObject_NewState = SourceMetadata.StateObject_OldState;
-	SourceMetadata.VisualizeActor = ShooterVisualizer;
-
-	SourceWeapon = XComGameState_Item(History.GetGameStateForObjectID(AbilityContext.ItemObject.ObjectID));
-	if (SourceWeapon != None)
-	{
-		WeaponTemplate = X2WeaponTemplate(SourceWeapon.GetMyTemplate());
-	}
-	
-	bGoodAbility = XComGameState_Unit(SourceMetadata.StateObject_NewState).IsFriendlyToLocalPlayer();
-
-	if( Context.IsResultContextMiss() && AbilityTemplate.SourceMissSpeech != '' )
-	{
-		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTree(SourceMetadata, Context, false, SourceMetadata.LastActionAdded));
-		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", AbilityTemplate.SourceMissSpeech, bGoodAbility ? eColor_Bad : eColor_Good);
-	}
-	else if( Context.IsResultContextHit() && AbilityTemplate.SourceHitSpeech != '' )
-	{
-		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTree(SourceMetadata, Context, false, SourceMetadata.LastActionAdded));
-		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, "", AbilityTemplate.SourceHitSpeech, bGoodAbility ? eColor_Good : eColor_Bad);
-	}
-
-	if( Context.InputContext.MovementPaths.Length > 0 )
-	{
-		ExitCoverAction = X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTree(SourceMetadata, Context, false, SourceMetadata.LastActionAdded));
-		
-		// if this ability has a built in move, do it right before we do the fire action
-		if(Context.InputContext.MovementPaths.Length > 0)
-		{
-			// This is the move action. Notice how it is commented out. This means it is not getting visualized. Why does this work? I HAVE NOT A DAMN CLUE
-			//class'X2VisualizerHelpers'.static.ParsePath(Context, SourceMetadata, AbilityTemplate.bSkipMoveStop);
-
-			//  add paths for other units moving with us (e.g. gremlins moving with a move+attack ability)
-			// Normally this would not matter for a Jedi, but there are mods that allow this to matter
-			if (Context.InputContext.MovementPaths.Length > 1)
-			{
-				for (TrackIndex = 1; TrackIndex < Context.InputContext.MovementPaths.Length; ++TrackIndex)
-				{
-					ActionMetadata = EmptyMetadata;
-					ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(Context.InputContext.MovementPaths[TrackIndex].MovingUnitRef.ObjectID);
-					ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(Context.InputContext.MovementPaths[TrackIndex].MovingUnitRef.ObjectID);
-					MoveDelay = X2Action_Delay(class'X2Action_Delay'.static.AddToVisualizationTree(ActionMetadata, Context, false, SourceMetadata.LastActionAdded));
-					MoveDelay.Duration = class'X2Ability_DefaultAbilitySet'.default.TypicalMoveDelay;
-					class'X2VisualizerHelpers'.static.ParsePath(Context, ActionMetadata, AbilityTemplate.bSkipMoveStop);	
-				}
-			}
-
-			MoveEnd = X2Action_MoveEnd(VisualizationMgr.GetNodeOfType(VisualizationMgr.BuildVisTree, class'X2Action_MoveEnd', SourceMetadata.VisualizeActor));
-
-			if (MoveEnd != none)
-			{
-				// add the fire action as a child of the MoveEndNodes parents
-				AddedAction = AbilityTemplate.ActionFireClass.static.AddToVisualizationTree(SourceMetadata, Context, false, none, MoveEnd.ParentActions);
-				
-				// reconnect the MoveEnd actions as children of the fire action, as a special end of move animation will be performed for this move + attack ability
-				VisualizationMgr.DisconnectAction(MoveEnd);
-				VisualizationMgr.ConnectAction(MoveEnd, VisualizationMgr.BuildVisTree, false, AddedAction);
-			}
-			else
-			{
-				// There is no MoveEnd action, which means we should just parent the fire action to the Move action and let the AnimTreeController sort it out
-				AddedAction = AbilityTemplate.ActionFireClass.static.AddToVisualizationTree(SourceMetadata, Context, false, SourceMetadata.LastActionAdded);
-			}
-		}
-		else
-		{
-			// no move, just add the fire action. Parent is the exit cover action if we have one
-			AddedAction = AbilityTemplate.ActionFireClass.static.AddToVisualizationTree(SourceMetadata, Context, false, SourceMetadata.LastActionAdded);
-		}
-
-		FireAction = AddedAction;
-
-		class'XComGameState_NarrativeManager'.static.BuildVisualizationForDynamicNarrative(VisualizeGameState, false, 'AttackBegin', FireAction.ParentActions[0]);
-
-		if( AbilityTemplate.AbilityToHitCalc != None )
-		{
-			X2Action_Fire(AddedAction).SetFireParameters(Context.IsResultContextHit());
-		}
-	}
-
-	//If there are effects added to the shooter, add the visualizer actions for them
-	for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityShooterEffects.Length; ++EffectIndex)
-	{
-		AbilityTemplate.AbilityShooterEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, SourceMetadata, Context.FindShooterEffectApplyResult(AbilityTemplate.AbilityShooterEffects[EffectIndex]));		
-	}
-	//****************************************************************************************
-
-	//Configure the visualization track for the target(s). This functionality uses the context primarily
-	//since the game state may not include state objects for misses.
-	//****************************************************************************************	
-	if (AbilityTemplate.AbilityTargetEffects.Length > 0 &&			//There are effects to apply
-		AbilityContext.PrimaryTarget.ObjectID > 0)				//There is a primary target
-	{
-		TargetVisualizer = History.GetVisualizer(AbilityContext.PrimaryTarget.ObjectID);
-		TargetVisualizerInterface = X2VisualizerInterface(TargetVisualizer);
-
-		ActionMetadata = EmptyMetadata;
-
-		ActionMetadata.VisualizeActor = TargetVisualizer;
-
-		TargetStateObject = VisualizeGameState.GetGameStateForObjectID(AbilityContext.PrimaryTarget.ObjectID);
-		if( TargetStateObject != none )
-		{
-			History.GetCurrentAndPreviousGameStatesForObjectID(AbilityContext.PrimaryTarget.ObjectID, 
-															   ActionMetadata.StateObject_OldState, ActionMetadata.StateObject_NewState,
-															   eReturnType_Reference,
-															   VisualizeGameState.HistoryIndex);
-			`assert(ActionMetadata.StateObject_NewState == TargetStateObject);
-		}
-		else
-		{
-			//If TargetStateObject is none, it means that the visualize game state does not contain an entry for the primary target. Use the history version
-			//and show no change.
-			ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(AbilityContext.PrimaryTarget.ObjectID);
-			ActionMetadata.StateObject_NewState = ActionMetadata.StateObject_OldState;
-		}
-
-		// if this is a melee attack, make sure the target is facing the location he will be melee'd from
-		if(AbilityContext.MovementPaths.Length > 0
-			&& AbilityContext.MovementPaths[0].MovementData.Length > 0
-			&& XGUnit(TargetVisualizer) != none)
-		{
-			MoveTurnAction = X2Action_MoveTurn(class'X2Action_MoveTurn'.static.AddToVisualizationTree(ActionMetadata, Context, false, ExitCoverAction));
-			MoveTurnAction.m_vFacePoint = AbilityContext.MovementPaths[0].MovementData[AbilityContext.MovementPaths[0].MovementData.Length - 1].Position;
-			MoveTurnAction.m_vFacePoint.Z = TargetVisualizerInterface.GetTargetingFocusLocation().Z;
-			MoveTurnAction.UpdateAimTarget = true;
-
-			// Jwats: Add a wait for ability effect so the idle state machine doesn't process!
-			WaitForFireAction = X2Action_WaitForAnotherAction(class'X2Action_WaitForAnotherAction'.static.AddToVisualizationTree(ActionMetadata, Context, false, MoveTurnAction));
-			WaitForFireAction.ActionToWaitFor = FireAction;
-		}
-
-		//Pass in AddedAction (Fire Action) as the LastActionAdded if we have one. Important! As this is automatically used as the parent in the effect application sub functions below.
-		if (AddedAction != none && AddedAction.IsA('X2Action_Fire'))
-		{
-			ActionMetadata.LastActionAdded = AddedAction;
-		}
-		
-		//Add any X2Actions that are specific to this effect being applied. These actions would typically be instantaneous, showing UI world messages
-		//playing any effect specific audio, starting effect specific effects, etc. However, they can also potentially perform animations on the 
-		//track actor, so the design of effect actions must consider how they will look/play in sequence with other effects.
-		for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityTargetEffects.Length; ++EffectIndex)
-		{
-			ApplyResult = Context.FindTargetEffectApplyResult(AbilityTemplate.AbilityTargetEffects[EffectIndex]);
-
-			// Target effect visualization
-			if( !Context.bSkipAdditionalVisualizationSteps )
-			{
-				AbilityTemplate.AbilityTargetEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, ActionMetadata, ApplyResult);
-			}
-
-			// Source effect visualization
-			AbilityTemplate.AbilityTargetEffects[EffectIndex].AddX2ActionsForVisualizationSource(VisualizeGameState, SourceMetadata, ApplyResult);
-		}
-
-		//the following is used to handle Rupture flyover text
-		TargetUnitState = XComGameState_Unit(ActionMetadata.StateObject_OldState);
-		if (TargetUnitState != none &&
-			XComGameState_Unit(ActionMetadata.StateObject_OldState).GetRupturedValue() == 0 &&
-			XComGameState_Unit(ActionMetadata.StateObject_NewState).GetRupturedValue() > 0)
-		{
-			//this is the frame that we realized we've been ruptured!
-			class 'X2StatusEffects'.static.RuptureVisualization(VisualizeGameState, ActionMetadata);
-		}
-
-		if (AbilityTemplate.bAllowBonusWeaponEffects && WeaponTemplate != none)
-		{
-			for (EffectIndex = 0; EffectIndex < WeaponTemplate.BonusWeaponEffects.Length; ++EffectIndex)
-			{
-				ApplyResult = Context.FindTargetEffectApplyResult(WeaponTemplate.BonusWeaponEffects[EffectIndex]);
-				WeaponTemplate.BonusWeaponEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, ActionMetadata, ApplyResult);
-				WeaponTemplate.BonusWeaponEffects[EffectIndex].AddX2ActionsForVisualizationSource(VisualizeGameState, SourceMetadata, ApplyResult);
-			}
-		}
-
-		if (Context.IsResultContextMiss() && (AbilityTemplate.LocMissMessage != "" || AbilityTemplate.TargetMissSpeech != ''))
-		{
-			SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-			SoundAndFlyOver.SetSoundAndFlyOverParameters(None, AbilityTemplate.LocMissMessage, AbilityTemplate.TargetMissSpeech, bGoodAbility ? eColor_Bad : eColor_Good);
-		}
-		else if( Context.IsResultContextHit() && (AbilityTemplate.LocHitMessage != "" || AbilityTemplate.TargetHitSpeech != '') )
-		{
-			SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyover'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-			SoundAndFlyOver.SetSoundAndFlyOverParameters(None, AbilityTemplate.LocHitMessage, AbilityTemplate.TargetHitSpeech, bGoodAbility ? eColor_Good : eColor_Bad);
-		}
-
-		if (!bPlayedAttackResultNarrative)
-		{
-			class'XComGameState_NarrativeManager'.static.BuildVisualizationForDynamicNarrative(VisualizeGameState, false, 'AttackResult');
-			bPlayedAttackResultNarrative = true;
-		}
-
-		if( TargetVisualizerInterface != none )
-		{
-			//Allow the visualizer to do any custom processing based on the new game state. For example, units will create a death action when they reach 0 HP.
-			TargetVisualizerInterface.BuildAbilityEffectsVisualization(VisualizeGameState, ActionMetadata);
-		}
-	}
-	//****************************************************************************************
-
-	//Finish adding the shooter's track
-	//****************************************************************************************
-	if( ShooterVisualizerInterface != none)
-	{
-		ShooterVisualizerInterface.BuildAbilityEffectsVisualization(VisualizeGameState, SourceMetadata);				
-	}
-
-	//  Handle redirect visualization
-	TypicalAbility_AddEffectRedirects(VisualizeGameState, SourceMetadata);
-
-	//****************************************************************************************
-
-	//Configure the visualization tracks for the environment
-	//****************************************************************************************
-
-	if (ExitCoverAction != none)
-	{
-		ExitCoverAction.ShouldBreakWindowBeforeFiring( Context, WindowBreakTouchIndex );
-	}
-
-	foreach VisualizeGameState.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamageEvent)
-	{
-		ActionMetadata = EmptyMetadata;
-		ActionMetadata.VisualizeActor = none;
-		ActionMetadata.StateObject_NewState = EnvironmentDamageEvent;
-		ActionMetadata.StateObject_OldState = EnvironmentDamageEvent;
-
-		// if this is the damage associated with the exit cover action, we need to force the parenting within the tree
-		// otherwise LastActionAdded with be 'none' and actions will auto-parent.
-		if ((ExitCoverAction != none) && (WindowBreakTouchIndex > -1))
-		{
-			if (EnvironmentDamageEvent.HitLocation == AbilityContext.ProjectileEvents[WindowBreakTouchIndex].HitLocation)
-			{
-				ActionMetadata.LastActionAdded = ExitCoverAction;
-			}
-		}
-
-		for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityShooterEffects.Length; ++EffectIndex)
-		{
-			AbilityTemplate.AbilityShooterEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, ActionMetadata, 'AA_Success');		
-		}
-
-		for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityTargetEffects.Length; ++EffectIndex)
-		{
-			AbilityTemplate.AbilityTargetEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, ActionMetadata, 'AA_Success');
-		}
-	}
-
-	foreach VisualizeGameState.IterateByClassType(class'XComGameState_WorldEffectTileData', WorldDataUpdate)
-	{
-		ActionMetadata = EmptyMetadata;
-		ActionMetadata.VisualizeActor = none;
-		ActionMetadata.StateObject_NewState = WorldDataUpdate;
-		ActionMetadata.StateObject_OldState = WorldDataUpdate;
-
-		for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityShooterEffects.Length; ++EffectIndex)
-		{
-			AbilityTemplate.AbilityShooterEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, ActionMetadata, 'AA_Success');		
-		}
-
-		for (EffectIndex = 0; EffectIndex < AbilityTemplate.AbilityTargetEffects.Length; ++EffectIndex)
-		{
-			AbilityTemplate.AbilityTargetEffects[EffectIndex].AddX2ActionsForVisualization(VisualizeGameState, ActionMetadata, 'AA_Success');
-		}
-	}
-	//****************************************************************************************
-
-	//Process any interactions with interactive objects
-	foreach VisualizeGameState.IterateByClassType(class'XComGameState_InteractiveObject', InteractiveObject)
-	{
-		// Add any doors that need to listen for notification
-		// Move logic is taken from MoveAbility_BuildVisualization, which only has special case handling for AI patrol movement ( which wouldn't happen here )
-		if ( Context.InputContext.MovementPaths.Length > 0 || (InteractiveObject.IsDoor() && InteractiveObject.HasDestroyAnim()) ) //Is this a closed door?
-		{
-			ActionMetadata = EmptyMetadata;
-			//Don't necessarily have a previous state, so just use the one we know about
-			ActionMetadata.StateObject_OldState = InteractiveObject;
-			ActionMetadata.StateObject_NewState = InteractiveObject;
-			ActionMetadata.VisualizeActor = History.GetVisualizer(InteractiveObject.ObjectID);
-
-			class'X2Action_BreakInteractActor'.static.AddToVisualizationTree(ActionMetadata, Context);
-		}
-	}
-	
-	//Add a join so that all hit reactions and other actions will complete before the visualization sequence moves on. In the case
-	// of fire but no enter cover then we need to make sure to wait for the fire since it isn't a leaf node
-	VisualizationMgr.GetAllLeafNodes(VisualizationMgr.BuildVisTree, LeafNodes);
-
-	LeafNodes.AddItem(class'X2Action_EnterCover'.static.AddToVisualizationTree(SourceMetadata, Context, false, FireAction));
-	
-	if (VisualizationMgr.BuildVisTree.ChildActions.Length > 0)
-	{
-		JoinActions = X2Action_MarkerNamed(class'X2Action_MarkerNamed'.static.AddToVisualizationTree(SourceMetadata, Context, false, none, LeafNodes));
-		JoinActions.SetName("Join");
-	}
+	XComGameStateContext_Ability(VisualizeGameState.GetContext()).InputContext.MovementPaths.Remove(1, 1);
+	TypicalAbility_BuildVisualization(VisualizeGameState);
 }
 
 static function X2AbilityTemplate ForceAlignmentModifier()
@@ -2321,6 +1960,7 @@ static function X2AbilityTemplate ForceAbilitiesAnimSet()
 	AnimSets = new class'X2Effect_AdditionalAnimSets';
 	AnimSets.EffectName = 'ForceAnimsets';
 	AnimSets.AddAnimSetWithPath("AnimSet'JediClassAbilities.Anims.AS_ForcePowers'");
+	AnimSets.AddAnimSetWithPath("AnimSet'JediClassAbilities.Anims.AS_Teleport'");
 	AnimSets.BuildPersistentEffect(1, true, false, false, eGameRule_TacticalGameStart);
 	AnimSets.DuplicateResponse = eDupe_Ignore;
 	Template.AddTargetEffect(AnimSets);
