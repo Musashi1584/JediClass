@@ -1851,7 +1851,6 @@ static simulated function Teleport_ModifyActivatedAbilityContext(XComGameStateCo
 	InputData.MovingUnitRef = UnitState.GetReference();
 	AbilityContext.InputContext.MovementPaths.Length = 0;
 	AbilityContext.InputContext.MovementPaths.AddItem(InputData);
-	`LOG(GetFuncName() @ AbilityContext.InputContext.MovementPaths.Length,, 'JediClass');
 }
 
 static simulated function XComGameState Teleport_BuildGameState(XComGameStateContext Context)
@@ -1960,7 +1959,6 @@ static function X2AbilityTemplate ForceAbilitiesAnimSet()
 	AnimSets = new class'X2Effect_AdditionalAnimSets';
 	AnimSets.EffectName = 'ForceAnimsets';
 	AnimSets.AddAnimSetWithPath("AnimSet'JediClassAbilities.Anims.AS_ForcePowers'");
-	AnimSets.AddAnimSetWithPath("AnimSet'JediClassAbilities.Anims.AS_Teleport'");
 	AnimSets.BuildPersistentEffect(1, true, false, false, eGameRule_TacticalGameStart);
 	AnimSets.DuplicateResponse = eDupe_Ignore;
 	Template.AddTargetEffect(AnimSets);
