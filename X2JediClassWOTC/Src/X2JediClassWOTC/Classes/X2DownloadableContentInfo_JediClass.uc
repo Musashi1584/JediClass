@@ -220,3 +220,25 @@ static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameStat
 	}
 }
 
+static function bool HasDualMeleeEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	return IsPrimaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate())) &&
+		IsSecondaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
+}
+
+static function bool IsPrimaryMeleeWeaponTemplate(X2WeaponTemplate WeaponTemplate)
+{
+	return WeaponTemplate != none &&
+		WeaponTemplate.InventorySlot == eInvSlot_PrimaryWeapon &&
+		WeaponTemplate.iRange == 0;
+}
+
+static function bool IsSecondaryMeleeWeaponTemplate(X2WeaponTemplate WeaponTemplate)
+{
+	return WeaponTemplate != none &&
+		WeaponTemplate.InventorySlot == eInvSlot_SecondaryWeapon &&
+		WeaponTemplate.iRange == 0 &&
+		WeaponTemplate.WeaponCat != 'wristblade' &&
+		WeaponTemplate.WeaponCat != 'shield' &&
+		WeaponTemplate.WeaponCat != 'gauntlet';
+}

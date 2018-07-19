@@ -51,6 +51,7 @@ static function array<X2DataTemplate> CreateTemplates()
 static function X2DataTemplate CreateTemplate_LightSaber_ConventionalPrimary()
 {
 	local X2WeaponTemplate Template;
+	local AltGameArchetypeUse DualWieldArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[0]);
 	Template.GameplayInstanceClass = class'XGLightSaber';
@@ -60,11 +61,17 @@ static function X2DataTemplate CreateTemplate_LightSaber_ConventionalPrimary()
 	Template.WeaponCat = 'lightsaber';
 	Template.WeaponTech = 'conventional';
 	Template.strImage = "img:///LightSaber_CV.UI.LightsaberIcon";
+	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_Shotgun';
 	Template.EquipSound = "Sword_Equip_Conventional";
-	Template.InventorySlot = eInvSlot_PrimaryWeapon;
+	Template.InventorySlot = eInvSlot_SecondaryWeapon;
 	Template.StowedLocation = eSlot_RightHand;
 	// This all the resources; sounds, animations, models, physics, the works.
 	Template.GameArchetype = "LightSaber_CV.Archetypes.WP_LightSaber_CV";
+
+	DualWieldArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
+	DualWieldArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
+	Template.AltGameArchetypeArray.AddItem(DualWieldArchetype);
+
 	//Template.AddDefaultAttachment('Sheath', "ConvSword.Meshes.SM_ConvSword_Sheath", true);
 	Template.Tier = 0;
 	Template.OnAcquiredFn = OnLightsaberAcquired;
@@ -98,6 +105,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_ConventionalPrimary()
 static function X2DataTemplate CreateTemplate_LightSaber_MagneticPrimary()
 {
 	local X2WeaponTemplate Template;
+	local AltGameArchetypeUse DualWieldArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[1]);
 	Template.GameplayInstanceClass = class'XGLightSaber';
@@ -107,12 +115,17 @@ static function X2DataTemplate CreateTemplate_LightSaber_MagneticPrimary()
 	Template.WeaponCat = 'lightsaber';
 	Template.WeaponTech = 'magnetic';
 	Template.strImage = "img:///LightSaber_CV.UI.LightsaberIcon";
+	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_Shotgun';
 	Template.EquipSound = "Sword_Equip_Magnetic";
-	Template.InventorySlot = eInvSlot_PrimaryWeapon;
+	Template.InventorySlot = eInvSlot_SecondaryWeapon;
 	Template.StowedLocation = eSlot_RightHand;
 	// This all the resources; sounds, animations, models, physics, the works.
 	Template.GameArchetype = "LightSaber_CV.Archetypes.WP_LightSaber_CV";
-	//Template.AddDefaultAttachment('R_Back', "MagSword.Meshes.SM_MagSword_Sheath", false);
+
+	DualWieldArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
+	DualWieldArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
+	Template.AltGameArchetypeArray.AddItem(DualWieldArchetype);
+
 	Template.Tier = 1;
 	Template.OnAcquiredFn = OnLightsaberAcquired;
 
@@ -133,7 +146,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_MagneticPrimary()
 	
 	AddConfigAbilities(Template, default.LIGHTSABER_MAGNETIC_ABILITIES);
 
-	Template.BaseItem = 'LightSaber_CV_Primary'; // Which item this will be upgraded from
+	Template.BaseItem = 'Lightsaber_CV'; // Which item this will be upgraded from
 	
 	Template.DamageTypeTemplateName = 'Melee';
 	Template.BaseDamage.DamageType = 'Melee';
@@ -149,6 +162,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_MagneticPrimary()
 static function X2DataTemplate CreateTemplate_LightSaber_BeamPrimary()
 {
 	local X2WeaponTemplate Template;
+	local AltGameArchetypeUse DualWieldArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[2]);
 	Template.GameplayInstanceClass = class'XGLightSaber';
@@ -158,12 +172,17 @@ static function X2DataTemplate CreateTemplate_LightSaber_BeamPrimary()
 	Template.WeaponCat = 'lightsaber';
 	Template.WeaponTech = 'beam';
 	Template.strImage = "img:///LightSaber_CV.UI.LightsaberIcon";
+	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_Shotgun';
 	Template.EquipSound = "Sword_Equip_Beam";
-	Template.InventorySlot = eInvSlot_PrimaryWeapon;
+	Template.InventorySlot = eInvSlot_SecondaryWeapon;
 	Template.StowedLocation = eSlot_RightHand;
 	// This all the resources; sounds, animations, models, physics, the works.
 	Template.GameArchetype = "LightSaber_CV.Archetypes.WP_LightSaber_CV";
-	//Template.AddDefaultAttachment('R_Back', "BeamSword.Meshes.SM_BeamSword_Sheath", false);
+	
+	DualWieldArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
+	DualWieldArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
+	Template.AltGameArchetypeArray.AddItem(DualWieldArchetype);
+
 	Template.Tier = 2;
 	Template.OnAcquiredFn = OnLightsaberAcquired;
 
@@ -182,7 +201,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_BeamPrimary()
 	
 	AddConfigAbilities(Template, default.LIGHTSABER_BEAM_ABILITIES);
 
-	Template.BaseItem = 'LightSaber_MG_Primary'; // Which item this will be upgraded from
+	Template.BaseItem = 'Lightsaber_MG'; // Which item this will be upgraded from
 	
 	Template.BaseDamage.DamageType='Melee';
 	Template.DamageTypeTemplateName = 'Melee';
@@ -231,6 +250,14 @@ static function bool OnLightsaberAcquired(XComGameState NewGameState, XComGameSt
 
 	return true;
 }
+
+function bool ShouldUseDualWieldArchetype(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)
+{
+	`LOG("ShouldUseDualWieldArchetype" @ ConsiderArchetype,, 'JediClass');
+	return (class'X2DownloadableContentInfo_JediClass'.static.HasDualMeleeEquipped(UnitState) &&
+		ConsiderArchetype == "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual");
+}
+
 
 defaultproperties
 {
