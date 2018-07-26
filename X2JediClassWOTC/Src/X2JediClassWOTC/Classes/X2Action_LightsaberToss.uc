@@ -15,6 +15,8 @@ var string LightsaberSound_Cue_Path;
 var protected SoundCue LightsaberSound_Cue;
 var protected AudioComponent LightsaberSoundComponent;
 
+var CustomAnimParams Params;
+
 function AddProjectileVolley(X2UnifiedProjectile NewProjectile)
 {
 	bWaitingToFire = false;
@@ -35,7 +37,9 @@ function Init()
 		Targets.AddItem(Target);
 	}
 
-	UnitPawn.Mesh.GetSocketWorldLocationAndRotation('L_Hand', LastLocation);
+	UnitPawn.Mesh.GetSocketWorldLocationAndRotation('R_Hand', LastLocation);
+	`log(default.Class @ GetFuncName() @ LastLocation.X @ LastLocation.Y @ LastLocation.Z,, 'X2JediClassWOTC');
+
 	LightsaberSound_Cue = SoundCue(`CONTENT.RequestGameArchetype(LightsaberSound_Cue_Path));
 	LightsaberSoundComponent = CreateAudioComponent(LightsaberSound_Cue, false);
 	
@@ -105,6 +109,7 @@ function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
 	local XComGameState_InteractiveObject InteractiveObject;
 	local XComInteractiveLevelActor InteractiveLevelActor;
 	local XComGameState_Unit PrimaryTargetState;
+	local vector RightHandLocation;
 
 	`log("X2Action_LightsaberToss ProjectileNotifyHit" @ bMainImpactNotify @ iProjectileNotifyHitIndex @ "/" @ Targets.Length @ HitLocation @ UnitPawn.Location,, 'X2JediClassWOTC');
 
@@ -142,7 +147,9 @@ function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
 	}
 
 	//if (HitLocation.X ~= UnitPawn.Location.X && HitLocation.Y ~= UnitPawn.Location.Y && HitLocation.Z ~= UnitPawn.Location.Z)
-	if (!class'Helpers'.static.AreVectorsDifferent(HitLocation, UnitPawn.Location, 1))
+	
+	UnitPawn.Mesh.GetSocketWorldLocationAndRotation('R_Hand', RightHandLocation);
+	if (!class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 0.1))
 	{
 		//`log("X2Action_LightsaberToss ReturnToSource" @ iProjectileNotifyHitIndex @ Targets.Length,, 'X2JediClassWotc');
 		LightsaberReturned();
@@ -153,11 +160,11 @@ function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
 
 function LightsaberReturned()
 {
-	LightsaberSoundComponent.Stop();
 	if(AbilityTemplate.bHideWeaponDuringFire)
 	{
 		WeaponVisualizer.GetEntity().Mesh.SetHidden(false);
 	}
+	LightsaberSoundComponent.Stop();
 }
 
 simulated state Executing
@@ -194,10 +201,13 @@ simulated state Executing
 		local X2VisualizerInterface Target;
 		//local StateObjectReference TargetRef;
 
+		`log(default.Class @ GetFuncName() @ iNextNotifyIndex @Targets.Length,, 'X2JediClassWotc');
+
 		if (iNextNotifyIndex >= Targets.Length)
 		{
 			`log("X2Action_LightsaberToss Return Lightsaber to unit location" @ UnitPawn.Location,, 'X2JediClassWotc');
-			SendProjectile(LastLocation, UnitPawn.Location, false);
+			UnitPawn.Mesh.GetSocketWorldLocationAndRotation('R_Hand', NextTargetLocation);
+			SendProjectile(LastLocation, NextTargetLocation, false);
 		}
 		else if (iNextNotifyIndex < Targets.Length)
 		{
@@ -223,6 +233,7 @@ Begin:
 	Unit.CurrentFireAction = self;
 	UnitPawn.EnableRMA(true, true);
 	UnitPawn.EnableRMAInteractPhysics(true);
+
 	FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(AnimParams));
 
 	LightsaberSoundComponent.Play();
@@ -242,6 +253,16 @@ Begin:
 			LightsaberReturned();
 			break;
 		}
+	}
+
+	if (bCanComplete && bReturnedToSource)
+	{
+		//UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
+		Params = default.Params;
+		Params.AnimName = 'FF_LightsaberTossStopA';
+		Params.Looping = false;
+		FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params));
+		//UnitPawn.GetAnimTreeController().SetAllowNewAnimations(false);
 	}
 	
 	Sleep(0.5f);

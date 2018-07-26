@@ -41,14 +41,14 @@ static function array<X2DataTemplate> CreateTemplates()
 	local array<X2DataTemplate> Weapons;
 
 	// Lightsabers
-	Weapons.AddItem(CreateTemplate_LightSaber_ConventionalPrimary());
-	Weapons.AddItem(CreateTemplate_LightSaber_MagneticPrimary());
-	Weapons.AddItem(CreateTemplate_LightSaber_BeamPrimary());
+	Weapons.AddItem(CreateTemplate_LightSaber_Conventional());
+	Weapons.AddItem(CreateTemplate_LightSaber_Magnetic());
+	Weapons.AddItem(CreateTemplate_LightSaber_Beam());
 	
 	return Weapons;
 }
 
-static function X2DataTemplate CreateTemplate_LightSaber_ConventionalPrimary()
+static function X2DataTemplate CreateTemplate_LightSaber_Conventional()
 {
 	local X2WeaponTemplate Template;
 	local AltGameArchetypeUse DualWieldArchetype;
@@ -102,7 +102,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_ConventionalPrimary()
 	return Template;
 }
 
-static function X2DataTemplate CreateTemplate_LightSaber_MagneticPrimary()
+static function X2DataTemplate CreateTemplate_LightSaber_Magnetic()
 {
 	local X2WeaponTemplate Template;
 	local AltGameArchetypeUse DualWieldArchetype;
@@ -159,7 +159,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_MagneticPrimary()
 	return Template;
 }
 
-static function X2DataTemplate CreateTemplate_LightSaber_BeamPrimary()
+static function X2DataTemplate CreateTemplate_LightSaber_Beam()
 {
 	local X2WeaponTemplate Template;
 	local AltGameArchetypeUse DualWieldArchetype;
