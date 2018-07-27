@@ -16,6 +16,8 @@ var protected SoundCue LightsaberSound_Cue;
 var protected AudioComponent LightsaberSoundComponent;
 
 var CustomAnimParams Params;
+var AnimNodeSequence IdleAnim;
+var name IdleAnimationName, StopAnimationName;
 
 function AddProjectileVolley(X2UnifiedProjectile NewProjectile)
 {
@@ -55,9 +57,10 @@ function Init()
 
 	SetProjectileColor();
 
-	bWaitingToFire = true;
-	bCanComplete = false;
-	bReturnedToSource = false;
+	//bWaitingToFire = true;
+	//bCanComplete = false;
+	//bReturnedToSource = false;
+	//bSnap = true;
 }
 
 function SetProjectileColor()
@@ -163,21 +166,21 @@ function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
 
 	if (iProjectileNotifyHitIndex == Targets.Length)
 	{
-		`log("bMainImpactNotify" @ bMainImpactNotify @ "/" @ iProjectileNotifyHitIndex @ "/" @ Targets.Length,, 'X2JediClassWotc');
-		`log("HitLocation" @ HitLocation,, 'X2JediClassWotc');
-		`log("RightHandLocation" @ RightHandLocation,, 'X2JediClassWotc');
-		`log("AreVectorsDifferent 0.1" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 0.1),, 'X2JediClassWotc');
-		`log("AreVectorsDifferent 0.5" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 0.5),, 'X2JediClassWotc');
-		`log("AreVectorsDifferent 1.5" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 1.5),, 'X2JediClassWotc');
-		`log("AreVectorsDifferent 3" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 3),, 'X2JediClassWotc');
-		`log("AreVectorsDifferent 5" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 5),, 'X2JediClassWotc');
-		`log("AreVectorsDifferent 10" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 10),, 'X2JediClassWotc');
-		`log("AreVectorsDifferent 20" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 20),, 'X2JediClassWotc');
-		`log("AreVectorsDifferent 30" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 30),, 'X2JediClassWotc');
-		`log("AreVectorsDifferent 50" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 50),, 'X2JediClassWotc');
+		//`log("bMainImpactNotify" @ bMainImpactNotify @ "/" @ iProjectileNotifyHitIndex @ "/" @ Targets.Length,, 'X2JediClassWotc');
+		//`log("HitLocation" @ HitLocation,, 'X2JediClassWotc');
+		//`log("RightHandLocation" @ RightHandLocation,, 'X2JediClassWotc');
+		//`log("AreVectorsDifferent 0.1" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 0.1),, 'X2JediClassWotc');
+		//`log("AreVectorsDifferent 0.5" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 0.5),, 'X2JediClassWotc');
+		//`log("AreVectorsDifferent 1.5" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 1.5),, 'X2JediClassWotc');
+		//`log("AreVectorsDifferent 3" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 3),, 'X2JediClassWotc');
+		//`log("AreVectorsDifferent 5" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 5),, 'X2JediClassWotc');
+		//`log("AreVectorsDifferent 10" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 10),, 'X2JediClassWotc');
+		//`log("AreVectorsDifferent 20" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 20),, 'X2JediClassWotc');
+		//`log("AreVectorsDifferent 30" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 30),, 'X2JediClassWotc');
+		//`log("AreVectorsDifferent 50" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 50),, 'X2JediClassWotc');
 	}
 
-	if (!class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 20))
+	if (!class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 50))
 	{
 		`log("X2Action_LightsaberToss returned to source" @ iProjectileNotifyHitIndex @ Targets.Length,, 'X2JediClassWotc');
 		bReturnedToSource = true;
@@ -257,8 +260,6 @@ Begin:
 
 	FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(AnimParams));
 
-	bSnap = true;
-
 	LightsaberSoundComponent.Play();
 
 	if(AbilityTemplate.bHideWeaponDuringFire)
@@ -266,21 +267,22 @@ Begin:
 		WeaponVisualizer.GetEntity().Mesh.SetHidden(true);
 	}
 
-	if (!bCanComplete && !bReturnedToSource)
+	if (!bCanComplete)
 	{
-		`LOG("Start NO_IdleGunUp",, 'X2JediClassWotc');
+		`LOG("Start" @ IdleAnimationName,, 'X2JediClassWotc');
 		Params = default.Params;
-		Params.AnimName = 'NO_IdleGunUp';
+		Params.AnimName = IdleAnimationName;
 		Params.Looping = true;
 		if(UnitPawn.GetAnimTreeController().CanPlayAnimation(Params.AnimName))
 		{
-			UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
+			IdleAnim = UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
 		}
 	}
 	
 	while (!bCanComplete || !bReturnedToSource)
 	{
 		Sleep(0.0f);
+
 		if (ActionTimout <= 0)
 		{
 			bCanComplete = true;
@@ -292,16 +294,18 @@ Begin:
 
 	if (bCanComplete && bReturnedToSource)
 	{
-		//UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
-		`LOG("Start FF_LightsaberTossStopA" @ bSnap,, 'X2JediClassWotc');
+		IdleAnim.StopAnim();
+		UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
+		`LOG("Start" @ StopAnimationName,, 'X2JediClassWotc');
 		LightsaberReturned();
 		Params = default.Params;
-		Params.AnimName = 'FF_LightsaberTossStopA';
+		Params.AnimName = StopAnimationName;
 		Params.Looping = false;
 		if (UnitPawn.GetAnimTreeController().CanPlayAnimation(Params.AnimName))
 		{
 			FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params));
 		}
+		
 		//UnitPawn.GetAnimTreeController().SetAllowNewAnimations(false);
 		CompleteAction();
 	}
@@ -316,4 +320,10 @@ defaultproperties
 	LightsaberSound_Cue_Path="LightSaber_CV.SFX.LightsaberSwingLoop_Cue"
 	bNotifyMultiTargetsAtOnce = false
 	ActionTimout = 10
+	bWaitingToFire = true
+	bCanComplete = false
+	bReturnedToSource = false
+	bSnap = true
+	IdleAnimationName = "NO_IdleGunUp"
+	StopAnimationName = "FF_LightsaberTossStopA"
 }
