@@ -107,8 +107,13 @@ function SendProjectile(vector Source, vector Target, bool bReturnToSource = fal
 
 function NotifyTargetsAbilityApplied()
 {
-	// Just leave here to overwrite the super function
-	//super.NotifyTargetsAbilityApplied();
+	`log(GetFuncName() @ "was called",, 'X2JediClassWOTC');
+}
+
+function DoNotifyTargetsAbilityAppliedWithMultipleHitLocations(XComGameState NotifyVisualizeGameState, XComGameStateContext_Ability NotifyAbilityContext,
+									   int HistoryIndex, Vector HitLocation, array<Vector> allHitLocations, int PrimaryTargetID = 0, bool bNotifyMultiTargetsAtOnce = true )
+{
+	`log(GetFuncName() @ "was called",, 'X2JediClassWOTC');
 }
 
 function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
@@ -116,8 +121,10 @@ function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
 	local XComGameState_EnvironmentDamage EnvironmentDamageEvent;
 	local XComGameState_InteractiveObject InteractiveObject;
 	local XComInteractiveLevelActor InteractiveLevelActor;
-	local XComGameState_Unit PrimaryTargetState;
+	local XComGameState_Unit TargetState;
 	local vector RightHandLocation;
+	local float HandProximity;
+	local bool bReturn;
 
 	if (bReturnedToSource)
 	{
@@ -126,13 +133,12 @@ function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
 
 	`log("X2Action_LightsaberToss ProjectileNotifyHit" @ bMainImpactNotify @ iProjectileNotifyHitIndex @ "/" @ Targets.Length @ HitLocation @ UnitPawn.Location,, 'X2JediClassWOTC');
 
-	//`log("X2Action_LightsaberToss vector comparison" @ HitLocation.X ~= UnitPawn.Location.X @ HitLocation.Y ~= UnitPawn.Location.Y @ HitLocation.Z ~= UnitPawn.Location.Z @ "/" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, UnitPawn.Location, 1),, 'X2JediClassWotc');
+	bReturn = Targets.Length == iProjectileNotifyHitIndex;
 
 	if (iProjectileNotifyHitIndex < Targets.Length && bMainImpactNotify)
 	{
 		// Notify target
 		AbilityContext.InputContext.MultiTargetsNotified[iProjectileNotifyHitIndex] = true;
-		iProjectileNotifyHitIndex++;
 
 		foreach VisualizeGameState.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamageEvent)
 		{		
@@ -152,39 +158,34 @@ function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
 		}
 
 		bSnap = true;
-		PrimaryTargetState = XComGameState_Unit(History.GetGameStateForObjectID(PrimaryTargetID));
-		`XEVENTMGR.TriggerEvent('Visualizer_ProjectileHit', PrimaryTargetState, self);
-		`XEVENTMGR.TriggerEvent('Visualizer_AbilityHit', self, self);
+		TargetState = XComGameState_Unit(History.GetGameStateForObjectID(Targets[iProjectileNotifyHitIndex].ObjectID));
+		`XEVENTMGR.TriggerEvent('Visualizer_ProjectileHit', TargetState, self);
+		//
 		ProjectileHitLocation = HitLocation;
-		NotifyTargetsAbilityApplied();
+		iProjectileNotifyHitIndex++;
+		//NotifyTargetsAbilityApplied();
 	}
-
-	//if (HitLocation.X ~= UnitPawn.Location.X && HitLocation.Y ~= UnitPawn.Location.Y && HitLocation.Z ~= UnitPawn.Location.Z)
-
 
 	UnitPawn.Mesh.GetSocketWorldLocationAndRotation('R_Hand', RightHandLocation);
 
-	if (iProjectileNotifyHitIndex == Targets.Length)
+	if (bReturn)
 	{
-		//`log("bMainImpactNotify" @ bMainImpactNotify @ "/" @ iProjectileNotifyHitIndex @ "/" @ Targets.Length,, 'X2JediClassWotc');
-		//`log("HitLocation" @ HitLocation,, 'X2JediClassWotc');
-		//`log("RightHandLocation" @ RightHandLocation,, 'X2JediClassWotc');
-		//`log("AreVectorsDifferent 0.1" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 0.1),, 'X2JediClassWotc');
-		//`log("AreVectorsDifferent 0.5" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 0.5),, 'X2JediClassWotc');
-		//`log("AreVectorsDifferent 1.5" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 1.5),, 'X2JediClassWotc');
-		//`log("AreVectorsDifferent 3" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 3),, 'X2JediClassWotc');
-		//`log("AreVectorsDifferent 5" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 5),, 'X2JediClassWotc');
-		//`log("AreVectorsDifferent 10" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 10),, 'X2JediClassWotc');
-		//`log("AreVectorsDifferent 20" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 20),, 'X2JediClassWotc');
-		//`log("AreVectorsDifferent 30" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 30),, 'X2JediClassWotc');
-		//`log("AreVectorsDifferent 50" @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 50),, 'X2JediClassWotc');
-	}
+		`XEVENTMGR.TriggerEvent('Visualizer_AbilityHit', self, self);
+		`log("bMainImpactNotify" @ bMainImpactNotify @ "/" @ iProjectileNotifyHitIndex @ "/" @ Targets.Length,, 'X2JediClassWotc');
+		`log("HitLocation" @ HitLocation,, 'X2JediClassWotc');
+		`log("RightHandLocation" @ RightHandLocation,, 'X2JediClassWotc');
 
-	if (!class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, 50))
-	{
-		`log("X2Action_LightsaberToss returned to source" @ iProjectileNotifyHitIndex @ Targets.Length,, 'X2JediClassWotc');
-		bReturnedToSource = true;
-		bSnap = true;
+		for (HandProximity = 0.0; HandProximity <= 50.0;  HandProximity+=0.1)
+		{
+			if (!class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, HandProximity))
+			{
+				`log("AreVectorsDifferent" @ HandProximity @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, HandProximity),, 'X2JediClassWotc');
+				`log("X2Action_LightsaberToss returned to source" @ iProjectileNotifyHitIndex @ Targets.Length,, 'X2JediClassWotc');
+				bReturnedToSource = true;
+				bSnap = true;
+				break;
+			}
+		}
 	}
 }
 

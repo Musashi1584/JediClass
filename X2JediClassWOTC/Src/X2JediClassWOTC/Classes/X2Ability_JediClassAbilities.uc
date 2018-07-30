@@ -2046,7 +2046,7 @@ static function X2AbilityTemplate LightsaberTelekinesis()
 
 	// Icon Properties
 	Template.IconImage = "img:///LightSaber_CV.UI.UIPerk_TossMulti";
-	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_MAJOR_PRIORITY;
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.STANDARD_SHOT_PRIORITY + 1;
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.DisplayTargetHitChance = true;
 	Template.AbilitySourceName = 'eAbilitySource_Standard';
@@ -2131,7 +2131,7 @@ static function X2AbilityTemplate LightsaberToss()
 
 	// Icon Properties
 	Template.IconImage = "img:///LightSaber_CV.UI.UIPerk_TossSingle";
-	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_MAJOR_PRIORITY;
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.STANDARD_SHOT_PRIORITY;
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.DisplayTargetHitChance = true;
 	Template.AbilitySourceName = 'eAbilitySource_Standard';
