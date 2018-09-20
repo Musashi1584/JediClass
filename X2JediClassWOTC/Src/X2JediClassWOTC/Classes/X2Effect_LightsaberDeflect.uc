@@ -5,8 +5,6 @@ var config array<name> IgnoreAbilities;         //  abilities listed here will b
 var config array<name> IgnoreEffects;           //  if the original target is affected by this effects allow to hit
 var config array<name> UnlimitedUsesEffects;    //  if the original target is affected by this effects allow unlimited deflects/reflects
 
-var config int REFLECT_HIT_DIFFICULTY;
-
 var privatewrite name DeflectUsed;
 var privatewrite name DeflectBonus;
 var privatewrite name AttackHit;
@@ -94,7 +92,7 @@ function bool ChangeHitResultForTarget(XComGameState_Effect EffectState, XComGam
 		DeflectRoll += DeflectModifier;
 
 		// Check to see if we can reflect and our roll was high enough, so we can tell the reflect shot to hit
-		if (bReflect && (DeflectRoll > (AttackHitChance + default.REFLECT_HIT_DIFFICULTY)))
+		if (bReflect && (DeflectRoll > (AttackHitChance + class'X2Ability_JediClassAbilities'.default.REFLECT_HIT_DIFFICULTY)))
 		{
 			DidDeflectHit = 1;
 			//NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(GetFuncName());

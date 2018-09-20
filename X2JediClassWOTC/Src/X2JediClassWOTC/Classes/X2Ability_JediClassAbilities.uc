@@ -1,37 +1,51 @@
 class X2Ability_JediClassAbilities extends X2Ability
 	dependson (XComGameStateContext_Ability) config(JediClass);
 
+var config int FORCE_MEDITATE_CHARGES;
+var config float FORCE_MEDITATE_REGEN_PERCENT;
+
 var config int FORCE_DRAIN_RADIUS;
 var config int FORCE_DRAIN_CHARGES;
+var config int FORCE_DRAIN_COOLDOWN;
+var config int FORCE_DRAIN_COST;
 
 var config int FORCE_SENSE_RADIUS;
 
 var config int BATTLE_MEDITATION_COOLDOWN;
+var config int BATTLE_MEDITATION_COST;
 
 var config int ENERGY_ABSORPTION_SHIELD_POINTS;
 
 var config int FORCE_FEAR_COOLDOWN;
+var config int FORCE_FEAR_COST;
 var config int FORCE_FEAR_CONE_LENGTH_TILES;
 var config int FORCE_FEAR_CONE_END_DIAMETER_TILES;
 var config int FORCE_FEAR_TURNS;
 
 var config int FORCE_SPEED_COOLDOWN;
+var config int FORCE_SPEED_COST;
 
 var config int MIND_CONTROL_CHARGES;
 var config int MIND_CONTROL_COOLDOWN;
+var config int MIND_CONTROL_COST;
 
 var config int FORCE_HEAL_CHARGES;
+var config int FORCE_HEAL_COOLDOWN;
+var config int FORCE_HEAL_COST;
 var config int FORCE_HEAL_PERUSEHP;
 
 var config int MIND_TRICKS_COOLDOWN;
+var config int MIND_TRICKS_COST;
 var config int MIND_TRICKS_RANGE;
 var config int MIND_TRICKS_RADIUS;
 var config int MIND_TRICKS_TURNS;
 
 var config int FORCE_PUSH_COOLDOWN;
+var config int FORCE_PUSH_COST;
 var config int FORCE_PUSH_KNOCKBACK_DISTANCE;
 
 var config int FORCE_WIND_COOLDOWN;
+var config int FORCE_WIND_COST;
 var config int FORCE_WIND_KNOCKBACK_DISTANCE;
 var config int FORCE_WIND_CONE_LENGTH_TILES;
 var config int FORCE_WIND_CONE_END_DIAMETER_TILES;
@@ -39,10 +53,13 @@ var config int FORCE_WIND_ENVIRONMENTAL_DAMAGE;
 
 var config int FORCE_LIGHTNING_STUNNED_ACTIONS;
 var config int FORCE_LIGHTNING_STUN_CHANCE;
+var config int FORCE_LIGHTNING_COOLDOWN;
+var config int FORCE_LIGHTNING_COST;
+
 var config int FORCE_CHAIN_LIGHTNING_STUNNED_ACTIONS;
 var config int FORCE_CHAIN_LIGHTNING_STUN_CHANCE;
-var config int FORCE_LIGHTNING_COOLDOWN;
 var config int FORCE_CHAIN_LIGHTNING_COOLDOWN;
+var config int FORCE_CHAIN_LIGHTNING_COST;
 
 var config WeaponDamageValue FORCE_LIGHTNING_BASEDAMAGE;
 var config WeaponDamageValue FORCE_CHAIN_LIGHTNING_BASEDAMAGE;
@@ -52,11 +69,18 @@ var config WeaponDamageValue FORCE_WIND_BASEDAMAGE;
 var config WeaponDamageValue FORCE_DRAIN_BASEDAMAGE;
 
 var config int LIGHTSABER_MULTI_TOSS_COOLDOWN;
+var config int LIGHTSABER_MULTI_TOSS_COST;
 var config int LIGHTSABER_MULTI_TOSS_MAX_TARGETS;
 var config float LIGHTSABER_MULTI_TOSS_NEXT_TARGET_MAXLENGTH;
 
+var config int LIGHTSABER_TOSS_COOLDOWN;
+var config int LIGHTSABER_TOSS_COST;
+
+var config int LEAP_STRIKE_COST;
+
 var config int REFLECT_BONUS;
 var config int REFLECT_REPEAT_MALUS;
+var config int REFLECT_HIT_DIFFICULTY;
 
 var privatewrite name ForceDrainEventName;
 var privatewrite name ForceDrainUnitValue;
@@ -65,6 +89,11 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> AbilityTemplates;
 
+	AbilityTemplates.AddItem(ForcePowerPool());
+	AbilityTemplates.AddItem(Holocron('HolocronPool_CV',3));
+	AbilityTemplates.AddItem(Holocron('HolocronPool_MG',2));
+	AbilityTemplates.AddItem(Holocron('HolocronPool_BM',1));
+	AbilityTemplates.AddItem(ForceMeditate());
 	AbilityTemplates.AddItem(ForceDrain());
 	AbilityTemplates.AddItem(LightsaberSlash());
 	AbilityTemplates.AddItem(ForceProtection());
@@ -103,12 +132,141 @@ static function array<X2DataTemplate> CreateTemplates()
 	return AbilityTemplates;
 }
 
+static function X2AbilityTemplate ForcePowerPool()
+{
+	local X2AbilityTemplate					Template;
+	local X2Effect_JediForcePool_ByRank		ForcePoolEffect;
+	
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForcePowerPool');
+
+	Template.IconImage = "";
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Neutral;
+	Template.bIsPassive = true;
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	//  This is a dummy effect so that an icon shows up in the UI.
+	ForcePoolEffect = new class'X2Effect_JediForcePool_ByRank';
+	ForcePoolEffect.BuildPersistentEffect(1);
+	ForcePoolEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, "img:///UILibrary_PerkIcons.UIPerk_standard", false,, Template.AbilitySourceName);
+	Template.AddTargetEffect(ForcePoolEffect);
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	// Note: no visualization on purpose!
+
+	Template.bCrossClassEligible = false;
+
+	return Template;
+}
+
+static function X2AbilityTemplate Holocron(name TemplateName, int PoolDivisor)
+{
+	local X2AbilityTemplate					Template;
+	local X2Effect_JediForcePool_Holocron	ForcePoolEffect;
+	
+	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
+
+	Template.IconImage = "";
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Neutral;
+	Template.bIsPassive = true;
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	//  This is a dummy effect so that an icon shows up in the UI.
+	ForcePoolEffect = new class'X2Effect_JediForcePool_Holocron';
+	ForcePoolEffect.BuildPersistentEffect(1);
+	ForcePoolEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, "img:///UILibrary_PerkIcons.UIPerk_standard", false,, Template.AbilitySourceName);
+	ForcePoolEffect.PoolDivisor = PoolDivisor;
+	Template.AddTargetEffect(ForcePoolEffect);
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	// Note: no visualization on purpose!
+
+	Template.bCrossClassEligible = false;
+
+	return Template;
+}
+
+static function X2AbilityTemplate ForceMeditate()
+{
+	local X2AbilityTemplate					Template;
+	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2AbilityCost_Charges				ChargeCost;
+	local X2AbilityCharges					Charges;
+	local X2Effect_ForceMeditate			MeditateEffect;
+	local X2Effect_PersistentStatChange		NoDodgeEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceMeditate');
+
+	Template.IconImage = "img:///JediClassUI.UIPerk_Deflect";
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.Hostility = eHostility_Neutral;
+	Template.bDisplayInUITacticalText = false;
+	Template.DisplayTargetHitChance = false;
+
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SQUADDIE_PRIORITY;
+
+	Charges = new class'X2AbilityCharges';
+	Charges.InitialCharges = default.FORCE_MEDITATE_CHARGES;
+	Template.AbilityCharges = Charges;
+
+	ChargeCost = new class'X2AbilityCost_Charges';
+	ChargeCost.NumCharges = 1;
+	Template.AbilityCosts.AddItem(ChargeCost);
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = true;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	Template.AbilityTargetStyle = default.SelfTarget;
+
+	MeditateEffect = new class'X2Effect_ForceMeditate';
+	MeditateEffect.BuildPersistentEffect(1);
+	MeditateEffect.RegenAmount = default.FORCE_MEDITATE_REGEN_PERCENT;
+	Template.AddTargetEffect(MeditateEffect);
+
+	NoDodgeEffect = new class'X2Effect_PersistentStatChange';
+	NoDodgeEffect.BuildPersistentEffect(1, false, false, false, eGameRule_PlayerTurnBegin);
+	NoDodgeEffect.AddPersistentStatChange(eStat_Dodge, 0, MODOP_PostMultiplication);       //  no dodge for you!
+	Template.AddTargetEffect(NoDodgeEffect);
+
+	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
+
+	Template.bSkipFireAction = true;
+	Template.bShowActivation = true;
+	Template.bSkipPerkActivationActions = true;
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+
+	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
+	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
+	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
+	Template.bFrameEvenWhenUnitIsHidden = true;
+
+	return Template;
+}
+
 static function X2AbilityTemplate ForceDrain()
 {
 	local X2AbilityTemplate					Template;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
 	local X2AbilityMultiTarget_Radius		RadiusMultiTarget;
+	LOCAL X2AbilityCooldown					Cooldown;
 	local X2AbilityCost_Charges				ChargeCost;
+	local X2AbilityCost_ForcePoints			FPCost;
 	local X2Condition_UnitProperty			CivilianProperty;
 	local X2Effect_ApplyWeaponDamage		DamageEffect;
 	local X2AbilityCharges					Charges;
@@ -124,6 +282,11 @@ static function X2AbilityTemplate ForceDrain()
 
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_LIEUTENANT_PRIORITY;
 
+	Cooldown = new class'X2AbilityCooldown';
+	Cooldown.iNumTurns = default.FORCE_DRAIN_COOLDOWN;
+	Cooldown.bDoNotApplyOnHit = true;
+	Template.AbilityCooldown = Cooldown;
+
 	Charges = new class'X2AbilityCharges';
 	Charges.InitialCharges = default.FORCE_DRAIN_CHARGES;
 	Template.AbilityCharges = Charges;
@@ -133,8 +296,13 @@ static function X2AbilityTemplate ForceDrain()
 	Template.AbilityCosts.AddItem(ChargeCost);
 
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
-	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.iNumPoints = default.FORCE_DRAIN_COST;
 	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = 1;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
 
 	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StatCheck_UnitVsUnitForce';
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
@@ -542,6 +710,7 @@ static function X2AbilityTemplate BattleMeditation()
 	local X2AbilityCooldown						Cooldown;
 	local X2Effect_Persistent					BattleMeditationEffect;
 	local X2AbilityCost_ActionPoints			ActionPointCost;
+	local X2AbilityCost_ForcePoints				FPCost;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'BattleMeditation');
 
@@ -553,6 +722,11 @@ static function X2AbilityTemplate BattleMeditation()
 	ActionPointCost.iNumPoints = 1;
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.BATTLE_MEDITATION_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
 
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
@@ -595,6 +769,7 @@ static function X2AbilityTemplate ForceFear()
 	local X2AbilityTemplate					Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2AbilityCost_ForcePoints			FPCost;
 	local array<name>						SkipExclusions;
 	local X2AbilityCooldown					Cooldown;
 	local X2AbilityTarget_Cursor			CursorTarget;
@@ -656,6 +831,11 @@ static function X2AbilityTemplate ForceFear()
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);	
 
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.FORCE_FEAR_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
+
 	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StatCheck_UnitVsUnitForce';
 
 	// Targeting Method
@@ -691,6 +871,7 @@ static function X2AbilityTemplate ForceSpeed()
 	local X2Effect_GrantActionPoints			PointEffect;
 	local X2Effect_Persistent					ActionPointPersistEffect;
 	local X2Effect_ForceSpeed					ForceSpeedEffect;
+	local X2AbilityCost_ForcePoints				FPCost;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceSpeed');
 
@@ -699,6 +880,11 @@ static function X2AbilityTemplate ForceSpeed()
 	Template.AbilityCooldown = Cooldown;
 
 	Template.AbilityCosts.AddItem(default.FreeActionCost);
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.FORCE_SPEED_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
 
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
@@ -748,6 +934,7 @@ static function X2AbilityTemplate MindControl()
 	local X2Condition_UnitEffects       EffectCondition;
 	local X2AbilityCharges              Charges;
 	local X2AbilityCost_Charges         ChargeCost;
+	local X2AbilityCost_ForcePoints		FPCost;
 	local X2AbilityCooldown             Cooldown;
 	local X2Condition_UnitImmunities	UnitImmunityCondition;
 
@@ -762,6 +949,11 @@ static function X2AbilityTemplate MindControl()
 	ActionPointCost.iNumPoints = 1;
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.MIND_CONTROL_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
 
 	Charges = new class'X2AbilityCharges';
 	Charges.InitialCharges = default.MIND_CONTROL_CHARGES;
@@ -835,6 +1027,8 @@ static function X2AbilityTemplate ForceHeal()
 	local X2AbilityTemplate					Template;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
 	local X2AbilityCost_Charges				ChargeCost;
+	local X2AbilityCost_ForcePoints			FPCost;
+	local X2AbilityCooldown					Cooldown;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
 	local X2Condition_UnitStatCheck			UnitStatCheckCondition;
 	local X2Effect_ApplyMedikitHeal			MedikitHeal;
@@ -847,6 +1041,16 @@ static function X2AbilityTemplate ForceHeal()
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
 	ActionPointCost.iNumPoints = 1;	
 	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.FORCE_HEAL_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
+
+	Cooldown = new class'X2AbilityCooldown';
+	Cooldown.iNumTurns = default.FORCE_HEAL_COOLDOWN;
+	Cooldown.bDoNotApplyOnHit = true;
+	Template.AbilityCooldown = Cooldown;
 
 	ForceHealCharges = new class'X2AbilityCharges';
 	ForceHealCharges.InitialCharges = default.FORCE_HEAL_CHARGES;
@@ -946,6 +1150,7 @@ static function X2AbilityTemplate MindTricks()
 	local X2AbilityTemplate					Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2AbilityCost_ForcePoints			FPCost;
 	local array<name>						SkipExclusions;
 	local X2Effect_MindTricks				MindTricksEffect;
 	local X2Effect_RemoveActionPoints		RemoveActionPointsEffect;
@@ -1001,6 +1206,11 @@ static function X2AbilityTemplate MindTricks()
 	ActionPointCost.iNumPoints = 1;
 	ActionPointCost.bConsumeAllPoints = false;
 	Template.AbilityCosts.AddItem(ActionPointCost);	
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.MIND_TRICKS_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
 
 	Template.AbilityToHitCalc = new class'X2AbilityToHitCalc_StatCheck_UnitVsUnitForce';
 
@@ -1075,6 +1285,7 @@ static function X2AbilityTemplate ForceWind()
 	local X2AbilityTemplate					Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2AbilityCost_ForcePoints			FPCost;
 	local X2Effect_ApplyWeaponDamage		DamageEffect;
 	local array<name>						SkipExclusions;
 	local X2Effect_ForcePush				KnockBackEffect;
@@ -1132,6 +1343,11 @@ static function X2AbilityTemplate ForceWind()
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);	
 
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.FORCE_WIND_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
+
 	KnockBackEffect = new class'X2Effect_ForcePush';
 	KnockBackEffect.KnockbackDistance = default.FORCE_WIND_KNOCKBACK_DISTANCE;
 	KnockBackEffect.bKnockbackDestroysNonFragile = true;
@@ -1185,6 +1401,7 @@ static function X2AbilityTemplate ForcePush()
 	local X2AbilityTemplate					Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2AbilityCost_ForcePoints			FPCost;
 	local X2Effect_ApplyWeaponDamage		DamageEffect;
 	local array<name>						SkipExclusions;
 	local X2Effect_ForcePush				KnockBackEffect;
@@ -1235,6 +1452,11 @@ static function X2AbilityTemplate ForcePush()
 	ActionPointCost.iNumPoints = 1;
 	ActionPointCost.bConsumeAllPoints = false;
 	Template.AbilityCosts.AddItem(ActionPointCost);	
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.FORCE_PUSH_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
 
 	KnockBackEffect = new class'X2Effect_ForcePush';
 	KnockBackEffect.KnockbackDistance = default.FORCE_PUSH_KNOCKBACK_DISTANCE;
@@ -1290,10 +1512,11 @@ static function X2AbilityTemplate ForcePush()
 static function X2AbilityTemplate ForceChoke()
 {
 
-	//local X2AbilityCooldown                 Cooldown;
+	local X2AbilityCooldown                 Cooldown;
 	local X2AbilityTemplate                 Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
 	local X2AbilityCost_ActionPoints        ActionPointCost;
+	local X2AbilityCost_ForcePoints			FPCost;
 	local X2Effect_ApplyWeaponDamage		DamageEffect;
 	local array<name>                       SkipExclusions;
 	local X2Effect_AdditionalAnimSets		TargetAnimSet;
@@ -1323,9 +1546,9 @@ static function X2AbilityTemplate ForceChoke()
 	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName);
 	Template.AddShooterEffectExclusions(SkipExclusions);
 
-	//Cooldown = new class'X2AbilityCooldown';
-	//Cooldown.iNumTurns = default.FORCE_LIGHTNING_COOLDOWN;
-	//Template.AbilityCooldown = Cooldown;
+	Cooldown = new class'X2AbilityCooldown';
+	Cooldown.iNumTurns = default.FORCE_LIGHTNING_COOLDOWN;
+	Template.AbilityCooldown = Cooldown;
 
 	// Targeting Details
 	// Can only shoot visible enemies
@@ -1348,6 +1571,11 @@ static function X2AbilityTemplate ForceChoke()
 	ActionPointCost.iNumPoints = 1;
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);	
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.FORCE_LIGHTNING_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
 
 	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
 	DamageEffect.bIgnoreBaseDamage = true;
@@ -1489,6 +1717,7 @@ static function X2AbilityTemplate ForceLightning()
 	local X2AbilityTemplate                 Template;
 	local X2Condition_UnitProperty			UnitPropertyCondition;
 	local X2AbilityCost_ActionPoints        ActionPointCost;
+	local X2AbilityCost_ForcePoints			FPCost;
 	local X2Effect_ApplyWeaponDamage		DamageEffect;
 	local array<name>                       SkipExclusions;
 
@@ -1542,6 +1771,11 @@ static function X2AbilityTemplate ForceLightning()
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);	
 
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.FORCE_LIGHTNING_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
+
 	//Stun Effect
 	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
 	DamageEffect.bIgnoreBaseDamage = true;
@@ -1588,6 +1822,7 @@ static function X2AbilityTemplate ForceChainLightning()
 	local X2AbilityTemplate						Template;
 	local X2Condition_UnitProperty				UnitPropertyCondition;
 	local X2AbilityCost_ActionPoints			ActionPointCost;
+	local X2AbilityCost_ForcePoints				FPCost;
 	local X2Effect_ApplyWeaponDamage			DamageEffect;
 	local X2AbilityMultiTarget_AllAllies		MultiTargetStyle;
 	local array<name>							SkipExclusions;
@@ -1642,6 +1877,11 @@ static function X2AbilityTemplate ForceChainLightning()
 	ActionPointCost.iNumPoints = 1;
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);	
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.FORCE_CHAIN_LIGHTNING_COST;
+	FPCost.ConsumeAllForce = true;
+	Template.AbilityCosts.AddItem(FPCost);
 
 	PrimaryTargetGuaranteedHitEffect = new class'X2Effect_PrimaryTargetGuaranteedHit';
 	PrimaryTargetGuaranteedHitEffect.BuildPersistentEffect(1, false, false, false);
@@ -1717,6 +1957,7 @@ static function X2AbilityTemplate LeapStrike()
 	local X2Effect_ApplyWeaponDamage						WeaponDamageEffect;
 	local array<name>										SkipExclusions;
 	local X2AbilityCost_ActionPoints						ActionPointCost;
+	local X2AbilityCost_ForcePoints							FPCost;
 	local X2Effect_Persistent								ShadowStepEffect;
 	local X2Condition_Visibility							VisibilityCondition;
 	local X2Effect_PersistentTraversalChange				TeleportEffect;
@@ -1736,6 +1977,11 @@ static function X2AbilityTemplate LeapStrike()
 	ActionPointCost.iNumPoints = 1;
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.LEAP_STRIKE_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
 
 	StandardMelee = new class'X2AbilityToHitCalc_StandardMelee';
 	Template.AbilityToHitCalc = StandardMelee;
@@ -2032,6 +2278,7 @@ static function X2AbilityTemplate LightsaberTelekinesis()
 	local X2AbilityTemplate						Template;
 	local X2AbilityCooldown						Cooldown;
 	local X2AbilityCost_ActionPoints			ActionPointCost;
+	local X2AbilityCost_ForcePoints				FPCost;
 	local X2Effect_ApplyWeaponDamage			WeaponDamageEffect;
 	//local array<name>							SkipExclusions;
 	//local X2AbilityCost_Ammo					AmmoCost;
@@ -2070,6 +2317,11 @@ static function X2AbilityTemplate LightsaberTelekinesis()
 	ActionPointCost.iNumPoints = 1;
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.LIGHTSABER_MULTI_TOSS_COST;
+	FPCost.ConsumeAllForce = true;
+	Template.AbilityCosts.AddItem(FPCost);
 
 	PrimaryTargetGuaranteedHitEffect = new class'X2Effect_PrimaryTargetGuaranteedHit';
 	PrimaryTargetGuaranteedHitEffect.BuildPersistentEffect(1, false, false, false);
@@ -2122,7 +2374,9 @@ static function X2AbilityTemplate LightsaberTelekinesis()
 static function X2AbilityTemplate LightsaberToss()
 {
 	local X2AbilityTemplate                 Template;
+	local X2AbilityCooldown					Cooldown;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2AbilityCost_ForcePoints			FPCost;
 	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
 	local array<name>                       SkipExclusions;
 	//local X2AbilityCost_Ammo                AmmoCost;
@@ -2142,10 +2396,19 @@ static function X2AbilityTemplate LightsaberToss()
 	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName);
 	Template.AddShooterEffectExclusions(SkipExclusions);
 
+	Cooldown = new class'X2AbilityCooldown';
+	Cooldown.iNumTurns = default.LIGHTSABER_TOSS_COOLDOWN;
+	Template.AbilityCooldown = Cooldown;
+
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
 	ActionPointCost.iNumPoints = 1;
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.LIGHTSABER_TOSS_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
 	
 	// Targeting Details
 	// Can only shoot visible enemies

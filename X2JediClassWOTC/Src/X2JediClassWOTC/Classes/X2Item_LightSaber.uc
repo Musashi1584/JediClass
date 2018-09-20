@@ -231,21 +231,30 @@ static function bool OnLightsaberAcquired(XComGameState NewGameState, XComGameSt
 	ItemTemplateMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 	WeaponUpgradeNames = ItemState.GetMyWeaponUpgradeTemplateNames();
 
+	if (WeaponUpgradeNames.Length != 4)
+	{
+		ItemState.WipeUpgradeTemplates();
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_CRYSTAL)), 0);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_EMITTER)), 1);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_LENS)), 2);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_CELL)), 3);
+		return true;
+	}
 	if (default.LIGHTSABER_VALID_CRYSTALS.Find(WeaponUpgradeNames[0]) == INDEX_NONE)
 	{
 		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_CRYSTAL)), 0);
 	}
 	if (default.LIGHTSABER_VALID_CELLS.Find(WeaponUpgradeNames[1]) == INDEX_NONE)
 	{
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_CELL)), 1);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_EMITTER)), 1);
 	}
 	if (default.LIGHTSABER_VALID_EMITTERS.Find(WeaponUpgradeNames[2]) == INDEX_NONE)
 	{
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_EMITTER)), 2);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_LENS)), 2);
 	}
 	if (default.LIGHTSABER_VALID_LENSES.Find(WeaponUpgradeNames[3]) == INDEX_NONE)
 	{
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_LENS)), 3);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_CELL)), 3);
 	}
 
 	return true;

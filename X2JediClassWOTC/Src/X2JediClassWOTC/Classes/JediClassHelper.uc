@@ -22,9 +22,8 @@ static function AddDarkSidePointToGameState(XComGameState_Unit Unit, out XComGam
 	NewSourceUnit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Unit.ObjectID));
 	if (NewSourceUnit != none)
 	{
-		NewSourceUnit = XComGameState_Unit(NewGameState.CreateStateObject(NewSourceUnit.Class, NewSourceUnit.ObjectID));
+		NewSourceUnit = XComGameState_Unit(NewGameState.ModifyStateObject(NewSourceUnit.Class, NewSourceUnit.ObjectID));
 		NewSourceUnit.SetUnitFloatValue('DarkSidePoints', DarkSidePoints.fValue + DarkSidePointsToAdd, eCleanup_Never);
-		NewGameState.AddStateObject(NewSourceUnit);
 		`LOG("JediClassHelper AddDarkSidePointToGameState for" @ NewSourceUnit.GetFullName() @ DarkSidePointsToAdd @ "(" @ DarkSidePoints.fValue + DarkSidePointsToAdd @ ")",, 'JediClass');
 	}
 }
@@ -43,11 +42,10 @@ static function AddDarkSidePoint(XComGameState_Unit Unit, int DarkSidePointsToAd
 	NewSourceUnit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Unit.ObjectID));
 	if (NewSourceUnit != none)
 	{
-		NewSourceUnit = XComGameState_Unit(NewGameState.CreateStateObject(NewSourceUnit.Class, NewSourceUnit.ObjectID));
+		NewSourceUnit = XComGameState_Unit(NewGameState.ModifyStateObject(NewSourceUnit.Class, NewSourceUnit.ObjectID));
 		NewSourceUnit.SetUnitFloatValue('DarkSidePoints', DarkSidePoints.fValue + DarkSidePointsToAdd, eCleanup_Never);
-		NewGameState.AddStateObject(NewSourceUnit);
 		`TACTICALRULES.SubmitGameState(NewGameState);
-		`LOG("JediClassHelper AddLightSidePoints for" @ NewSourceUnit.GetFullName() @ DarkSidePointsToAdd @ "(" @ DarkSidePoints.fValue + DarkSidePointsToAdd @ ")",, 'JediClass');
+		`LOG("JediClassHelper AddDarkSidePoints for" @ NewSourceUnit.GetFullName() @ DarkSidePointsToAdd @ "(" @ DarkSidePoints.fValue + DarkSidePointsToAdd @ ")",, 'JediClass');
 	}
 }
 
@@ -63,9 +61,8 @@ static function AddLightSidePointToGameState(XComGameState_Unit Unit, out XComGa
 	NewSourceUnit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Unit.ObjectID));
 	if (NewSourceUnit != none)
 	{
-		NewSourceUnit = XComGameState_Unit(NewGameState.CreateStateObject(NewSourceUnit.Class, NewSourceUnit.ObjectID));
+		NewSourceUnit = XComGameState_Unit(NewGameState.ModifyStateObject(NewSourceUnit.Class, NewSourceUnit.ObjectID));
 		NewSourceUnit.SetUnitFloatValue('LightSidePoints', LightSidePoints.fValue + LightSidePointsToAdd, eCleanup_Never);
-		NewGameState.AddStateObject(NewSourceUnit);
 		`LOG("JediClassHelper AddLightSidePointToGameState for" @ NewSourceUnit.GetFullName() @ LightSidePointsToAdd @ "(" @ LightSidePoints.fValue + LightSidePointsToAdd @ ")",, 'JediClass');
 	}
 }
@@ -84,9 +81,8 @@ static function AddLightSidePoint(XComGameState_Unit Unit, int LightSidePointsTo
 	NewSourceUnit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Unit.ObjectID));
 	if (NewSourceUnit != none)
 	{
-		NewSourceUnit = XComGameState_Unit(NewGameState.CreateStateObject(NewSourceUnit.Class, NewSourceUnit.ObjectID));
+		NewSourceUnit = XComGameState_Unit(NewGameState.ModifyStateObject(NewSourceUnit.Class, NewSourceUnit.ObjectID));
 		NewSourceUnit.SetUnitFloatValue('LightSidePoints', LightSidePoints.fValue + LightSidePointsToAdd, eCleanup_Never);
-		NewGameState.AddStateObject(NewSourceUnit);
 		`TACTICALRULES.SubmitGameState(NewGameState);
 		`LOG("JediClassHelper AddLightSidePoints for" @ NewSourceUnit.GetFullName() @ LightSidePointsToAdd @ "(" @ LightSidePoints.fValue + LightSidePointsToAdd @ ")",, 'JediClass');
 	}

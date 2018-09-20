@@ -78,6 +78,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\UISL_TacticalHUD_JediStats.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2AbilityCost_ForcePoints.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2AbilityToHitCalc_LightsaberDeflect.uc">
       <SubType>Content</SubType>
     </Content>
@@ -108,6 +111,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ForceAlignmentModifier.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ForceMeditate.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ForceSpeed.uc">
       <SubType>Content</SubType>
     </Content>
@@ -115,6 +121,15 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_GrantLightSidePoint.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_JediForcePool_Bonus.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_JediForcePool_ByRank.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_JediForcePool_Holocron.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_LightsaberDeflect.uc">
@@ -157,7 +172,7 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_Revive.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\X2JediClassWOTC\Classes\X2EventListener_JediClass_SquaddieLoadout.uc">
+    <Content Include="Src\X2JediClassWOTC\Classes\X2EventListener_JediClass.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Item_Holocrons.uc">
