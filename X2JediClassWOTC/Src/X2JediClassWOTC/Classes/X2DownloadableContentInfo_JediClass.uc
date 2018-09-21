@@ -70,7 +70,7 @@ static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent Mes
 						break;
 				}
 
-				//`LOG(MaterialInstanceTimeVarying(ParentMITV.Parent).Name @ MITV.Name,, 'X2JediClassWotc');
+				`LOG(GetFuncName() @ MaterialInstanceTimeVarying(ParentMITV.Parent).Name @ MITV.Name,, 'X2JediClassWotc');
 
 				Palette = `CONTENT.GetColorPalette(ePalette_ArmorTint);
 				if (Palette != none)
@@ -79,6 +79,7 @@ static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent Mes
 					{
 						GlowTint = Palette.Entries[WeaponArchetype.m_kAppearance.iWeaponTint].Primary;
 						MITV.SetVectorParameterValue('Emissive Color', GlowTint);
+						`LOG(GetFuncName() @ "Setting Emissive Color",, 'X2JediClassWotc');
 					}
 				}
 			}
