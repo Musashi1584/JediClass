@@ -42,7 +42,7 @@ static function X2DataTemplate DeflectBonusAbility(name Append, int Bonus)
 	Template = PurePassive(name("DeflectBonus" $ Append),,,,false);
 
 	DeflectChanceEffect = new class'X2Effect_ExtraDeflectChance';
-	DeflectChanceEffect.BuildPersistentEffect(1, true, false);
+	DeflectChanceEffect.BuildPersistentEffect(1);
 	DeflectChanceEffect.DeflectBonus = Bonus;
 	Template.AddTargetEffect(DeflectChanceEffect);
 

@@ -1,2 +1,9 @@
 [JediClassHelper]
 ForceAlignmentModifier="Force Alignment"
+
+[X2Effect_JediForcePool_ByRank]
+ForceLabel="Force Points"
+ForceDescription="The Jedi's current ability to focus the Force."
+
+[X2Effect_ForceMeditate]
+RegenMessage="Regenerated <Regen/> Force Points"

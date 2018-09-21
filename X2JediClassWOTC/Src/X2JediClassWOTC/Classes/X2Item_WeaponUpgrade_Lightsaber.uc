@@ -2,6 +2,9 @@ class X2Item_WeaponUpgrade_Lightsaber extends X2Item config(JediClass);
 
 var config int BASIC_UPGRADE_VALUE, ADVANCED_UPGRADE_VALUE, SUPERIOR_UPGRADE_VALUE, ULTIMATE_UPGRADE_VALUE;
 var config array<ArtifactCost> BASIC_COSTS, ADVANCED_COSTS, SUPERIOR_COSTS, ULTIMATE_COSTS;
+var config name DIATIUM_MESH, DISCHARGE_MESH, ION_MESH, JOLT_MESH;
+var config name FOCUS_MESH, DISRUPT_MESH, PHOBIUM_MESH, FENCING_MESH;
+var config name BEAM_GEM_MESH, BYROTHSIS_MESH, DUELING_MESH, VIBRATION_MESH;
 
 var config WeaponDamageValue DIAMOND_DAMAGE;
 var config WeaponDamageValue ADEGAN_CRYSTAL_DAMAGE;
@@ -166,6 +169,7 @@ static function X2DataTemplate CreateDiamond()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDiamond');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'diamond');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -184,6 +188,7 @@ static function X2DataTemplate CreateAdeganCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeAdeganCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'adegan');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -202,6 +207,7 @@ static function X2DataTemplate CreateAnkarresSapphire()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeAnkarresSapphire');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'ankarres');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -225,6 +231,7 @@ static function X2DataTemplate CreateBarabOreIngot()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeBarabOreIngot');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'barabore');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -243,6 +250,7 @@ static function X2DataTemplate CreateBondarCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeBondarCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'bondar');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -262,6 +270,7 @@ static function X2DataTemplate CreateDamindCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDamindCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'damind');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -282,6 +291,7 @@ static function X2DataTemplate CreateDragiteCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDragiteCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'dragite');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -300,6 +310,7 @@ static function X2DataTemplate CreateEralamCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeEralamCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'eralam');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -320,6 +331,7 @@ static function X2DataTemplate CreateFirkrannCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeFirkrannCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'firkrann');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -340,6 +352,7 @@ static function X2DataTemplate CreateHurrikaineCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeHurrikaineCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'hurrikaine');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -358,6 +371,7 @@ static function X2DataTemplate CreateJenruaxCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeJenruaxCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'jenruax');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -377,6 +391,7 @@ static function X2DataTemplate CreateKaiburrCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeKaiburrCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'kaiburr');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -396,6 +411,7 @@ static function X2DataTemplate CreateKashaCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeKashaCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'kasha');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -416,6 +432,7 @@ static function X2DataTemplate CreateLorrdianGemstone()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeLorrdianGemstone');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'lorrdian');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -435,6 +452,7 @@ static function X2DataTemplate CreateNextorCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeNextorCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'nextor');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -455,6 +473,7 @@ static function X2DataTemplate CreateOpilaCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeOpilaCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'opila');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -473,6 +492,7 @@ static function X2DataTemplate CreatePhondCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradePhondCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'phond');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -491,6 +511,7 @@ static function X2DataTemplate CreatePontiteCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradePontiteCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'pontite');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -509,6 +530,7 @@ static function X2DataTemplate CreateQixoniCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeQixoniCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'qixoni');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -527,6 +549,7 @@ static function X2DataTemplate CreateRubatCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeRubatCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'rubat');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -547,6 +570,7 @@ static function X2DataTemplate CreateRuusanCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeRuusanCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'ruusan');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -565,6 +589,7 @@ static function X2DataTemplate CreateSapithCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeSapithCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'sapith');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -585,6 +610,7 @@ static function X2DataTemplate CreateSigilCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeSigilCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'sigil');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -605,6 +631,7 @@ static function X2DataTemplate CreateSolariCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeSolariCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'solari');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -625,6 +652,7 @@ static function X2DataTemplate CreateStygiumCrystal()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeStygiumCrystal');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'stygium');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -645,6 +673,7 @@ static function X2DataTemplate CreateUltimaPearl()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeUltimaPearl');
 	SetUpLightsaberUpgrade(Template, 'Crystal');
+	SetUpCrystalMesh(Template, 'ultima');
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -706,6 +735,7 @@ static function X2DataTemplate CreateDiatiumCell_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDiatiumCell_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.DIATIUM_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -737,6 +767,7 @@ static function X2DataTemplate CreateDiatiumCell_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDiatiumCell_Adv');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.DIATIUM_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -768,6 +799,7 @@ static function X2DataTemplate CreateDiatiumCell_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDiatiumCell_Sup');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.DIATIUM_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.SUPERIOR_UPGRADE_VALUE;
@@ -799,6 +831,7 @@ static function X2DataTemplate CreateDiatiumCell_Ult()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDiatiumCell_Ult');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.DIATIUM_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ULTIMATE_UPGRADE_VALUE;
@@ -830,6 +863,7 @@ static function X2DataTemplate CreateDischargeCell_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDischargeCell_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.DISCHARGE_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -861,6 +895,7 @@ static function X2DataTemplate CreateDischargeCell_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDischargeCell_Adv');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.DISCHARGE_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -892,6 +927,7 @@ static function X2DataTemplate CreateDischargeCell_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDischargeCell_Sup');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.DISCHARGE_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.SUPERIOR_UPGRADE_VALUE;
@@ -923,6 +959,7 @@ static function X2DataTemplate CreateIonCell_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeIonCell_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.ION_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -954,6 +991,7 @@ static function X2DataTemplate CreateIonCell_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeIonCell_Adv');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.ION_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -985,6 +1023,7 @@ static function X2DataTemplate CreateIonCell_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeIonCell_Sup');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.ION_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.SUPERIOR_UPGRADE_VALUE;
@@ -1016,6 +1055,7 @@ static function X2DataTemplate CreateJoltCell_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeJoltCell_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.JOLT_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -1049,6 +1089,7 @@ static function X2DataTemplate CreateJoltCell_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeJoltCell_Adv');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.JOLT_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -1082,6 +1123,7 @@ static function X2DataTemplate CreateJoltCell_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeJoltCell_Sup');
 	SetUpLightsaberUpgrade(Template, 'Cell');
+	SetUpCellMesh(Template, default.JOLT_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.SUPERIOR_UPGRADE_VALUE;
@@ -1115,6 +1157,7 @@ static function X2DataTemplate CreateFocusEmitter_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeFocusEmitter_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.FOCUS_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -1148,6 +1191,7 @@ static function X2DataTemplate CreateFocusEmitter_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeFocusEmitter_Adv');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.FOCUS_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -1181,6 +1225,7 @@ static function X2DataTemplate CreateFocusEmitter_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeFocusEmitter_Sup');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.FOCUS_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.SUPERIOR_UPGRADE_VALUE;
@@ -1214,6 +1259,7 @@ static function X2DataTemplate CreateDisruptEmitter_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDisruptEmitter_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.DISRUPT_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -1247,6 +1293,7 @@ static function X2DataTemplate CreateDisruptEmitter_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDisruptEmitter_Adv');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.DISRUPT_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -1280,6 +1327,7 @@ static function X2DataTemplate CreateDisruptEmitter_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDisruptEmitter_Sup');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.DISRUPT_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.SUPERIOR_UPGRADE_VALUE;
@@ -1313,6 +1361,7 @@ static function X2DataTemplate CreatePhobiumEmitter_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradePhobiumEmitter_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.PHOBIUM_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -1348,6 +1397,7 @@ static function X2DataTemplate CreatePhobiumEmitter_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradePhobiumEmitter_Adv');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.PHOBIUM_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -1383,6 +1433,7 @@ static function X2DataTemplate CreatePhobiumEmitter_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradePhobiumEmitter_Sup');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.PHOBIUM_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.SUPERIOR_UPGRADE_VALUE;
@@ -1418,6 +1469,7 @@ static function X2DataTemplate CreatePhobiumEmitter_Ult()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradePhobiumEmitter_Ult');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.PHOBIUM_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ULTIMATE_UPGRADE_VALUE;
@@ -1453,6 +1505,7 @@ static function X2DataTemplate CreateFencingEmitter_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeFencingEmitter_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.FENCING_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -1486,6 +1539,7 @@ static function X2DataTemplate CreateFencingEmitter_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeFencingEmitter_Adv');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.FENCING_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -1519,6 +1573,7 @@ static function X2DataTemplate CreateFencingEmitter_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeFencingEmitter_Sup');
 	SetUpLightsaberUpgrade(Template, 'Emitter');
+	SetUpEmitterMesh(Template, default.FENCING_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.SUPERIOR_UPGRADE_VALUE;
@@ -1552,6 +1607,7 @@ static function X2DataTemplate CreateBeamGemLens_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeBeamGemLens_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.BEAM_GEM_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -1587,6 +1643,7 @@ static function X2DataTemplate CreateBeamGemLens_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeBeamGemLens_Adv');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.BEAM_GEM_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -1622,6 +1679,7 @@ static function X2DataTemplate CreateBeamGemLens_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeBeamGemLens_Sup');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.BEAM_GEM_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -1657,6 +1715,7 @@ static function X2DataTemplate CreateByrothsisLens_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeByrothsisLens_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.BYROTHSIS_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.SUPERIOR_UPGRADE_VALUE;
@@ -1692,6 +1751,7 @@ static function X2DataTemplate CreateByrothsisLens_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeByrothsisLens_Adv');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.BYROTHSIS_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -1727,6 +1787,7 @@ static function X2DataTemplate CreateByrothsisLens_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeByrothsisLens_Sup');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.BYROTHSIS_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -1762,6 +1823,7 @@ static function X2DataTemplate CreateDuelingLens_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDuelingLens_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.DUELING_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -1797,6 +1859,7 @@ static function X2DataTemplate CreateDuelingLens_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDuelingLens_Adv');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.DUELING_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -1832,6 +1895,7 @@ static function X2DataTemplate CreateDuelingLens_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDuelingLens_Sup');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.DUELING_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -1867,6 +1931,7 @@ static function X2DataTemplate CreateDuelingLens_Ult()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeDuelingLens_Ult');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.DUELING_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ULTIMATE_UPGRADE_VALUE;
@@ -1902,6 +1967,7 @@ static function X2DataTemplate CreateVibrationLens_Bsc()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeVibrationLens_Bsc');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.VIBRATION_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -1937,6 +2003,7 @@ static function X2DataTemplate CreateVibrationLens_Adv()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeVibrationLens_Adv');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.VIBRATION_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.ADVANCED_UPGRADE_VALUE;
@@ -1972,6 +2039,7 @@ static function X2DataTemplate CreateVibrationLens_Sup()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, 'UpgradeVibrationLens_Sup');
 	SetUpLightsaberUpgrade(Template, 'Lens');
+	SetUpLensMesh(Template, default.VIBRATION_MESH);
 
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.TradingPostValue = default.BASIC_UPGRADE_VALUE;
@@ -2012,8 +2080,11 @@ static function SetUpLightsaberUpgrade(out X2WeaponUpgradeTemplate Template, nam
 	Template.MaxQuantity = 1;
 
 	Template.BlackMarketTexts = class'X2Item_DefaultUpgrades'.default.UpgradeBlackMarketTexts;
+	
+	Template.UpgradeCats.AddItem('lightsaber');
 
-	switch (UpgradeName) {
+	switch (UpgradeName)
+	{
 		case 'Crystal': // 26 upgrades
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeAdeganCrystal');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeAnkarresSapphire');
@@ -2041,12 +2112,8 @@ static function SetUpLightsaberUpgrade(out X2WeaponUpgradeTemplate Template, nam
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeUltimaPearl');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeUpariCrystal');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeVelmoriteCrystal');
-
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[0], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[1], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[2], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-
 			break;
+
 		case 'Cell': // 13 upgrades
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeDiatiumCell_Bsc');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeDiatiumCell_Adv');
@@ -2061,12 +2128,8 @@ static function SetUpLightsaberUpgrade(out X2WeaponUpgradeTemplate Template, nam
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeJoltCell_Bsc');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeJoltCell_Adv');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeJoltCell_Sup');
-
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[0], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[1], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[2], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-
 			break;
+
 		case 'Emitter': // 13 upgrades
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeFocusEmitter_Bsc');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeFocusEmitter_Adv');
@@ -2081,12 +2144,8 @@ static function SetUpLightsaberUpgrade(out X2WeaponUpgradeTemplate Template, nam
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeFencingEmitter_Bsc');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeFencingEmitter_Adv');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeFencingEmitter_Sup');
-
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[0], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[1], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[2], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-
 			break;
+
 		case 'Lens': // 13 upgrades
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeBeamGemLens_Bsc');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeBeamGemLens_Adv');
@@ -2101,14 +2160,124 @@ static function SetUpLightsaberUpgrade(out X2WeaponUpgradeTemplate Template, nam
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeVibrationLens_Bsc');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeVibrationLens_Adv');
 			Template.MutuallyExclusiveUpgrades.AddItem('UpgradeVibrationLens_Sup');
-
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[0], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[1], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-			Template.AddUpgradeAttachment(UpgradeName, '', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[2], , "", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_Flechette_Rounds", "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
-
 			break;
+
 		default:
 	}
+}
+
+static function SetUpCellMesh(out X2WeaponUpgradeTemplate Template, name IniMeshChoice)
+{
+	local string MeshPath;
+	local string IconPath;
+	
+	`log(default.Class @ GetFuncName() @ Template.DataName @ IniMeshChoice,, 'X2JediClassWOTC');
+
+	switch (IniMeshChoice)
+	{
+			case 'Luke':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Pommel_Luke";
+				IconPath = "img:///JediClassWeaponUpgrades.Cell.upgrade_diatiumcell";
+				break;
+			case 'Quigon':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Pommel_Quigon";
+				IconPath = "img:///JediClassWeaponUpgrades.Cell.upgrade_ioncell";
+				break;
+			case 'Vader':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Pommel_Vader";
+				IconPath = "img:///JediClassWeaponUpgrades.Cell.upgrade_dischargecell";
+				break;
+			case 'Yoda':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Pommel_Yoda";
+				IconPath = "img:///JediClassWeaponUpgrades.Cell.upgrade_joltcell";
+				break;
+			default:
+	}
+	
+	//function AddUpgradeAttachment(Name AttachSocket, Name UIArmoryCameraPointTag, string MeshName, string ProjectileName, name MatchWeaponTemplate, optional bool AttachToPawn, optional string IconName, optional string InventoryIconName, optional string InventoryCategoryIcon, optional delegate<X2TacticalGameRulesetDataStructures.CheckUpgradeStatus> ValidateAttachmentFn)
+	Template.AddUpgradeAttachment('Cell', 'UIPawnLocation_WeaponUpgrade_Shotgun', MeshPath, "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[0], , "", IconPath, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
+	Template.AddUpgradeAttachment('Cell', 'UIPawnLocation_WeaponUpgrade_Shotgun', MeshPath, "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[1], , "", IconPath, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
+	Template.AddUpgradeAttachment('Cell', 'UIPawnLocation_WeaponUpgrade_Shotgun', MeshPath, "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[2], , "", IconPath, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
+}
+
+static function SetUpEmitterMesh(out X2WeaponUpgradeTemplate Template, name IniMeshChoice)
+{
+	local string MeshPath;
+	local string IconPath;
+
+	`log(default.Class @ GetFuncName() @ Template.DataName @ IniMeshChoice,, 'X2JediClassWOTC');
+
+	switch (IniMeshChoice)
+	{
+			case 'Luke':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Emitter_Luke";
+				IconPath = "img:///JediClassWeaponUpgrades.Emitter.upgrade_focusemitter";
+				break;
+			case 'Quigon':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Emitter_Quigon";
+				IconPath = "img:///JediClassWeaponUpgrades.Emitter.upgrade_fencingemitter";
+				break;
+			case 'Vader':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Emitter_Vader";
+				IconPath = "img:///JediClassWeaponUpgrades.Emitter.upgrade_disruptemitter";
+				break;
+			case 'Yoda':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Emitter_Yoda";
+				IconPath = "img:///JediClassWeaponUpgrades.Emitter.upgrade_phobiumemitter";
+				break;
+			default:
+	}
+	
+	//function AddUpgradeAttachment(Name AttachSocket, Name UIArmoryCameraPointTag, string MeshName, string ProjectileName, name MatchWeaponTemplate, optional bool AttachToPawn, optional string IconName, optional string InventoryIconName, optional string InventoryCategoryIcon, optional delegate<X2TacticalGameRulesetDataStructures.CheckUpgradeStatus> ValidateAttachmentFn)
+	Template.AddUpgradeAttachment('Emitter', 'UIPawnLocation_WeaponUpgrade_Shotgun', MeshPath, "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[0], , "", IconPath, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
+	Template.AddUpgradeAttachment('Emitter', 'UIPawnLocation_WeaponUpgrade_Shotgun', MeshPath, "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[1], , "", IconPath, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
+	Template.AddUpgradeAttachment('Emitter', 'UIPawnLocation_WeaponUpgrade_Shotgun', MeshPath, "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[2], , "", IconPath, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
+}
+
+// The lenses are actually inside and focus the beam before the emitter shoots it out. That's my story and I'm sticking to it! I definitely didn't think of the part names in the wrong order!
+static function SetUpLensMesh(out X2WeaponUpgradeTemplate Template, name IniMeshChoice)
+{
+	local string MeshPath;
+	local string IconPath;
+	
+	`log(default.Class @ GetFuncName() @ Template.DataName @ IniMeshChoice,, 'X2JediClassWOTC');
+
+	switch (IniMeshChoice)
+	{
+			case 'Luke':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Grip_Luke";
+				IconPath = "img:///JediClassWeaponUpgrades.Lens.upgrade_beamgemlens";
+				break;
+			case 'Quigon':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Grip_Quigon";
+				IconPath = "img:///JediClassWeaponUpgrades.Lens.upgrade_duelinglens";
+				break;
+			case 'Vader':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Grip_Vader";
+				IconPath = "img:///JediClassWeaponUpgrades.Lens.upgrade_vibrationlens";
+				break;
+			case 'Yoda':
+				MeshPath = "LightSaber_CV.SkeletalMeshes.Grip_Yoda";
+				IconPath = "img:///JediClassWeaponUpgrades.Lens.upgrade_byrothsislens";
+				break;
+			default:
+	}
+	
+	//function AddUpgradeAttachment(Name AttachSocket, Name UIArmoryCameraPointTag, string MeshName, string ProjectileName, name MatchWeaponTemplate, optional bool AttachToPawn, optional string IconName, optional string InventoryIconName, optional string InventoryCategoryIcon, optional delegate<X2TacticalGameRulesetDataStructures.CheckUpgradeStatus> ValidateAttachmentFn)
+	Template.AddUpgradeAttachment('Lens', 'UIPawnLocation_WeaponUpgrade_Shotgun', MeshPath, "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[0], , "", IconPath, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
+	Template.AddUpgradeAttachment('Lens', 'UIPawnLocation_WeaponUpgrade_Shotgun', MeshPath, "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[1], , "", IconPath, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
+	Template.AddUpgradeAttachment('Lens', 'UIPawnLocation_WeaponUpgrade_Shotgun', MeshPath, "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[2], , "", IconPath, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
+}
+
+// This isn't actually setting up a mesh, but I love being consistent
+static function SetUpCrystalMesh(out X2WeaponUpgradeTemplate Template, name CrystalName)
+{
+	`log(default.Class @ GetFuncName() @ Template.DataName,, 'X2JediClassWOTC');
+	
+	//function AddUpgradeAttachment(Name AttachSocket, Name UIArmoryCameraPointTag, string MeshName, string ProjectileName, name MatchWeaponTemplate, optional bool AttachToPawn, optional string IconName, optional string InventoryIconName, optional string InventoryCategoryIcon, optional delegate<X2TacticalGameRulesetDataStructures.CheckUpgradeStatus> ValidateAttachmentFn)
+	Template.AddUpgradeAttachment('Crystal', 'UIPawnLocation_WeaponUpgrade_Shotgun', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[0], , "", "img:///JediClassWeaponUpgrades.Crystal." $ CrystalName, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
+	Template.AddUpgradeAttachment('Crystal', 'UIPawnLocation_WeaponUpgrade_Shotgun', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[1], , "", "img:///JediClassWeaponUpgrades.Crystal." $ CrystalName, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
+	Template.AddUpgradeAttachment('Crystal', 'UIPawnLocation_WeaponUpgrade_Shotgun', "", "", class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES[2], , "", "img:///JediClassWeaponUpgrades.Crystal." $ CrystalName, "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_weaponIcon_battery");
 }
 
 static function bool CanApplyUpgradeToWeaponLightsaber(X2WeaponUpgradeTemplate UpgradeTemplate, XComGameState_Item Weapon, int SlotIndex)

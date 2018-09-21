@@ -8,7 +8,7 @@
 //  Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
 //---------------------------------------------------------------------------------------
 
-class X2DownloadableContentInfo_JediClass extends X2DownloadableContentInfo config (JediClass);
+class X2DownloadableContentInfo_JediClass extends X2DownloadableContentInfo config(JediClass);
 
 struct SocketReplacementInfo
 {
@@ -16,7 +16,6 @@ struct SocketReplacementInfo
 	var string SocketMeshString;
 	var bool Female;
 };
-
 
 var config array<SocketReplacementInfo> SocketReplacements;
 
@@ -289,4 +288,58 @@ static function bool IsSecondaryMeleeWeaponTemplate(X2WeaponTemplate WeaponTempl
 		WeaponTemplate.WeaponCat != 'wristblade' &&
 		WeaponTemplate.WeaponCat != 'shield' &&
 		WeaponTemplate.WeaponCat != 'gauntlet';
+}
+
+static function bool CanWeaponApplyUpgrade(XComGameState_Item WeaponState, X2WeaponUpgradeTemplate UpgradeTemplate)
+{
+	local X2WeaponTemplate WeaponTemplate;
+	local name TemplateName;
+	local bool bIsTemplateWeWant;
+
+	WeaponTemplate = X2WeaponTemplate(WeaponState.GetMyTemplate());
+
+	if (WeaponTemplate == none)
+		return true;	// We only care about stopping upgrades for lightsabers, which are weapons, so let non-weapons pass
+
+	foreach class'X2Item_Lightsaber'.default.LIGHTSABER_TEMPLATE_NAMES(TemplateName)
+	{
+		if (InStr(string(WeaponTemplate.DataName), string(TemplateName)) != INDEX_NONE) // Primary Secondaries adds the primary sabers, so we need to make sure to look for template names generated off of ours
+		{
+			bIsTemplateWeWant = true;
+			break;
+		}
+	}
+
+	if (bIsTemplateWeWant && UpgradeTemplate.UpgradeCats.Find(WeaponTemplate.WeaponCat) == INDEX_NONE)
+		return false;	// Try to find our weapon category in the list of categories the upgrade is intended for. If it's not there, don't allow the upgrade
+
+	return true; // We only get here if: we're testing a weapon that is a lightsaber added by this mod, and the upgrade is intended for lightsabers. Good! It may pass.
+}
+
+exec function DebugGiveJediUpgrades(optional int NumToGive = 1)
+{
+	local XComGameState						NewGameState;
+	local X2ItemTemplateManager				ItemMgr;
+	local array<X2WeaponUpgradeTemplate>	AllUpgrades;
+	local X2WeaponUpgradeTemplate			ThisUpgrade;
+	local XComGameState_Item				NewItemState;
+
+	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("CHEAT: Give Jedi Upgrades");
+
+	AllUpgrades = ItemMgr.GetAllUpgradeTemplates();
+
+	foreach AllUpgrades(ThisUpgrade)
+	{
+		if (ThisUpgrade.ClassThatCreatedUs == class'X2Item_WeaponUpgrade_Lightsaber')
+		{
+			`LOG("Adding to HQ" @ ThisUpgrade.DataName,, 'X2JediClassWOTC');
+			NewItemState = ThisUpgrade.CreateInstanceFromTemplate(NewGameState);
+			NewItemState.Quantity = NumToGive;
+			NewGameState.AddStateObject(NewItemState);
+			`XCOMHQ.AddItemToHQInventory(NewItemState);
+		}
+	}
+
+	`STRATEGYRULES.SubmitGameState(NewGameState);
 }
