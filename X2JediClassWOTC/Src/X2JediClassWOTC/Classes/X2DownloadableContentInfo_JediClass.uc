@@ -32,20 +32,24 @@ var config array<LootTableEntry> ADVANCED_LOOT_ENTRIES;
 var config name SUPERIOR_LOOT_ENTRIES_TO_TABLE;
 var config array<LootTableEntry> SUPERIOR_LOOT_ENTRIES;
 
-static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent MeshComp, MaterialInstanceConstant MIC)
+static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent MeshComp)
 {
 	local XComLinearColorPalette Palette;
 	local LinearColor GlowTint;
 	local int i;
 	local MaterialInterface Mat, ParentMat;
 	local MaterialInstanceTimeVarying MITV, ParentMITV, NewMITV;
-	
+
+	//`LOG(GetFuncName() @ XComWeapon(WeaponArchetype.m_kEntity) @ MeshComp.GetNumElements(),, 'X2JediClassWotc');
+
 	if (MeshComp != none)
 	{
 		for (i = 0; i < MeshComp.GetNumElements(); ++i)
 		{
 			Mat = MeshComp.GetMaterial(i);
 			MITV = MaterialInstanceTimeVarying(Mat);
+
+			//`LOG(GetFuncName() @ i @ XComWeapon(WeaponArchetype.m_kEntity) @ MaterialInstanceTimeVarying(Mat).Parent.Name @ MaterialInstanceConstant(Mat).Parent.Name,, 'X2JediClassWotc');
 
 			if (MITV != none)
 			{
@@ -69,16 +73,18 @@ static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent Mes
 						break;
 				}
 
-				`LOG(GetFuncName() @ MaterialInstanceTimeVarying(ParentMITV.Parent).Name @ MITV.Name,, 'X2JediClassWotc');
-
-				Palette = `CONTENT.GetColorPalette(ePalette_ArmorTint);
-				if (Palette != none)
+				//`LOG(GetFuncName() @ i @ MaterialInstanceTimeVarying(ParentMITV.Parent).Name @ MITV.Name,, 'X2JediClassWotc');
+				if (InStr(ParentMat, "MAT_Lightsaber_Blade") != INDEX_NONE)
 				{
-					if(WeaponArchetype.m_kAppearance.iWeaponTint != INDEX_NONE)
+					Palette = `CONTENT.GetColorPalette(ePalette_ArmorTint);
+					if (Palette != none)
 					{
-						GlowTint = Palette.Entries[WeaponArchetype.m_kAppearance.iWeaponTint].Primary;
-						MITV.SetVectorParameterValue('Emissive Color', GlowTint);
-						`LOG(GetFuncName() @ "Setting Emissive Color",, 'X2JediClassWotc');
+						if(WeaponArchetype.m_kAppearance.iWeaponTint != INDEX_NONE)
+						{
+							GlowTint = Palette.Entries[WeaponArchetype.m_kAppearance.iWeaponTint].Primary;
+							MITV.SetVectorParameterValue('Emissive Color', GlowTint);
+							//`LOG(GetFuncName() @ "Setting Emissive Color",, 'X2JediClassWotc');
+						}
 					}
 				}
 			}
