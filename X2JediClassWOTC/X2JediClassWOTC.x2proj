@@ -36,6 +36,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Config\XComJediClass.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\XComJediUpgrades.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\Holocrons.upk">
       <SubType>Content</SubType>
     </Content>

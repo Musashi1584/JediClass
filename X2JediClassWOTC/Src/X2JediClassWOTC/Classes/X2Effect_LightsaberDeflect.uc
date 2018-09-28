@@ -38,6 +38,10 @@ function bool ChangeHitResultForTarget(XComGameState_Effect EffectState, XComGam
 	if (!TargetUnit.IsAbleToAct())
 		return false;
 
+	// target must be wielding a lightsaber as their primary weapon (we'll deal with dual wielding conditions later?)
+	if (X2WeaponTemplate(TargetUnit.GetPrimaryWeapon().GetMyTemplate()).WeaponCat != 'lightsaber')
+		return false;
+
 	// incoming attack must not have a non-reflectable damage type
 	for (i = 0; i < AbilityTemplate.AbilityTargetEffects.Length; i++)
 	{

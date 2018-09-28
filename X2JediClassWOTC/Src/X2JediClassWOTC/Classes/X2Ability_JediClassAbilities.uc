@@ -2288,6 +2288,7 @@ static function X2AbilityTemplate LightsaberTelekinesis()
 	//local X2AbilityTarget_Cursor				CursorTarget;
 	//local X2AbilityTarget_Single				SingleTarget;
 	local X2Effect_PrimaryTargetGuaranteedHit	PrimaryTargetGuaranteedHitEffect;
+	local X2Condition_UnitInventory				LightsaberCondition;
 	
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberTelekinesis');
 
@@ -2339,6 +2340,11 @@ static function X2AbilityTemplate LightsaberTelekinesis()
 	Template.AbilityTargetConditions.AddItem(UnitPropertyCondition);
 
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	// Can't toss a non-saber
+	LightsaberCondition = new class'X2Condition_UnitInventory';
+	LightsaberCondition.RelevantSlot = eInvSlot_PrimaryWeapon;
+	LightsaberCondition.RequireWeaponCategory = 'lightsaber';
+	Template.AbilityShooterConditions.AddItem(LightsaberCondition);
 
 	Template.bAllowBonusWeaponEffects = true;
 
@@ -2380,6 +2386,7 @@ static function X2AbilityTemplate LightsaberToss()
 	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
 	local array<name>                       SkipExclusions;
 	//local X2AbilityCost_Ammo                AmmoCost;
+	local X2Condition_UnitInventory			LightsaberCondition;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberToss');
 
@@ -2417,6 +2424,11 @@ static function X2AbilityTemplate LightsaberToss()
 	Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);
 	// Can't shoot while dead
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	// Can't toss a non-saber
+	LightsaberCondition = new class'X2Condition_UnitInventory';
+	LightsaberCondition.RelevantSlot = eInvSlot_PrimaryWeapon;
+	LightsaberCondition.RequireWeaponCategory = 'lightsaber';
+	Template.AbilityShooterConditions.AddItem(LightsaberCondition);
 
 	// Only at single targets that are in range.
 	Template.AbilityTargetStyle = default.SimpleSingleTarget;

@@ -234,27 +234,27 @@ static function bool OnLightsaberAcquired(XComGameState NewGameState, XComGameSt
 	if (WeaponUpgradeNames.Length != 4)
 	{
 		ItemState.WipeUpgradeTemplates();
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_CRYSTAL)), 0);
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_EMITTER)), 1);
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_LENS)), 2);
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_CELL)), 3);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.CRYSTAL_SETUPS[0].UpgradeName)), 0);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.EMITTER_SETUPS[0].UpgradeName)), 1);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.LENS_SETUPS[0].UpgradeName)), 2);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.CELL_SETUPS[0].UpgradeName)), 3);
 		return true;
 	}
-	if (default.LIGHTSABER_VALID_CRYSTALS.Find(WeaponUpgradeNames[0]) == INDEX_NONE)
+	if (class'X2Item_WeaponUpgrade_Lightsaber'.default.CRYSTAL_SETUPS.Find('UpgradeName', WeaponUpgradeNames[0]) == INDEX_NONE)
 	{
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_CRYSTAL)), 0);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.CRYSTAL_SETUPS[0].UpgradeName)), 0);
 	}
-	if (default.LIGHTSABER_VALID_CELLS.Find(WeaponUpgradeNames[1]) == INDEX_NONE)
+	if (class'X2Item_WeaponUpgrade_Lightsaber'.default.EMITTER_SETUPS.Find('UpgradeName', WeaponUpgradeNames[1]) == INDEX_NONE)
 	{
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_EMITTER)), 1);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.EMITTER_SETUPS[0].UpgradeName)), 1);
 	}
-	if (default.LIGHTSABER_VALID_EMITTERS.Find(WeaponUpgradeNames[2]) == INDEX_NONE)
+	if (class'X2Item_WeaponUpgrade_Lightsaber'.default.LENS_SETUPS.Find('UpgradeName', WeaponUpgradeNames[2]) == INDEX_NONE)
 	{
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_LENS)), 2);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.LENS_SETUPS[0].UpgradeName)), 2);
 	}
-	if (default.LIGHTSABER_VALID_LENSES.Find(WeaponUpgradeNames[3]) == INDEX_NONE)
+	if (class'X2Item_WeaponUpgrade_Lightsaber'.default.CELL_SETUPS.Find('UpgradeName', WeaponUpgradeNames[3]) == INDEX_NONE)
 	{
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(default.LIGHTSABER_DEFAULT_CELL)), 3);
+		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.CELL_SETUPS[0].UpgradeName)), 3);
 	}
 
 	return true;
