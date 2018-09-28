@@ -75,6 +75,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Config\XComEngine.ini" />
     <Content Include="Config\XComGame.ini" />
     <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\X2JediClassWOTC\Classes\AnimNotify_UpdateWeaponMaterial.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\JediClassHelper.uc">
       <SubType>Content</SubType>
     </Content>

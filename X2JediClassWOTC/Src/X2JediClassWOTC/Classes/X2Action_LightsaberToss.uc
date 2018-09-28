@@ -67,20 +67,40 @@ function SetProjectileColor()
 {
 	local MaterialInterface Mat;
 	local MaterialInstanceConstant MIC;
+	local MaterialInstanceTimeVarying MITV;
 	local MeshComponent MeshComp;
+	local XComWeapon Weapon;
 	local int i;
 
-	MeshComp = XComWeapon(WeaponVisualizer.m_kEntity).Mesh;
+	Weapon = XComWeapon(WeaponVisualizer.m_kEntity);
+	MeshComp = Weapon.Mesh;
+
 	if (MeshComp != none)
 	{
-		for (i = 0; i < MeshComp.GetNumElements(); ++i)
+		for (i = 0; i < MeshComp.GetNumElements(); i++)
 		{
 			Mat = MeshComp.GetMaterial(i);
 			MIC = MaterialInstanceConstant(Mat);
+			//`log(default.class @ GetFuncName() @ "MIC" @ i @ MIC @ MIC.Parent,, 'X2JediClassWOTC');
 			if (InStr(MIC.Parent, "MAT_Lightsaber_Blade") != INDEX_NONE)
-				XComWeapon(WeaponVisualizer.m_kEntity).DefaultProjectileTemplate.ProjectileElements[0].DefaultParticleSystemInstanceParameterSet.InstanceParameters[0].Material = MIC;
+			{
+				//`log(default.class @ GetFuncName() @ "MIC" @ "applying",, 'X2JediClassWOTC');
+				Weapon.DefaultProjectileTemplate.ProjectileElements[0].DefaultParticleSystemInstanceParameterSet.InstanceParameters[0].Material = MIC;
+				class'X2DownloadableContentInfo_JediClass'.static.UpdateWeaponMaterial(Weapon.m_kGameWeapon, MeshComp);
+			}
+			
+			MITV = MaterialInstanceTimeVarying(Mat);
+			//`log(default.class @ GetFuncName() @ "MITV" @ i @ MITV @ MITV.Parent,, 'X2JediClassWOTC');
+			if (InStr(MITV.Parent, "MAT_Lightsaber_Blade") != INDEX_NONE)
+			{
+				//`log(default.class @ GetFuncName() @ "MITV" @ "applying",, 'X2JediClassWOTC');
+				Weapon.DefaultProjectileTemplate.ProjectileElements[0].DefaultParticleSystemInstanceParameterSet.InstanceParameters[0].Material = MITV;
+				class'X2DownloadableContentInfo_JediClass'.static.UpdateWeaponMaterial(Weapon.m_kGameWeapon, MeshComp);
+			}
 		}
 	}
+
+	return;
 }
 
 function SendProjectile(vector Source, vector Target, bool bReturnToSource = false)
@@ -107,13 +127,13 @@ function SendProjectile(vector Source, vector Target, bool bReturnToSource = fal
 
 function NotifyTargetsAbilityApplied()
 {
-	`log(GetFuncName() @ "was called",, 'X2JediClassWOTC');
+	`log("X2Action_LightsaberToss" @ GetFuncName() @ "was called",, 'X2JediClassWOTC');
 }
 
 function DoNotifyTargetsAbilityAppliedWithMultipleHitLocations(XComGameState NotifyVisualizeGameState, XComGameStateContext_Ability NotifyAbilityContext,
 									   int HistoryIndex, Vector HitLocation, array<Vector> allHitLocations, int PrimaryTargetID = 0, bool bNotifyMultiTargetsAtOnce = true )
 {
-	`log(GetFuncName() @ "was called",, 'X2JediClassWOTC');
+	`log("X2Action_LightsaberToss" @ GetFuncName() @ "was called",, 'X2JediClassWOTC');
 }
 
 function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
@@ -171,15 +191,15 @@ function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
 	if (bReturn)
 	{
 		`XEVENTMGR.TriggerEvent('Visualizer_AbilityHit', self, self);
-		`log("bMainImpactNotify" @ bMainImpactNotify @ "/" @ iProjectileNotifyHitIndex @ "/" @ Targets.Length,, 'X2JediClassWotc');
-		`log("HitLocation" @ HitLocation,, 'X2JediClassWotc');
-		`log("RightHandLocation" @ RightHandLocation,, 'X2JediClassWotc');
+		`log("X2Action_LightsaberToss bMainImpactNotify" @ bMainImpactNotify @ "/" @ iProjectileNotifyHitIndex @ "/" @ Targets.Length,, 'X2JediClassWotc');
+		`log("X2Action_LightsaberToss HitLocation" @ HitLocation,, 'X2JediClassWotc');
+		`log("X2Action_LightsaberToss RightHandLocation" @ RightHandLocation,, 'X2JediClassWotc');
 
-		for (HandProximity = 0.0; HandProximity <= 50.0;  HandProximity+=0.1)
+		for (HandProximity = 0.0; HandProximity <= 100.0;  HandProximity+=0.1)
 		{
 			if (!class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, HandProximity))
 			{
-				`log("AreVectorsDifferent" @ HandProximity @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, HandProximity),, 'X2JediClassWotc');
+				`log("X2Action_LightsaberToss AreVectorsDifferent" @ HandProximity @ class'Helpers'.static.AreVectorsDifferent(HitLocation, RightHandLocation, HandProximity),, 'X2JediClassWotc');
 				`log("X2Action_LightsaberToss returned to source" @ iProjectileNotifyHitIndex @ Targets.Length,, 'X2JediClassWotc');
 				bReturnedToSource = true;
 				bSnap = true;
@@ -204,6 +224,7 @@ simulated state Executing
 	{
 		ActionTimout -= fDeltaT;
 		UpdateSnaps(fDeltaT);
+		SetProjectileColor();
 	}
 
 	simulated function UpdateSnaps(float fDeltaT)
@@ -297,7 +318,7 @@ Begin:
 	{
 		IdleAnim.StopAnim();
 		UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
-		`LOG("Start" @ StopAnimationName,, 'X2JediClassWotc');
+		`LOG(default.class @ "Start" @ StopAnimationName,, 'X2JediClassWotc');
 		LightsaberReturned();
 		Params = default.Params;
 		Params.AnimName = StopAnimationName;

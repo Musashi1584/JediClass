@@ -54,7 +54,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_Conventional()
 	local AltGameArchetypeUse DualWieldArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[0]);
-	Template.GameplayInstanceClass = class'XGLightSaber';
+	//Template.GameplayInstanceClass = class'XGLightSaber';
 	Template.WeaponPanelImage = "_Sword";                       // used by the UI. Probably determines iconview of the weapon.
 
 	Template.ItemCat = 'weapon';
@@ -108,7 +108,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_Magnetic()
 	local AltGameArchetypeUse DualWieldArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[1]);
-	Template.GameplayInstanceClass = class'XGLightSaber';
+	//Template.GameplayInstanceClass = class'XGLightSaber';
 	Template.WeaponPanelImage = "_Pistol";                       // used by the UI. Probably determines iconview of the weapon.
 
 	Template.ItemCat = 'weapon';
@@ -165,7 +165,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_Beam()
 	local AltGameArchetypeUse DualWieldArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[2]);
-	Template.GameplayInstanceClass = class'XGLightSaber';
+	//Template.GameplayInstanceClass = class'XGLightSaber';
 	Template.WeaponPanelImage = "_Pistol";                       // used by the UI. Probably determines iconview of the weapon.
 
 	Template.ItemCat = 'weapon';

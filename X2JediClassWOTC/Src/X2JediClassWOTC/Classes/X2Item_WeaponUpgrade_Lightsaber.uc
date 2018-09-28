@@ -54,15 +54,16 @@ static function X2DataTemplate CreateJediUpgrade(name SocketName, UpgradeSetup T
 	local name						AbilityName, SaberName;
 	local UpgradeSetup				TypeSetup;
 	
+	`log("-------------------------------------------------------------------------", default.bLogUpgrades, 'X2JediClassWOTC');
+	`log(default.class @ GetFuncName() @ "setting up" @ ThisUpgradeSetup.UpgradeName, default.bLogUpgrades, 'X2JediClassWOTC');
+	`log(default.class @ GetFuncName() @ "SocketName" @ SocketName, default.bLogUpgrades, 'X2JediClassWOTC');
+	
 	`CREATE_X2TEMPLATE(class'X2WeaponUpgradeTemplate', Template, ThisUpgradeSetup.UpgradeName);
 	Template.LootStaticMesh = StaticMesh'UI_3D.Loot.WeapFragmentA';
 	Template.strImage = ThisUpgradeSetup.ImagePath;
 	Template.TradingPostValue = ThisUpgradeSetup.UpgradeValue;
 	Template.Tier = ThisUpgradeSetup.Tier;
-	
-	`log("-------------------------------------------------------------------------", default.bLogUpgrades, 'X2JediClassWOTC');
-	`log(default.class @ GetFuncName() @ "setting up" @ ThisUpgradeSetup.UpgradeName, default.bLogUpgrades, 'X2JediClassWOTC');
-	`log(default.class @ GetFuncName() @ "SocketName" @ SocketName, default.bLogUpgrades, 'X2JediClassWOTC');
+	Template.ItemCat = 'utility';
 
 	Template.CHBonusDamage = ThisUpgradeSetup.DamageValue;
 	Template.AddCHDamageModifierFn = DamageUpgradeModifier;
