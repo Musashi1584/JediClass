@@ -2037,7 +2037,7 @@ static function X2AbilityTemplate LeapStrike()
 	Template.BuildVisualizationFn = Teleport_BuildVisualization; //TypicalAbility_BuildVisualization;
 
 	Template.AdditionalAbilities.AddItem('ForceAbilitiesAnimSet');
-	Template.AdditionalAbilities.AddItem('LeapStrikeFleche');
+	//Template.AdditionalAbilities.AddItem('LeapStrikeFleche');
 
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
