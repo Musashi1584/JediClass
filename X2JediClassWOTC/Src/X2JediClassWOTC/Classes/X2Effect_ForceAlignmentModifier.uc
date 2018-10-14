@@ -8,7 +8,7 @@ function GetToHitModifiers(XComGameState_Effect EffectState, XComGameState_Unit 
 	ModInfo.Reason = class'JediClassHelper'.static.GetForceAlignmentModifierString();
 	ModInfo.Value = class'JediClassHelper'.static.GetSuccessModifier(Attacker, AbilityState.GetMyTemplateName());
 
-	//`LOG("X2Effect_ForceAlignmentModifier ForceAlignmentModifier" @ ModInfo.Value,, 'JediClass');
+	//`LOG("X2Effect_ForceAlignmentModifier ForceAlignmentModifier" @ ModInfo.Value,, 'X2JediClassWOTC');
 
 	ShotModifiers.AddItem(ModInfo);
 }

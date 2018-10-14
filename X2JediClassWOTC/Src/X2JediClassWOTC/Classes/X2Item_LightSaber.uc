@@ -262,7 +262,6 @@ static function bool OnLightsaberAcquired(XComGameState NewGameState, XComGameSt
 
 function bool ShouldUseDualWieldArchetype(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)
 {
-	`LOG("ShouldUseDualWieldArchetype" @ ConsiderArchetype,, 'JediClass');
 	return (class'X2DownloadableContentInfo_JediClass'.static.HasDualMeleeEquipped(UnitState) &&
 		ConsiderArchetype == "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual");
 }

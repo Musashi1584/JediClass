@@ -2,12 +2,6 @@
 
 [i]"For over a thousand generations, the Jedi were the guardians of peace and justice in the Old Republic — before the dark times. Before the Empire."[/i]
 
-Vanilla and Long War 2 / Long War Perk Pack compatible. 
-
-[b]IMPORTANT 1 For vanilla (Not LW2 or LWPP user) use my [url=steamcommunity.com/sharedfiles/filedetails/?id=923981897]LW Promotion Screen For Vanilla[/url] which allows you to display the third perk column and the grand master rank.[/b]
-
-[b]IMPORTANT 2 Accidentally i chose the same mod id as the old jedi class mod by Marweezy. This means you can only run either this or the old mod not both at the same time.[/b]
-
 Jedi can't be trained in the Guerilla Training School and they are rare to get on rookie promotion.
 
 [h1]Force Powers[/h1]
@@ -19,6 +13,23 @@ A preview of the force powers can be seen here https://youtu.be/TXoFliFNDNM
 The full list of the perks with description can be found here [url=steamcommunity.com/workshop/filedetails/discussion/944207594/2592234299557734947/]Force Powers[/url]
 
 [i]"Don't be too proud of this technological terror you've constructed. The ability to destroy a planet is insignificant next to the power of the Force."[/i]
+
+[h1]Force Pool[/h1]
+
+In an effort to differentiate from the standard cooldown-based gameplay of other classes, Jedi have been given a Force Pool. This Force Pool acts similarly to mana pools from other games: you can cast abilities as long as you have the Force Points to do so. All Force abilities have a single turn cooldown, but a Jedi's Force Pool is very limited - by default, a Jedi receives 1 Force Point per rank as their maximum Force Pool. Three times per mission, a Jedi can use the Meditate ability to regenerate half of their maximum Force Points. Of course, this means that, while Jedi abilities are very powerful, Jedi are also very limited in their uses. The most powerful Force abilities require large amounts of Force Points to use, and will drain all Force Points when used. For example, Force Chain Lightning requires 5 Force Points, but even if you have 7 Force Points, you will end up with 0 Force Points remaining after you use it.
+
+You can increase the number of Force Points available to a Jedi by equipping them with a Holocron in their secondary slot. This allows them to use more Force abilities in a mission, but it lowers the damage they deal in melee combat, because they've given up their second lightsaber.
+
+[h1]Modular Saber System[/h1]
+
+The modular lightsaber system is what I like to think of as the logical conclusion to the vanilla modular weapon system: every part of a saber's abilities is determined by the upgrades placed on it. When you create a lightsaber - and you create them one at a time - it automatically has four upgrades attached to it. You can build new upgrades and trade out the existing upgrades for these new upgrades, but you cannot remove them or replace them with non-lightsaber upgrades. (NOTE: Other mods may provide ways for you to unequip upgrades or equip incorrect upgrades. I highly suggest you not do this, as it will break how the sabers function)
+
+As mentioned, all of a lightsaber's stats and abilities - from the aim bonuses to the damage to the armor shred - come from the upgrades. But it's not only the stats that are customized by the upgrade: the visual appearance of the saber also changes based upon which upgrades you equip to it. This means you have a tremendous amount of freedom to create the lightsaber you want your soldier to wield.
+
+There are four upgrade categories: crystal, lens, emitter, and cell. There are 13 lenses, 13 emitters, 13 cells, and 28 crystals. Lenses, emitters, and cells can be built in engineering once you have researched the proper techs, but crystals must be looted from aliens. After all, they're glorified rocks. You can't exactly build them from metal.
+In addition to the in-game customizability for sabers, every value on the saber upgrades that you might want to modify (and I mean every single one) has been pushed to an ini file for you to play with. You want to change the aim bonus of a certain upgrade? Go ahead. Want to change how much damage it deals? There you go. Want to make it give you new abilities? You got it. Want to change its visual model, or what the icon looks like in the menus? You can do that too. You want to add completely new lightsaber crystals or parts? Have fun. You have the power to do just about whatever you want to do, right there in the ini file. There is an extensive list of instructions there to guide you through each part of the process, and there are 67 existing upgrades to use as a guide.
+
+[url=https://docs.google.com/spreadsheets/d/10dBL4yeVK4Dk8z9FLWuNVEtq6D9V8uGXSqtS9r6Gmos/edit#gid=0] All upgrades in detail [/url]
 
 [h1]Force Alignment[/h1]
 
@@ -61,6 +72,7 @@ In XComClassData.ini change NumInDeck to
 [i]"You do have your moments. Not many, but you have them."[/i]
 
 [list]
+	[*]Ginger - Wotc conversion, Force Pool System, Modular Lightsaber System
 	[*]Zyxpsilon - Class Icon, Perk Icons and Rank Icons. Incredible work buddy!
 	[*]vhs - Workshop Image
 	[*]ObelixDK - Force Jump Animation, Lightsaber blender magic and being the good soul of creative xenos

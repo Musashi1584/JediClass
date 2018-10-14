@@ -17,7 +17,7 @@ simulated function OnEffectRemoved(const out EffectAppliedData ApplyEffectParame
 	local XComGameState_Unit UnitState;
 	//class'WorldInfo'.static.GetWorldInfo().Game.SetGameSpeed(1);
 	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(ApplyEffectParameters.SourceStateObjectRef.ObjectID));
-	`LOG("X2Effect_ForceSpeed.OnEffectRemoved SetGameSpeed 1",, 'JediClass');
+	`LOG("X2Effect_ForceSpeed.OnEffectRemoved SetGameSpeed 1",, 'X2JediClassWOTC');
 	XComHumanPawn(XGUnit(UnitState.GetVisualizer()).GetPawn()).Mesh.GlobalAnimRateScale = 1;
 	XComHumanPawn(XGUnit(UnitState.GetVisualizer()).GetPawn()).Mesh.bPerBoneMotionBlur = false;
 }

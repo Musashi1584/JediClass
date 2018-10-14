@@ -70,7 +70,7 @@ event OnInit(UIScreen Screen)
 //		if (class'WorldInfo'.static.GetWorldInfo().Game.GameSpeed != class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier)
 //		{
 //			class'WorldInfo'.static.GetWorldInfo().Game.SetGameSpeed(class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier);
-//			`LOG("UISL_TacticalHUD_JediStats UpdateGameSpeed" @ class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier @ "active ForceSpeed on" @ UnitState.GetFullName(),, 'JediClass');
+//			`LOG("UISL_TacticalHUD_JediStats UpdateGameSpeed" @ class'X2Effect_ForceSpeed'.default.ForceSpeedGameSpeedMutliplier @ "active ForceSpeed on" @ UnitState.GetFullName(),, 'X2JediClassWOTC');
 //		}
 //	}
 //	else
@@ -78,7 +78,7 @@ event OnInit(UIScreen Screen)
 //		if (class'WorldInfo'.static.GetWorldInfo().Game.GameSpeed != 1.0f)
 //		{
 //			class'WorldInfo'.static.GetWorldInfo().Game.SetGameSpeed(1.0f);
-//			`LOG("UISL_TacticalHUD_JediStats UpdateGameSpeed 1" @ UnitState.GetFullName(),, 'JediClass');
+//			`LOG("UISL_TacticalHUD_JediStats UpdateGameSpeed 1" @ UnitState.GetFullName(),, 'X2JediClassWOTC');
 //		}
 //	}
 //}
@@ -98,7 +98,7 @@ function EventListenerReturn OnKillMail(Object EventData, Object EventSource, XC
 
 	if (class'JediClassHelper'.default.DarkSideAbilities.Find(AbilityTemplate.DataName) != INDEX_NONE && !DeadUnit.IsEnemyUnit(Killer))
 	{
-		`LOG("UISL_TacticalHUD_JediStats Innocent Killer" @ Killer.GetFullName(),, 'JediClass');
+		`LOG("UISL_TacticalHUD_JediStats Innocent Killer" @ Killer.GetFullName(),, 'X2JediClassWOTC');
 		class'JediClassHelper'.static.AddDarkSidePoint(Killer);
 	}
 
@@ -132,14 +132,14 @@ function EventListenerReturn OnUnitEvacuated(Object EventData, Object EventSourc
 		}
 		if (bFoundCarry)
 		{
-			`LOG("UISL_TacticalHUD_JediStats Savior" @ UnitState.GetFullName(),, 'JediClass');
+			`LOG("UISL_TacticalHUD_JediStats Savior" @ UnitState.GetFullName(),, 'X2JediClassWOTC');
 			class'JediClassHelper'.static.AddLightSidePoint(UnitState);
 		}
 	}
 
 	if (UnitState.GetNumKills() == 0)
 	{
-		`LOG("UISL_TacticalHUD_JediStats Pacifist" @ UnitState.GetFullName(),, 'JediClass');
+		`LOG("UISL_TacticalHUD_JediStats Pacifist" @ UnitState.GetFullName(),, 'X2JediClassWOTC');
 		class'JediClassHelper'.static.AddLightSidePoint(UnitState);
 	}
 

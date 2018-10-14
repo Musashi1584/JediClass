@@ -88,15 +88,15 @@ simulated state Executing
 
 		CurrentTile = `XWORLD.GetTileCoordinatesFromPosition(Unit.Location);
 
-		//`LOG("X2Action_ForcePush MaybeNotifyEnvironmentDamage" @ CurrentTile.X @ CurrentTile.Y @ CurrentTile.Z,, 'JediClass');
+		//`LOG("X2Action_ForcePush MaybeNotifyEnvironmentDamage" @ CurrentTile.X @ CurrentTile.Y @ CurrentTile.Z,, 'X2JediClassWOTC');
 
 		foreach StateChangeContext.AssociatedState.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamage)
 		{
-			//`LOG("X2Action_ForcePush EnvironmentDamage" @ EnvironmentDamage.HitLocationTile.X @ EnvironmentDamage.HitLocationTile.Y @ EnvironmentDamage.HitLocationTile.Z,, 'JediClass');
+			//`LOG("X2Action_ForcePush EnvironmentDamage" @ EnvironmentDamage.HitLocationTile.X @ EnvironmentDamage.HitLocationTile.Y @ EnvironmentDamage.HitLocationTile.Z,, 'X2JediClassWOTC');
 			if(EnvironmentDamage.HitLocationTile.X == CurrentTile.X && EnvironmentDamage.HitLocationTile.Y == CurrentTile.Y)
 			{
 				DmgObjectRef = EnvironmentDamage.GetReference();
-				//`LOG("X2Action_ForcePush Notify Environmentdamage" @ DmgObjectRef.ObjectID,, 'JediClass');
+				//`LOG("X2Action_ForcePush Notify Environmentdamage" @ DmgObjectRef.ObjectID,, 'X2JediClassWOTC');
 				SetTimer(0.3f, false, nameof(DelayedNotify)); //Add a small delay since the is tile based 
 			}
 		}
@@ -165,7 +165,7 @@ Begin:
 	DistanceToTargetSquared = VSizeSq2D(EndingLocation - UnitPawn.Location);
 	If (DistanceToTargetSquared > CloseEnoughDistance/2)
 	{
-		//`LOG("X2Action_ForcePush AddImpulse" @ DistanceToTargetSquared,, 'JediClass');
+		//`LOG("X2Action_ForcePush AddImpulse" @ DistanceToTargetSquared,, 'X2JediClassWOTC');
 		ImpulseDirection = EndingLocation - UnitPawn.Location;
 		If (ImpulseDirection.Z >= -10) ImpulseDirection.Z += 150; //give a slight launching impulse if the targetlocation isnt beneath us
 		ImpulseDirection = ImpulseDirection * 0.2;
@@ -188,7 +188,7 @@ Begin:
 		UnitPawn.Mesh.AddImpulse(ImpulseDirection);
 		sleep (0.0f);
 		DistanceToTargetSquared = VSizeSq2D(EndingLocation - UnitPawn.Location);
-		//`LOG("X2Action_ForcePush" @ DistanceToTargetSquared @ iTries,, 'JediClass');
+		//`LOG("X2Action_ForcePush" @ DistanceToTargetSquared @ iTries,, 'X2JediClassWOTC');
 	}
 
 	//if(!NewUnitState.IsDead() && !NewUnitState.IsIncapacitated())
