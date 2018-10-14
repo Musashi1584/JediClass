@@ -19,7 +19,7 @@ function int GetAttackingDamageModifier(XComGameState_Effect EffectState, XComGa
 			StartLoc = WorldData.GetPositionFromTileCoordinates(Attacker.TurnStartLocation);
 			TargetLoc = WorldData.GetPositionFromTileCoordinates(TargetUnit.TileLocation);
 			BonusDmg = BonusDmgPerTile * VSize(StartLoc - TargetLoc)/ WorldData.WORLD_StepSize;
-			//`LOG("Fleche StartLoc" @ StartLoc @ "TargetLoc" @ TargetLoc @  "Dist" @ VSize(StartLoc - TargetLoc) @ "* BonusDmgPerTile" @ BonusDmgPerTile @ "BonusDmg" @ BonusDmg,, 'JediClass');
+			//`LOG("Fleche StartLoc" @ StartLoc @ "TargetLoc" @ TargetLoc @  "Dist" @ VSize(StartLoc - TargetLoc) @ "* BonusDmgPerTile" @ BonusDmgPerTile @ "BonusDmg" @ BonusDmg,, 'X2JediClassWOTC');
 			return int(BonusDmg);
 		}
 	}

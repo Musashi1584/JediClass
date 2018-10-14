@@ -443,7 +443,7 @@ static function EventListenerReturn ForceDrainListener(Object EventData, Object 
 				}
 				if (DamageDealt > 0)
 				{
-					//`LOG("TargetUnit" @ TargetUnit.GetMyTemplateName() @ DamageDealt,, 'JediClass');
+					//`LOG("TargetUnit" @ TargetUnit.GetMyTemplateName() @ DamageDealt,, 'X2JediClassWOTC');
 					StolenHP += Round(float(DamageDealt) * 1);
 				}
 			}
@@ -461,7 +461,7 @@ static function EventListenerReturn ForceDrainListener(Object EventData, Object 
 				NewGameState.AddStateObject(NewSourceUnit);
 				`TACTICALRULES.SubmitGameState(NewGameState);
 				//  Activate this ability to steal the HP
-				//`LOG("ForceDrainListener AbilityTriggerAgainstSingleTarget" @ AbilityState.ObjectID,, 'JediClass');
+				//`LOG("ForceDrainListener AbilityTriggerAgainstSingleTarget" @ AbilityState.ObjectID,, 'X2JediClassWOTC');
 				TargetRef.ObjectID = NewSourceUnit.ObjectID;
 				AbilityState.AbilityTriggerAgainstSingleTarget(TargetRef, false);
 			}
@@ -1686,7 +1686,7 @@ simulated function ForceChoke_BuildVisualization(XComGameState VisualizeGameStat
 			SoundAndFlyOver.SetSoundAndFlyOverParameters(None, AbilityTemplate.LocHitMessage, AbilityTemplate.TargetHitSpeech, eColor_Good);
 		}
 
-		//`LOG(AbilityTemplate.AbilityTargetEffects[0].Name @ Context.FindTargetEffectApplyResult(AbilityTemplate.AbilityTargetEffects[0]),, 'JediClass');
+		//`LOG(AbilityTemplate.AbilityTargetEffects[0].Name @ Context.FindTargetEffectApplyResult(AbilityTemplate.AbilityTargetEffects[0]),, 'X2JediClassWOTC');
 		
 		// add the damage action after WaitForAbilityEffect
 		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
@@ -2037,7 +2037,7 @@ static function X2AbilityTemplate LeapStrike()
 	Template.BuildVisualizationFn = Teleport_BuildVisualization; //TypicalAbility_BuildVisualization;
 
 	Template.AdditionalAbilities.AddItem('ForceAbilitiesAnimSet');
-	Template.AdditionalAbilities.AddItem('LeapStrikeFleche');
+	//Template.AdditionalAbilities.AddItem('LeapStrikeFleche');
 
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;

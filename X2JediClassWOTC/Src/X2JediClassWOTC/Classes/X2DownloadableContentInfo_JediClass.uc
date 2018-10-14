@@ -39,6 +39,7 @@ static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent Mes
 	local int i;
 	local MaterialInterface Mat, ParentMat;
 	local MaterialInstanceTimeVarying MITV, ParentMITV, NewMITV;
+	local SkeletalMeshComponent AttachedMesh;
 
 	//`LOG(GetFuncName() @ XComWeapon(WeaponArchetype.m_kEntity) @ MeshComp.GetNumElements(),, 'X2JediClassWotc');
 
@@ -76,6 +77,23 @@ static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent Mes
 				//`LOG(GetFuncName() @ i @ MaterialInstanceTimeVarying(ParentMITV.Parent).Name @ MITV.Name,, 'X2JediClassWotc');
 				if (InStr(ParentMat, "MAT_Lightsaber_Blade") != INDEX_NONE)
 				{
+					foreach WeaponArchetype.UnitPawn.Mesh.AttachedComponentsOnBone(class'SkeletalMeshComponent', AttachedMesh, 'LeftSwordSheath')
+					{
+						if (AttachedMesh != none)
+						{
+							MITV = MaterialInstanceTimeVarying(DynamicLoadObject("Lightsaber_CV.Materials.Invisible_MITV", class'MaterialInstanceTimeVarying'));
+						}
+						else
+						{
+							MITV = MaterialInstanceTimeVarying(DynamicLoadObject("Lightsaber_CV.Materials.MAT_Lightsaber_Blade_MITV", class'MaterialInstanceTimeVarying'));
+						}
+					
+						MeshComp.SetMaterial(0, MITV);
+						`LOG(GetFuncName() @ "setting blade mitv" @ MITV,, 'X2JediClassWotc');
+					
+						break;
+					}
+
 					Palette = `CONTENT.GetColorPalette(ePalette_ArmorTint);
 					if (Palette != none)
 					{
@@ -83,9 +101,11 @@ static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent Mes
 						{
 							GlowTint = Palette.Entries[WeaponArchetype.m_kAppearance.iWeaponTint].Primary;
 							MITV.SetVectorParameterValue('Emissive Color', GlowTint);
-							//`LOG(GetFuncName() @ "Setting Emissive Color",, 'X2JediClassWotc');
+							`LOG(GetFuncName() @ "Setting Emissive Color" @ MITV @ ParentMat,, 'X2JediClassWotc');
 						}
 					}
+
+					
 				}
 			}
 		}
@@ -153,7 +173,7 @@ static function bool IsResearchInHistory(name ResearchName)
 /// </summary>
 static event OnPostTemplatesCreated()
 {
-	//`LOG("ForceLightning Ability" @ class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager().FindAbilityTemplate('ForceLightning'),, 'JediClass');
+	//`LOG("ForceLightning Ability" @ class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager().FindAbilityTemplate('ForceLightning'),, 'X2JediClassWOTC');
 	OnPostAbilityTemplatesCreated();
 	OnPostLootTablesCreated();
 }
@@ -267,10 +287,19 @@ static function string DLCAppendSockets(XComUnitPawn Pawn)
 
 static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameState_Unit UnitState, XComUnitPawn Pawn)
 {
-	if (UnitState.IsAdvent() || UnitState.IsAlien())
+	if (UnitState.IsAdvent() || UnitState.IsAlien() || UnitState.IsCivilian())
 	{
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForceChokeTarget")));
 	}
+
+	if (UnitState.GetSoldierClassTemplateName() != 'Jedi')
+		return;
+
+	if (HasDualMeleeEquipped(UnitState))
+	{
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("Lightsaber_CV.Anims.AS_JediDual")));
+	}
+
 }
 
 static function bool HasDualMeleeEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
@@ -348,4 +377,54 @@ exec function DebugGiveJediUpgrades(optional int NumToGive = 1)
 	}
 
 	`STRATEGYRULES.SubmitGameState(NewGameState);
+}
+
+exec function GiveLightSidePoint(int Amount = 1)
+{
+	local XComGameStateHistory				History;
+	local UIArmory							Armory;
+	local StateObjectReference				UnitRef;
+	local XComGameState_Unit				UnitState;
+	
+	History = `XCOMHISTORY;
+
+	Armory = UIArmory(`SCREENSTACK.GetFirstInstanceOf(class'UIArmory'));
+	if (Armory == none)
+	{
+		return;
+	}
+
+	UnitRef = Armory.GetUnitRef();
+	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(UnitRef.ObjectID));
+	if (UnitState == none)
+	{
+		return;
+	}
+	
+	class'JediClassHelper'.static.AddLightSidePoint(UnitState ,Amount);
+}
+
+exec function GiveDarkSidePoint(int Amount = 1)
+{
+	local XComGameStateHistory				History;
+	local UIArmory							Armory;
+	local StateObjectReference				UnitRef;
+	local XComGameState_Unit				UnitState;
+	
+	History = `XCOMHISTORY;
+
+	Armory = UIArmory(`SCREENSTACK.GetFirstInstanceOf(class'UIArmory'));
+	if (Armory == none)
+	{
+		return;
+	}
+
+	UnitRef = Armory.GetUnitRef();
+	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(UnitRef.ObjectID));
+	if (UnitState == none)
+	{
+		return;
+	}
+	
+	class'JediClassHelper'.static.AddDarkSidePoint(UnitState ,Amount);
 }

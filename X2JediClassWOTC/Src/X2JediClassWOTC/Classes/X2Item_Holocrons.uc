@@ -17,12 +17,12 @@ static function X2DataTemplate Holocron_CV()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'Holocron_CV');
 
-	Template.strImage = "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_X4";
+	Template.strImage = "img:///Holocrons.UI.HolocronCV";
 
 	Template.ItemCat = 'weapon';
 	Template.WeaponCat = 'holocron';
 	Template.WeaponTech = 'conventional';
-	Template.iRange = 0;
+	Template.iRange = 1;
 	Template.Tier = 0;
 
 	Template.InventorySlot = eInvSlot_SecondaryWeapon;
@@ -46,19 +46,19 @@ static function X2DataTemplate Holocron_MG()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'Holocron_MG');
 
-	Template.strImage = "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_X4";
+	Template.strImage = "img:///Holocrons.UI.HolocronMG";
 
 	Template.ItemCat = 'weapon';
 	Template.WeaponCat = 'holocron';
 	Template.WeaponTech = 'magnetic';
-	Template.iRange = 0;
+	Template.iRange = 1;
 	Template.Tier = 0;
 
 	Template.InventorySlot = eInvSlot_SecondaryWeapon;
 	Template.StowedLocation = eSlot_LowerBack;
 	//Template.Abilities.AddItem('Hack');
 		
-	Template.GameArchetype = "Holocrons.Archetypes.WP_Holocron_CV";
+	Template.GameArchetype = "Holocrons.Archetypes.WP_Holocron_MG";
 
 	Template.CanBeBuilt = false;
 	Template.bInfiniteItem = true;
@@ -79,7 +79,7 @@ static function X2DataTemplate CreateTemplate_Holocron_MG_Schematic()
 	`CREATE_X2TEMPLATE(class'X2SchematicTemplate', Template, 'Holocron_MG_Schematic');
 
 	Template.ItemCat = 'weapon';
-	Template.strImage = "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_X4";
+	Template.strImage = "img:///Holocrons.UI.HolocronMG";
 	Template.PointsToComplete = 0;
 	Template.Tier = 1;
 	Template.OnBuiltFn = class'X2Item_DefaultSchematics'.static.UpgradeItems;
@@ -119,19 +119,19 @@ static function X2DataTemplate Holocron_BM()
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'Holocron_BM');
 
-	Template.strImage = "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_X4";
+	Template.strImage = "img:///Holocrons.UI.HolocronBM";
 
 	Template.ItemCat = 'weapon';
 	Template.WeaponCat = 'holocron';
 	Template.WeaponTech = 'beam';
-	Template.iRange = 0;
+	Template.iRange = 1;
 	Template.Tier = 0;
 
 	Template.InventorySlot = eInvSlot_SecondaryWeapon;
 	Template.StowedLocation = eSlot_LowerBack;
 	//Template.Abilities.AddItem('Hack');
 		
-	Template.GameArchetype = "Holocrons.Archetypes.WP_Holocron_CV";
+	Template.GameArchetype = "Holocrons.Archetypes.WP_Holocron_BM";
 
 	Template.CanBeBuilt = false;
 	Template.bInfiniteItem = true;
@@ -152,7 +152,7 @@ static function X2DataTemplate CreateTemplate_Holocron_BM_Schematic()
 	`CREATE_X2TEMPLATE(class'X2SchematicTemplate', Template, 'Holocron_BM_Schematic');
 
 	Template.ItemCat = 'weapon';
-	Template.strImage = "img:///UILibrary_StrategyImages.X2InventoryIcons.Inv_X4";
+	Template.strImage = "img:///Holocrons.UI.HolocronBM";
 	Template.PointsToComplete = 0;
 	Template.Tier = 3;
 	Template.OnBuiltFn = class'X2Item_DefaultSchematics'.static.UpgradeItems;

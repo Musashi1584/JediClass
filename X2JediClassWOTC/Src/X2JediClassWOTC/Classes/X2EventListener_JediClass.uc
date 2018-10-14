@@ -6,6 +6,7 @@ static function array<X2DataTemplate> CreateTemplates()
 
 	Templates.AddItem(CreateListenerTemplate_OnSquaddieItemStateApplied());
 	Templates.AddItem(CreateListenerTemplate_OnOverrideUnitFocusUI());
+	Templates.AddItem(CreateListenerTemplate_OnSoldierInfo());
 
 	return Templates;
 }
@@ -102,6 +103,73 @@ static function EventListenerReturn OnOverrideUnitFocusUI(Object EventData, Obje
 	Tuple.Data[4].s = "img:///JediClassUI.UIJediClass"; // iconPath
 	Tuple.Data[5].s = class'X2Effect_JediForcePool_ByRank'.default.ForceDescription; // tooltipText
 	Tuple.Data[6].s = class'X2Effect_JediForcePool_ByRank'.default.ForceLabel; // focusLabel
+
+	return ELR_NoInterrupt;
+}
+
+static function CHEventListenerTemplate CreateListenerTemplate_OnSoldierInfo()
+{
+	local CHEventListenerTemplate Template;
+
+	`CREATE_X2TEMPLATE(class'CHEventListenerTemplate', Template, 'JediClassSoldierInfo');
+
+	Template.RegisterInTactical = true;
+	Template.RegisterInStrategy = true;
+
+	Template.AddCHEvent('SoldierClassIcon', OnSoldierInfo, ELD_Immediate);
+	`LOG("Register Event SoldierClassIcon",, 'X2JediClassWOTC');
+
+	Template.AddCHEvent('SoldierClassDisplayName', OnSoldierInfo, ELD_Immediate);
+	`LOG("Register Event SoldierClassDisplayName",, 'X2JediClassWOTC');
+
+	Template.AddCHEvent('SoldierClassSummary', OnSoldierInfo, ELD_Immediate);
+	`LOG("Register Event SoldierClassSummary",, 'X2JediClassWOTC');
+
+	return Template;
+}
+
+static function EventListenerReturn OnSoldierInfo(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
+{
+	local XComLWTuple Tuple;
+	local XComGameState_Unit UnitState;
+	local string Info;
+
+	Tuple = XComLWTuple(EventData);
+	UnitState = XComGameState_Unit(EventSource);
+
+	//`LOG(GetFuncName() @ XComGameState_Unit(EventSource).GetFullName(),, 'X2JediClassWOTC');
+
+	if (UnitState.GetSoldierClassTemplate().DataName != 'UniversalSoldier')
+	{
+		//`LOG(GetFuncName() @ "bailing" @ UnitState.GetSoldierClassTemplate().DisplayName @ UnitState.GetSoldierClassTemplate().DataName,, 'X2JediClassWOTC');
+		return ELR_NoInterrupt;
+	}
+
+	switch (Event)
+	{
+		case 'SoldierClassIcon':
+			Info = UnitState.GetSoldierClassTemplate().IconImage;
+			break;
+		case 'SoldierClassDisplayName':
+			`LOG(GetFuncName() @ Event @ class'JediClassHelper'.static.GetDarkSideModifier(UnitState),, 'X2JediClassWOTC');
+			if (class'JediClassHelper'.static.GetDarkSideModifier(UnitState) > 0)
+			{
+				Info = "Sith";
+			}
+			else
+			{
+				Info = "Jedi";
+			}
+			break;
+		case 'SoldierClassSummary':
+			Info = UnitState.GetSoldierClassTemplate().ClassSummary;
+			break;
+	}
+
+	//`LOG(GetFuncName() @ Event @ Info,, 'X2JediClassWOTC');
+
+	Tuple.Data[0].s = Info;
+	EventData = Tuple;
 
 	return ELR_NoInterrupt;
 }
