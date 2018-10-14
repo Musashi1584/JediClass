@@ -28,6 +28,8 @@ static function X2DataTemplate CreateTemplate_LightSaber_Conventional_Project()
 	Template.bRepeatable = true;
 	Template.SortingTier = 4;
 	Template.ItemRewards.AddItem(class'X2Item_LightSaber'.default.LIGHTSABER_TEMPLATE_NAMES[0]);
+	Template.ItemRewards.AddItem(name(class'X2Item_LightSaber'.default.LIGHTSABER_TEMPLATE_NAMES[0] $ "_Primary"));
+	Template.ResearchCompletedFn = GiveAllItemRewards;
 
 	// Requirements
 	Template.Requirements.RequiredTechs.AddItem('ModularWeapons');
@@ -66,6 +68,8 @@ static function X2DataTemplate CreateTemplate_LightSaber_Magnetic_Project()
 	Template.bRepeatable = true;
 	Template.SortingTier = 4;
 	Template.ItemRewards.AddItem(class'X2Item_LightSaber'.default.LIGHTSABER_TEMPLATE_NAMES[1]);
+	Template.ItemRewards.AddItem(name(class'X2Item_LightSaber'.default.LIGHTSABER_TEMPLATE_NAMES[1] $ "_Primary"));
+	Template.ResearchCompletedFn = GiveAllItemRewards;
 
 	// Requirements
 	Template.Requirements.RequiredTechs.AddItem('AutopsyAdventStunLancer');
@@ -108,6 +112,8 @@ static function X2DataTemplate CreateTemplate_LightSaber_Beam_Project()
 	Template.bRepeatable = true;
 	Template.SortingTier = 4;
 	Template.ItemRewards.AddItem(class'X2Item_LightSaber'.default.LIGHTSABER_TEMPLATE_NAMES[2]);
+	Template.ItemRewards.AddItem(name(class'X2Item_LightSaber'.default.LIGHTSABER_TEMPLATE_NAMES[2] $ "_Primary"));
+	Template.ResearchCompletedFn = GiveAllItemRewards;
 
 	// Requirements
 	Template.Requirements.RequiredTechs.AddItem('AutopsyArchon');
@@ -134,4 +140,27 @@ static function X2DataTemplate CreateTemplate_LightSaber_Beam_Project()
 	Template.Cost.ResourceCosts.AddItem(Resources);
 
 	return Template;
+}
+
+static function GiveAllItemRewards(XComGameState NewGameState, XComGameState_Tech TechState)
+{
+	local X2ItemTemplateManager ItemTemplateManager;
+	local X2ItemTemplate ItemTemplate;
+	local array<name> ItemRewards;
+	local name ItemReward;
+	local int iRandIndex;
+	
+	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+	
+	ItemRewards = TechState.GetMyTemplate().ItemRewards;
+
+	foreach ItemRewards(ItemReward)
+	{
+		ItemTemplate = ItemTemplateManager.FindItemTemplate(ItemReward);
+		class'XComGameState_HeadquartersXCom'.static.GiveItem(NewGameState, ItemTemplate);
+	}
+
+	TechState.ItemRewards.Length = 0; // Reset the item rewards array in case the tech is repeatable
+	TechState.ItemRewards.AddItem(ItemTemplate); // Needed for UI Alert display info
+	TechState.bSeenResearchCompleteScreen = false; // Reset the research report for techs that are repeatable
 }

@@ -53,6 +53,7 @@ static function X2DataTemplate CreateJediUpgrade(name SocketName, UpgradeSetup T
 	local X2WeaponUpgradeTemplate	Template;
 	local name						AbilityName, SaberName;
 	local UpgradeSetup				TypeSetup;
+	local ArtifactCost				ThisCost;
 	
 	`log("-------------------------------------------------------------------------", default.bLogUpgrades, 'X2JediClassWOTC');
 	`log(default.class @ GetFuncName() @ "setting up" @ ThisUpgradeSetup.UpgradeName, default.bLogUpgrades, 'X2JediClassWOTC');
@@ -130,8 +131,22 @@ static function X2DataTemplate CreateJediUpgrade(name SocketName, UpgradeSetup T
 	{
 		Template.CanBeBuilt = true;
 		Template.PointsToComplete = 0;
-		Template.Cost.ResourceCosts = ThisUpgradeSetup.ResourceCosts;
-		Template.Cost.ArtifactCosts = ThisUpgradeSetup.ArtifactCosts;
+
+		if (ThisUpgradeSetup.ResourceCosts[0].ItemTemplateName != '')
+		{
+			foreach ThisUpgradeSetup.ResourceCosts(ThisCost)
+			{
+				Template.Cost.ResourceCosts.AddItem(ThisCost);
+			}
+		}
+		
+		if (ThisUpgradeSetup.ArtifactCosts[0].ItemTemplateName != '')
+		{
+			foreach ThisUpgradeSetup.ArtifactCosts(ThisCost)
+			{
+				Template.Cost.ArtifactCosts.AddItem(ThisCost);
+			}
+		}
 
 		if (ThisUpgradeSetup.RequiredTechs[0] != '')
 		{

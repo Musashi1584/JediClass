@@ -75,6 +75,8 @@ static function X2DataTemplate CreateTemplate_LightSaber_Conventional()
 	//Template.AddDefaultAttachment('Sheath', "ConvSword.Meshes.SM_ConvSword_Sheath", true);
 	Template.Tier = 0;
 	Template.OnAcquiredFn = OnLightsaberAcquired;
+	Template.OnEquippedFn = DeleteMatchingWeaponFromOtherSlot;
+	Template.OnUnequippedFn = ReplaceMatchingWeaponFromOtherSlot;
 
 	Template.iRadius = 1;
 	Template.NumUpgradeSlots = 4;
@@ -128,6 +130,8 @@ static function X2DataTemplate CreateTemplate_LightSaber_Magnetic()
 
 	Template.Tier = 1;
 	Template.OnAcquiredFn = OnLightsaberAcquired;
+	Template.OnEquippedFn = DeleteMatchingWeaponFromOtherSlot;
+	Template.OnUnequippedFn = ReplaceMatchingWeaponFromOtherSlot;
 
 	Template.iRadius = 1;
 	Template.NumUpgradeSlots = 4;
@@ -185,6 +189,8 @@ static function X2DataTemplate CreateTemplate_LightSaber_Beam()
 
 	Template.Tier = 2;
 	Template.OnAcquiredFn = OnLightsaberAcquired;
+	Template.OnEquippedFn = DeleteMatchingWeaponFromOtherSlot;
+	Template.OnUnequippedFn = ReplaceMatchingWeaponFromOtherSlot;
 
 	Template.iRadius = 1;
 	Template.NumUpgradeSlots = 4;
@@ -267,6 +273,129 @@ function bool ShouldUseDualWieldArchetype(XComGameState_Item ItemState, XComGame
 		ConsiderArchetype == "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual");
 }
 
+function DeleteMatchingWeaponFromOtherSlot(XComGameState_Item ItemState, XComGameState_Unit UnitState, XComGameState NewGameState)
+{
+	local XComGameStateHistory History;
+	local XComGameState_HeadquartersXCom XComHQ;
+	local array<StateObjectReference> InventoryItemRefs;
+	local array<name> ItemUpgradeNames, InventoryItemUpgradeNames;
+	local StateObjectReference MatchingItemRef;
+	local XComGameState_Item InventoryItemState;
+	local int idx, jdx;
+
+	History = `XCOMHISTORY;
+
+	foreach NewGameState.IterateByClassType(class'XComGameState_HeadquartersXCom', XComHQ)
+	{
+		break;
+	}
+
+	if (XComHQ == none)
+	{
+		XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
+		XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
+	}
+
+	InventoryItemRefs = XComHQ.Inventory;
+	for (idx = 0; idx < InventoryItemRefs.Length; idx++)
+	{
+		InventoryItemState = XComGameState_Item(History.GetGameStateForObjectID(InventoryItemRefs[idx].ObjectID));
+
+		if (InventoryItemState.WeaponAppearance.iWeaponTint == ItemState.WeaponAppearance.iWeaponTint &&
+			InventoryItemState.WeaponAppearance.iWeaponDeco == ItemState.WeaponAppearance.iWeaponDeco &&
+			InventoryItemState.WeaponAppearance.nmWeaponPattern == ItemState.WeaponAppearance.nmWeaponPattern &&
+			InventoryItemState.Nickname == ItemState.Nickname)
+		{
+			ItemUpgradeNames = ItemState.GetMyWeaponUpgradeTemplateNames();
+			InventoryItemUpgradeNames = InventoryItemState.GetMyWeaponUpgradeTemplateNames();
+
+			if (ItemUpgradeNames.Length == InventoryItemUpgradeNames.Length)
+			{
+				for (jdx = 0; jdx < ItemUpgradeNames.Length; jdx++)
+				{
+					if (ItemUpgradeNames[jdx] != InventoryItemUpgradeNames[jdx])
+					{
+						break;
+					}
+				}
+
+				if (jdx == ItemUpgradeNames.Length)
+				{
+					if (ItemState.GetMyTemplateName() != InventoryItemState.GetMyTemplateName())
+					{
+						MatchingItemRef = InventoryItemRefs[idx];
+					}
+				}
+			}
+		}
+	}
+
+	if (MatchingItemRef.ObjectID > 0)
+	{
+		NewGameState.RemoveStateObject(MatchingItemRef.ObjectID);
+		XComHQ.Inventory.RemoveItem(MatchingItemRef);
+	}
+
+	`Redscreen(ItemState.ObjectID @ "has no matching ItemState to remove!");
+}
+
+function ReplaceMatchingWeaponFromOtherSlot(XComGameState_Item ItemState, XComGameState_Unit UnitState, XComGameState NewGameState)
+{
+	local XComGameState_HeadquartersXCom XComHQ;
+	local name TemplateName;
+	local int PrimaryIndex;
+	local X2ItemTemplateManager ItemMgr;
+	local X2ItemTemplate ItemTemplate;
+	local XComGameState_Item NewItemState;
+	local array<X2WeaponUpgradeTemplate> OldStateUpgrades;
+	local X2WeaponUpgradeTemplate UpgradeTemplate;
+
+	ItemMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
+
+	TemplateName = ItemState.GetMyTemplateName();
+	PrimaryIndex = InStr(TemplateName, "_Primary");
+
+	if (PrimaryIndex == INDEX_NONE)
+	{
+		TemplateName = name(string(TemplateName) $ "_Primary");
+	}
+	else
+	{
+		TemplateName = name(Left(TemplateName, PrimaryIndex));
+	}
+
+	ItemTemplate = ItemMgr.FindItemTemplate(TemplateName);
+
+	if (ItemTemplate == none)
+	{
+		`Redscreen(TemplateName @ "does not exist! Cannot add saber mirror to other slot!");
+		return;
+	}
+
+	foreach NewGameState.IterateByClassType(class'XComGameState_HeadquartersXCom', XComHQ)
+	{
+		break;
+	}
+
+	if (XComHQ == none)
+	{
+		XComHQ = XComGameState_HeadquartersXCom(`XCOMHISTORY.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
+		XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
+	}
+
+	NewItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+	OldStateUpgrades = ItemState.GetMyWeaponUpgradeTemplates();
+	foreach OldStateUpgrades(UpgradeTemplate)
+	{
+		NewItemState.ApplyWeaponUpgradeTemplate(UpgradeTemplate);
+	}
+	NewItemState.WeaponAppearance.iWeaponTint = ItemState.WeaponAppearance.iWeaponTint;
+	NewItemState.WeaponAppearance.iWeaponDeco = ItemState.WeaponAppearance.iWeaponDeco;
+	NewItemState.WeaponAppearance.nmWeaponPattern = ItemState.WeaponAppearance.nmWeaponPattern;
+	NewItemState.Nickname = ItemState.Nickname;
+
+	XComHQ.AddItemToHQInventory(NewItemState);
+}
 
 defaultproperties
 {
