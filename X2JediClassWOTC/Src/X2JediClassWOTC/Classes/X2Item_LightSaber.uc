@@ -334,8 +334,10 @@ function DeleteMatchingWeaponFromOtherSlot(XComGameState_Item ItemState, XComGam
 		NewGameState.RemoveStateObject(MatchingItemRef.ObjectID);
 		XComHQ.Inventory.RemoveItem(MatchingItemRef);
 	}
-
-	`Redscreen(ItemState.ObjectID @ "has no matching ItemState to remove!");
+	else
+	{
+		`Redscreen(ItemState.ObjectID @ "has no matching ItemState to remove!");
+	}
 }
 
 function ReplaceMatchingWeaponFromOtherSlot(XComGameState_Item ItemState, XComGameState_Unit UnitState, XComGameState NewGameState)
@@ -383,6 +385,7 @@ function ReplaceMatchingWeaponFromOtherSlot(XComGameState_Item ItemState, XComGa
 	}
 
 	NewItemState = ItemTemplate.CreateInstanceFromTemplate(NewGameState);
+	NewItemState.WipeUpgradeTemplates();
 	OldStateUpgrades = ItemState.GetMyWeaponUpgradeTemplates();
 	foreach OldStateUpgrades(UpgradeTemplate)
 	{
