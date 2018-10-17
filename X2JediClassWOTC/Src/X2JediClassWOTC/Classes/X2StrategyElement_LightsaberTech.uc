@@ -148,7 +148,6 @@ static function GiveAllItemRewards(XComGameState NewGameState, XComGameState_Tec
 	local X2ItemTemplate ItemTemplate;
 	local array<name> ItemRewards;
 	local name ItemReward;
-	local int iRandIndex;
 	
 	ItemTemplateManager = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 	
