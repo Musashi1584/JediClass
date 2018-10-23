@@ -139,7 +139,7 @@ static function X2AbilityTemplate ForcePowerPool()
 	
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForcePowerPool');
 
-	Template.IconImage = "";
+	Template.IconImage = "img:///JediClassUI.UIPerk_Force";
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
 	Template.Hostility = eHostility_Neutral;
@@ -149,7 +149,6 @@ static function X2AbilityTemplate ForcePowerPool()
 	Template.AbilityTargetStyle = default.SelfTarget;
 	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
 
-	//  This is a dummy effect so that an icon shows up in the UI.
 	ForcePoolEffect = new class'X2Effect_JediForcePool_ByRank';
 	ForcePoolEffect.BuildPersistentEffect(1);
 	ForcePoolEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, "img:///UILibrary_PerkIcons.UIPerk_standard", false,, Template.AbilitySourceName);
@@ -170,7 +169,7 @@ static function X2AbilityTemplate Holocron(name TemplateName, int PoolDivisor)
 	
 	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
 
-	Template.IconImage = "";
+	Template.IconImage = "img:///JediClassUI.UIPerk_Holocron";
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
 	Template.Hostility = eHostility_Neutral;
@@ -206,7 +205,7 @@ static function X2AbilityTemplate ForceMeditate()
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceMeditate');
 
-	Template.IconImage = "img:///JediClassUI.UIPerk_Deflect";
+	Template.IconImage = "img:///JediClassUI.UIPerk_meditation";
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.Hostility = eHostility_Neutral;
@@ -747,7 +746,7 @@ static function X2AbilityTemplate BattleMeditation()
 	Template.bSkipExitCoverWhenFiring = true;
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	//Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 	
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
 	
