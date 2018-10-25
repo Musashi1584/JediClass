@@ -135,9 +135,9 @@ static function EventListenerReturn OnSoldierInfo(Object EventData, Object Event
 	Tuple = XComLWTuple(EventData);
 	UnitState = XComGameState_Unit(EventSource);
 
-	//`LOG(GetFuncName() @ XComGameState_Unit(EventSource).GetFullName(),, 'X2JediClassWOTC');
+	//`LOG(GetFuncName() @ UnitState.GetFullName(),, 'X2JediClassWOTC');
 
-	if (UnitState.GetSoldierClassTemplate().DataName != 'UniversalSoldier')
+	if (UnitState.GetSoldierClassTemplate().DataName != 'Jedi')
 	{
 		//`LOG(GetFuncName() @ "bailing" @ UnitState.GetSoldierClassTemplate().DisplayName @ UnitState.GetSoldierClassTemplate().DataName,, 'X2JediClassWOTC');
 		return ELR_NoInterrupt;
@@ -149,7 +149,7 @@ static function EventListenerReturn OnSoldierInfo(Object EventData, Object Event
 			Info = UnitState.GetSoldierClassTemplate().IconImage;
 			break;
 		case 'SoldierClassDisplayName':
-			`LOG(GetFuncName() @ Event @ class'JediClassHelper'.static.GetDarkSideModifier(UnitState),, 'X2JediClassWOTC');
+			//`LOG(GetFuncName() @ Event @ class'JediClassHelper'.static.GetDarkSideModifier(UnitState),, 'X2JediClassWOTC');
 			if (class'JediClassHelper'.static.GetDarkSideModifier(UnitState) > 0)
 			{
 				Info = "Sith";

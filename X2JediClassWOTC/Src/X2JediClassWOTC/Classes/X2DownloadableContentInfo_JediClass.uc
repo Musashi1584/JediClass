@@ -298,7 +298,9 @@ static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameStat
 	if (HasDualMeleeEquipped(UnitState))
 	{
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("Lightsaber_CV.Anims.AS_JediDual")));
+		
 	}
+	CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers")));
 
 }
 
@@ -410,6 +412,9 @@ exec function GiveDarkSidePoint(int Amount = 1)
 	local UIArmory							Armory;
 	local StateObjectReference				UnitRef;
 	local XComGameState_Unit				UnitState;
+	local XComGameState_Unit NewSourceUnit;
+	local XComGameState NewGameState;
+	local UnitValue DarkSidePoints;
 	
 	History = `XCOMHISTORY;
 
@@ -421,10 +426,19 @@ exec function GiveDarkSidePoint(int Amount = 1)
 
 	UnitRef = Armory.GetUnitRef();
 	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(UnitRef.ObjectID));
-	if (UnitState == none)
+	if (UnitState == none || UnitState.GetSoldierClassTemplateName() != 'Jedi')
 	{
 		return;
 	}
-	
-	class'JediClassHelper'.static.AddDarkSidePoint(UnitState ,Amount);
+
+	UnitState.GetUnitValue('DarkSidePoints', DarkSidePoints);
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(string(GetFuncName()));
+	NewSourceUnit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(UnitState.ObjectID));
+	if (NewSourceUnit != none)
+	{
+		NewSourceUnit = XComGameState_Unit(NewGameState.ModifyStateObject(NewSourceUnit.Class, NewSourceUnit.ObjectID));
+		NewSourceUnit.SetUnitFloatValue('DarkSidePoints', DarkSidePoints.fValue + Amount, eCleanup_Never);
+		`GAMERULES.SubmitGameState(NewGameState);
+		`LOG("EXEC AddDarkSidePoints for" @ NewSourceUnit.GetFullName() @ Amount @ "(" @ DarkSidePoints.fValue + Amount @ ")",, 'X2JediClassWOTC');
+	}
 }

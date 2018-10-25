@@ -12,8 +12,6 @@ Jedi can't be trained in the Guerilla Training School and they are rare to get o
 
 [i]"The Force is what gives a Jedi his power. It's an energy field created by all living things. It surrounds us and penetrates us. It binds the galaxy together." [/i]
 
-A preview of the force powers can be seen here https://youtu.be/TXoFliFNDNM
-
 The full list of the perks with description can be found here [url=https://steamcommunity.com/workshop/filedetails/discussion/1546501455/1736594593592400200/]Force Powers[/url]
 
 [i]"Don't be too proud of this technological terror you've constructed. The ability to destroy a planet is insignificant next to the power of the Force."[/i]
@@ -73,6 +71,8 @@ In XComClassData.ini change NumInDeck to
 
 [h1]Mod Compatility[/h1]
 This mod is not compatible with the current version of Grimy’s Loot Mod.
+Grimy’s currently breaks pretty much the entire modular saber system. It changes a bunch of stuff in the armory to make its upgrades work and to allow upgrades on things, and the Jedi mod relies on the Highlander, which also changes those same things.
+
 Other incombatibilities are not known yet.
 
 [h1]Credits[/h1]
