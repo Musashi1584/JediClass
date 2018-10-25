@@ -71,13 +71,11 @@ static function EventListenerReturn OnOverrideUnitFocusUI(Object EventData, Obje
 
 	if (UnitState == none)
 	{
-		Tuple.Data[0].b = false; // if no unit state, don't display Jedi Force Pool
 		return ELR_NoInterrupt;
 	}
 
 	if (!UnitState.GetUnitValue(class'X2Effect_JediForcePool_ByRank'.default.MaxForceName, MaxForce)) // GetUnitValue returns false if the unit did not already have the value
 	{
-		Tuple.Data[0].b = false; // if unit state doesn't have a MaxForce amount, don't display Jedi Force Pool
 		return ELR_NoInterrupt;
 	}
 	

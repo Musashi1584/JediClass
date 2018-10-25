@@ -8,6 +8,9 @@ static function array<X2DataTemplate> CreateTemplates()
 	Items.AddItem(Holocron_MG());
 	Items.AddItem(Holocron_BM());
 
+	Items.AddItem(CreateTemplate_Holocron_MG_Schematic());
+	Items.AddItem(CreateTemplate_Holocron_BM_Schematic());
+
 	return Items;
 }
 
