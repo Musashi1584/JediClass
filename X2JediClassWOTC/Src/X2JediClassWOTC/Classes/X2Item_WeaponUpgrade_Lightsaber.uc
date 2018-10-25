@@ -53,7 +53,8 @@ static function X2DataTemplate CreateJediUpgrade(name SocketName, UpgradeSetup T
 	local X2WeaponUpgradeTemplate	Template;
 	local name						AbilityName, SaberName;
 	local UpgradeSetup				TypeSetup;
-	local ArtifactCost				ThisCost;
+	local ArtifactCost				Cost;
+	local name						Tech;
 	
 	`log("-------------------------------------------------------------------------", default.bLogUpgrades, 'X2JediClassWOTC');
 	`log(default.class @ GetFuncName() @ "setting up" @ ThisUpgradeSetup.UpgradeName, default.bLogUpgrades, 'X2JediClassWOTC');
@@ -127,33 +128,41 @@ static function X2DataTemplate CreateJediUpgrade(name SocketName, UpgradeSetup T
 	`log(default.class @ GetFuncName() @ "ArtifactCosts 0 index check" @ ThisUpgradeSetup.ArtifactCosts[0].ItemTemplateName, default.bLogUpgrades, 'X2JediClassWOTC');
 	`log(default.class @ GetFuncName() @ "RequiredTechs 0 index check" @ ThisUpgradeSetup.RequiredTechs[0], default.bLogUpgrades, 'X2JediClassWOTC');
 
-	if (ThisUpgradeSetup.ResourceCosts[0].ItemTemplateName != '' || ThisUpgradeSetup.ArtifactCosts[0].ItemTemplateName != '')
+	// even if you specify an empty array in the ini, it'll give you an array of length 1
+	if (ThisUpgradeSetup.ResourceCosts[0].ItemTemplateName != '')
 	{
-		Template.CanBeBuilt = true;
-		Template.PointsToComplete = 0;
-
-		if (ThisUpgradeSetup.ResourceCosts[0].ItemTemplateName != '')
+		foreach ThisUpgradeSetup.ResourceCosts(Cost)
 		{
-			foreach ThisUpgradeSetup.ResourceCosts(ThisCost)
+			if (Cost.ItemTemplateName != '')
 			{
-				Template.Cost.ResourceCosts.AddItem(ThisCost);
+				Template.CanBeBuilt = true;
+				Template.PointsToComplete = 0;
+				Template.Cost.ResourceCosts.AddItem(Cost);
 			}
-		}
-		
-		if (ThisUpgradeSetup.ArtifactCosts[0].ItemTemplateName != '')
-		{
-			foreach ThisUpgradeSetup.ArtifactCosts(ThisCost)
-			{
-				Template.Cost.ArtifactCosts.AddItem(ThisCost);
-			}
-		}
-
-		if (ThisUpgradeSetup.RequiredTechs[0] != '')
-		{
-			Template.Requirements.RequiredTechs = ThisUpgradeSetup.RequiredTechs;
 		}
 	}
-	
+
+	if (ThisUpgradeSetup.ArtifactCosts[0].ItemTemplateName != '')
+	{
+		foreach ThisUpgradeSetup.ArtifactCosts(Cost)
+		{
+			if (Cost.ItemTemplateName != '')
+			{
+				Template.CanBeBuilt = true;
+				Template.PointsToComplete = 0;
+				Template.Cost.ArtifactCosts.AddItem(Cost);
+			}
+		}
+	}
+
+	if (ThisUpgradeSetup.RequiredTechs[0] != '')
+	{
+		foreach ThisUpgradeSetup.RequiredTechs(Tech)
+		{
+			Template.Requirements.RequiredTechs.AddItem(Tech);
+		}
+	}
+
 	Template.CanApplyUpgradeToWeaponFn = CanApplyUpgradeToWeaponLightsaber;
 	Template.MaxQuantity = 1;
 	Template.BlackMarketTexts = class'X2Item_DefaultUpgrades'.default.UpgradeBlackMarketTexts;

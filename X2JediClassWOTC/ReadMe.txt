@@ -1,6 +1,10 @@
-﻿[h1]Jedi Class Mod[/h1]
+﻿[h1]WotC Jedi Class Mod [BETA][/h1]
 
 [i]"For over a thousand generations, the Jedi were the guardians of peace and justice in the Old Republic — before the dark times. Before the Empire."[/i]
+
+Jedi can use either dual lightsabers or primary lightsaber and a holocron.
+
+Till you build you first lightsaber they also resort to mundane melee weapons.
 
 Jedi can't be trained in the Guerilla Training School and they are rare to get on rookie promotion.
 
@@ -10,7 +14,7 @@ Jedi can't be trained in the Guerilla Training School and they are rare to get o
 
 A preview of the force powers can be seen here https://youtu.be/TXoFliFNDNM
 
-The full list of the perks with description can be found here [url=steamcommunity.com/workshop/filedetails/discussion/944207594/2592234299557734947/]Force Powers[/url]
+The full list of the perks with description can be found here [url=https://steamcommunity.com/workshop/filedetails/discussion/1546501455/1736594593592400200/]Force Powers[/url]
 
 [i]"Don't be too proud of this technological terror you've constructed. The ability to destroy a planet is insignificant next to the power of the Force."[/i]
 
@@ -47,7 +51,7 @@ Yoda: No, no, no. Quicker, easier, more seductive.
 [h1]FAQ[/h1]
 
 [b]I don't see the dark side perk column / I have only two perk choice per rank[/b]
-Subscribe to [url=steamcommunity.com/sharedfiles/filedetails/?id=923981897]LW Promotion Screen For Vanilla[/url]
+Subscribe to [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1124609091&searchtext=promotion+screen][WOTC] New Promotion Screen by Default[/url]
 
 [b]My Lightsabers doesn't glow[/b]
 Possible problem #1: your graphical settings are too low
@@ -57,7 +61,7 @@ Possible problem #2: you are missing the shader cache file.
 Solution: Try to unsub, start the game once, exit the game and resub again.
 
 [b]How can i use "Commanders Choice" or train Jedi in the GTS?[/b]
-In {DriveLetter}:\Program Files (x86)\Steam\SteamApps\workshop\content\268500\944207594\config\XComClassData.ini change NumInForcedDeck to
+In {DriveLetter}:\Program Files (x86)\Steam\SteamApps\workshop\content\268500\1546501455\config\XComClassData.ini change NumInForcedDeck to
 [code]
 +NumInForcedDeck=1
 [/code]
@@ -67,18 +71,25 @@ In XComClassData.ini change NumInDeck to
 +NumInDeck=4
 [/code]
 
+[h1]Mod Compatility[/h1]
+This mod is not compatible with the current version of Grimy’s Loot Mod.
+Other incombatibilities are not known yet.
+
 [h1]Credits[/h1]
 
 [i]"You do have your moments. Not many, but you have them."[/i]
 
 [list]
-	[*]Ginger - Wotc conversion, Force Pool System, Modular Lightsaber System
+	[*]Ginger - A special thanks to Ginger who made this Wotc conversion happen, but did not stopped at that and added the Force Pool System and Modular Lightsaber System
+	[*]HulkCX - Substance painter textures and maya modelling of the modular lightsaber system
 	[*]Zyxpsilon - Class Icon, Perk Icons and Rank Icons. Incredible work buddy!
 	[*]vhs - Workshop Image
 	[*]ObelixDK - Force Jump Animation, Lightsaber blender magic and being the good soul of creative xenos
 	[*]xylthixlm - Force Sense Code, Custom Perk advisor, Ability Modding Authority
 	[*]Shadow79 & Darrick - Beta testing sith lords
+	[*]SirSunkruhm, SophiaOr & Dev - WotC Beta testing councellars
 	[*]robojumper - Code consultant, chain lightning visualisation, constant support when i was stuck again
 	[*]LeaderEnemyBoss - Ragdoll Expert and Force Push Code Guide
-	[*]Pavonis Interactive - Fleche code
 [/list]
+
+[h1]Note that this mod is in BETA and you may encouter bugs and glitches[/h1]

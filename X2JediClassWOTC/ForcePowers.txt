@@ -1,6 +1,6 @@
 [h1]Force Powers[/h1]
 
-Initiate: Force Jump, Lightsaber Slash, Leap Strike, Force Speed
+Initiate: Force Jump, Lightsaber Slash, Leap Strike, Force Speed, Force Power
 
 [table]
 	[tr]
