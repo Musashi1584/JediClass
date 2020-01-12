@@ -18,7 +18,7 @@ function bool ChangeHitResultForTarget(XComGameState_Effect EffectState, XComGam
 	local X2Effect_ApplyWeaponDamage DamageEffect;
 	local name CurrentEffect, DamageType;
 	local XComGameStateContext_Ability AbilityContext;
-	local int i, AttackHitChance, DeflectModifier, DeflectRoll, DidDeflectHit;
+	local int i, AttackHitChance, DeflectModifier, DeflectRoll, DidReflectHit;
 	local UnitValue CurrentValue;
 	//local XComGameState NewGameState;
 	//local XComGameState_Unit NewTargetUnit;
@@ -98,14 +98,20 @@ function bool ChangeHitResultForTarget(XComGameState_Effect EffectState, XComGam
 		// Check to see if we can reflect and our roll was high enough, so we can tell the reflect shot to hit
 		if (bReflect && (DeflectRoll > (AttackHitChance + class'X2Ability_JediClassAbilities'.default.REFLECT_HIT_DIFFICULTY)))
 		{
-			DidDeflectHit = 1;
+			DidReflectHit = 1;
 			//NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(GetFuncName());
 			//NewTargetUnit = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', TargetUnit.ObjectID));
 			//NewTargetUnit.SetUnitFloatValue(default.AttackHit, 1, eCleanup_BeginTurn);
-			TargetUnit.SetUnitFloatValue(default.AttackHit, DidDeflectHit, eCleanup_BeginTurn);
+			TargetUnit.SetUnitFloatValue(default.AttackHit, DidReflectHit, eCleanup_BeginTurn);
 			//`GAMERULES.SubmitGameState(NewGameState);
 		}
-		`log(default.class @ GetFuncName() @ "did deflect roll hit attacker:" @ DidDeflectHit,, 'X2JediClassWOTC');
+		`log(default.class @ GetFuncName() @ "did deflect roll hit attacker:" @
+			`ShowVar(DidReflectHit) @
+			`ShowVar(bReflect) @ 
+			`ShowVar(DeflectRoll) @
+			`ShowVar(AttackHitChance) @ "+REFLECT_HIT_DIFFICULTY" @
+			class'X2Ability_JediClassAbilities'.default.REFLECT_HIT_DIFFICULTY
+		,, 'X2JediClassWOTC');
 
 		// Check for the auto-deflect condition - do this after the reflect check so we have the option of hitting with it
 		foreach default.UnlimitedUsesEffects(CurrentEffect)
@@ -118,9 +124,9 @@ function bool ChangeHitResultForTarget(XComGameState_Effect EffectState, XComGam
 		}
 
 		// Check to see if we exceeded their hit roll
-		if (DeflectRoll > AttackHitChance)
+		if (true == true) //(DeflectRoll > AttackHitChance)
 		{
-			NewHitResult = eHit_Reflect;
+			NewHitResult = DidReflectHit == 1 ? eHit_Reflect : eHit_Deflect;
 			return true;
 		}
 	}

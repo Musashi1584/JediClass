@@ -1,18 +1,37 @@
 class X2AbilityToHitCalc_LightsaberDeflect extends X2AbilityToHitCalc;
 
-protected function int GetHitChance(XComGameState_Ability kAbility, AvailableTarget kTarget, optional out ShotBreakdown m_ShotBreakdown, optional bool bDebugLog=false)
+function RollForAbilityHit(XComGameState_Ability kAbility, AvailableTarget kTarget, out AbilityResultContext ResultContext)
 {
-	local XComGameState_Unit AttackerState;
+	local XComGameState_Unit UnitState;
 	local UnitValue DidAttackHit;
 
-	AttackerState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(kAbility.OwnerStateObject.ObjectID));
-	AttackerState.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, DidAttackHit);
+	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(kAbility.OwnerStateObject.ObjectID));
+	UnitState.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, DidAttackHit);
 
-	`log(default.class @ GetFuncName() @ "did deflect roll reflect at attacker:" @ DidAttackHit.fValue,, 'X2JediClassWOTC');
 
 	if (DidAttackHit.fValue > 0)
 	{
-		AttackerState.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, 0, eCleanup_BeginTurn);
+		ResultContext.HitResult = eHit_Success;
+		return;
+	}
+	
+	ResultContext.HitResult = eHit_Miss;
+}
+
+
+protected function int GetHitChance(XComGameState_Ability kAbility, AvailableTarget kTarget, optional out ShotBreakdown m_ShotBreakdown, optional bool bDebugLog=false)
+{
+	local XComGameState_Unit UnitState;
+	local UnitValue DidAttackHit;
+
+	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(kAbility.OwnerStateObject.ObjectID));
+	UnitState.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, DidAttackHit);
+
+	`log(default.class @ GetFuncName() @ UnitState.SummaryString() @ "did deflect roll reflect at attacker:" @ DidAttackHit.fValue,, 'X2JediClassWOTC');
+
+	if (DidAttackHit.fValue > 0)
+	{
+		UnitState.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, 0, eCleanup_BeginTurn);
 		return 100;
 	}
 	

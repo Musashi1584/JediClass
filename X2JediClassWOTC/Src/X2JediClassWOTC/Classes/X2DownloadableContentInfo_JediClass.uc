@@ -77,22 +77,22 @@ static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent Mes
 				//`LOG(GetFuncName() @ i @ MaterialInstanceTimeVarying(ParentMITV.Parent).Name @ MITV.Name,, 'X2JediClassWotc');
 				if (InStr(ParentMat, "MAT_Lightsaber_Blade") != INDEX_NONE)
 				{
-					foreach WeaponArchetype.UnitPawn.Mesh.AttachedComponentsOnBone(class'SkeletalMeshComponent', AttachedMesh, 'LeftSwordSheath')
-					{
-						if (AttachedMesh != none)
-						{
-							MITV = MaterialInstanceTimeVarying(DynamicLoadObject("Lightsaber_CV.Materials.Invisible_MITV", class'MaterialInstanceTimeVarying'));
-						}
-						else
-						{
-							MITV = MaterialInstanceTimeVarying(DynamicLoadObject("Lightsaber_CV.Materials.MAT_Lightsaber_Blade_MITV", class'MaterialInstanceTimeVarying'));
-						}
-					
-						MeshComp.SetMaterial(0, MITV);
-						`LOG(GetFuncName() @ "setting blade mitv" @ MITV,, 'X2JediClassWotc');
-					
-						break;
-					}
+					//foreach WeaponArchetype.UnitPawn.Mesh.AttachedComponentsOnBone(class'SkeletalMeshComponent', AttachedMesh, 'LeftSwordSheath')
+					//{
+					//	if (AttachedMesh != none)
+					//	{
+					//		MITV = MaterialInstanceTimeVarying(DynamicLoadObject("Lightsaber_CV.Materials.Invisible_MITV", class'MaterialInstanceTimeVarying'));
+					//	}
+					//	else
+					//	{
+					//		MITV = MaterialInstanceTimeVarying(DynamicLoadObject("Lightsaber_CV.Materials.MAT_Lightsaber_Blade_MITV", class'MaterialInstanceTimeVarying'));
+					//	}
+					//
+					//	MeshComp.SetMaterial(0, MITV);
+					//	`LOG(GetFuncName() @ "setting blade mitv" @ MITV,, 'X2JediClassWotc');
+					//
+					//	break;
+					//}
 
 					Palette = `CONTENT.GetColorPalette(ePalette_ArmorTint);
 					if (Palette != none)

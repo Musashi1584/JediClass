@@ -2462,6 +2462,7 @@ static function X2AbilityTemplate LightsaberDeflect()
 {
 	local X2AbilityTemplate						Template;
 	local X2Effect_LightsaberDeflect			RedirectEffect;
+	local X2Effect_PersistentStatChange			PersistentStatChangeEffect;
 
 	Template = PurePassive('LightsaberDeflect', "img:///LightSaber_CV.UI.UIPerk_Reflect", , 'eAbilitySource_Perk');
 	Template.AdditionalAbilities.AddItem('LightsaberDeflectShot');
@@ -2469,6 +2470,11 @@ static function X2AbilityTemplate LightsaberDeflect()
 	RedirectEffect = new class'X2Effect_LightsaberDeflect';
 	RedirectEffect.BuildPersistentEffect(1, true, false);
 	Template.AddTargetEffect(RedirectEffect);
+
+	PersistentStatChangeEffect = new class'X2Effect_PersistentStatChange';
+	PersistentStatChangeEffect.BuildPersistentEffect(1, true, false, false);
+	PersistentStatChangeEffect.AddPersistentStatChange(eStat_Offense, -50);
+	Template.AddTargetEffect(PersistentStatChangeEffect);
 
 	return Template;
 }
@@ -2494,7 +2500,7 @@ static function X2AbilityTemplate LightsaberDeflectShot()
 	EventListener.ListenerData.EventID = 'AbilityActivated';
 	EventListener.ListenerData.Filter = eFilter_None;
 	EventListener.ListenerData.Deferral = ELD_OnStateSubmitted;
-	EventListener.ListenerData.EventFn = class'XComGameState_Ability'.static.TemplarReflectListener;
+	EventListener.ListenerData.EventFn = class'X2Ability_JediClassAbilities'.static.JediReflectListener;
 	Template.AbilityTriggers.AddItem(EventListener);
 
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
@@ -2508,7 +2514,7 @@ static function X2AbilityTemplate LightsaberDeflectShot()
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
-	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
+	//Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
 	Template.MergeVisualizationFn = LightsaberDeflectShotMergeVisualization;
 	
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
@@ -2520,6 +2526,9 @@ static function X2AbilityTemplate LightsaberDeflectShot()
 	Template.CustomFireKillAnim = 'HL_Idle';
 	Template.ActionFireClass = class'X2Action_LightsaberDeflect';
 
+	Template.LocMissMessage = "";
+	Template.TargetMissSpeech = '';
+
 	Template.bCrossClassEligible = false;
 
 	return Template;
@@ -2530,7 +2539,8 @@ static function X2AbilityTemplate LightsaberReflect()
 	local X2AbilityTemplate						Template;
 	local X2Effect_LightsaberReflect			RedirectEffect;
 	local X2Effect_ExtraDeflectChance			DeflectBonusEffect;
-
+	local X2Effect_PersistentStatChange			PersistentStatChangeEffect;
+	
 	Template = PurePassive('LightsaberReflect', "img:///LightSaber_CV.UI.UIPerk_Reflect", , 'eAbilitySource_Perk');
 	Template.PrerequisiteAbilities.AddItem('LightsaberDeflect');
 	Template.OverrideAbilities.AddItem('LightsaberDeflect');
@@ -2545,7 +2555,45 @@ static function X2AbilityTemplate LightsaberReflect()
 	DeflectBonusEffect.DeflectBonus = default.REFLECT_BONUS;
 	Template.AddTargetEffect(DeflectBonusEffect);
 
+	PersistentStatChangeEffect = new class'X2Effect_PersistentStatChange';
+	PersistentStatChangeEffect.BuildPersistentEffect(1, true, false, false);
+	PersistentStatChangeEffect.AddPersistentStatChange(eStat_Offense, -50);
+	Template.AddTargetEffect(PersistentStatChangeEffect);
+
 	return Template;
+}
+
+static function EventListenerReturn JediReflectListener(Object EventData, Object EventSource, XComGameState GameState, Name EventID, Object CallbackData)
+{
+	local XComGameStateContext_Ability		AbilityContext;
+	local XComGameState						NewGameState;
+	local XComGameState_Unit				UnitState;
+	local XComGameState_Ability				JediAbilityState;
+
+	AbilityContext = XComGameStateContext_Ability(GameState.GetContext());
+	JediAbilityState = XComGameState_Ability(CallbackData);
+
+	if (AbilityContext == none || JediAbilityState == none)
+	{
+		return ELR_NoInterrupt;
+	}
+
+	
+	if (AbilityContext.InterruptionStatus != eInterruptionStatus_Interrupt)
+	{
+		if (AbilityContext.InputContext.PrimaryTarget.ObjectID == JediAbilityState.OwnerStateObject.ObjectID &&
+			(AbilityContext.ResultContext.HitResult == eHit_Reflect || AbilityContext.ResultContext.HitResult == eHit_Deflect))
+		{
+			//	set the data needed to apply reflect damage correctly
+			NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Jedi Class De/Reflect Data");
+			UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', JediAbilityState.OwnerStateObject.ObjectID));
+			UnitState.ReflectedAbilityContext = AbilityContext;
+			`TACTICALRULES.SubmitGameState(NewGameState);
+
+			JediAbilityState.AbilityTriggerAgainstSingleTarget(AbilityContext.InputContext.SourceObject, false);
+		}
+	}
+	return ELR_NoInterrupt;
 }
 
 function LightsaberDeflectShotMergeVisualization(X2Action BuildTree, out X2Action VisualizationTree)
