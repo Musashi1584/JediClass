@@ -22,6 +22,9 @@ function Init()
 	//local XComGameState_Ability AbilityState;
 	local Actor TargetVisualizer;
 	local Object ThisObj;
+	local XComGameState_Ability InstigatorAbilityState;
+	local XGWeapon Weapon;
+	local XComWeapon XComWeapon;
 
 	super.Init();
 
@@ -34,10 +37,28 @@ function Init()
 	TargetUnit = XGUnit(TargetVisualizer);
 	PrimaryTarget = X2VisualizerInterface(TargetVisualizer);
 
-	InstigatorUnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.PrimaryTarget.ObjectID));
-	ProjectileTemplate = XComWeapon(XGWeapon(XComGameState_Ability(`XCOMHISTORY.GetGameStateForObjectID(InstigatingAction.AbilityContext.InputContext.AbilityRef.ObjectID)).GetSourceWeapon().GetVisualizer()).m_kEntity).DefaultProjectileTemplate;
+	InstigatorUnitState = XComGameState_Unit(History.GetGameStateForObjectID(ReflectTargetID));
+
+	InstigatingAction = X2Action_Fire(`XCOMVISUALIZATIONMGR.GetCurrentActionForVisualizer(TargetVisualizer));
+	
+	if (InstigatingAction.ProjectileVolleys.Length > 0)
+	{
+		ProjectileTemplate = InstigatingAction.ProjectileVolleys[0];
+	}
+	else
+	{
+		InstigatorAbilityState = XComGameState_Ability(`XCOMHISTORY.GetGameStateForObjectID(InstigatingAction.AbilityContext.InputContext.AbilityRef.ObjectID));
+		if (InstigatorAbilityState != none)
+		{
+			Weapon = XGWeapon(InstigatorAbilityState.GetSourceWeapon().GetVisualizer());
+			XComWeapon = XComWeapon(Weapon.m_kEntity);
+			ProjectileTemplate = XComWeapon.DefaultProjectileTemplate;
+		}
+	}
 
 	bHit = AbilityContext.ResultContext.HitResult == eHit_Success ? true : false;
+	`LOG(default.class @ AbilityContext.ResultContext.HitResult @ bHit,, 'X2JediClassWOTC');
+
 	Params.AnimName = 'HL_LightsaberReflect';
 
 	ThisObj = self;
@@ -48,18 +69,23 @@ function Init()
 
 function SendProjectile(AnimNotify_FireWeaponVolley FireVolleyNotify)
 {
-	local X2UnifiedProjectile NewProjectile;
 	local X2VisualizerInterface TargetVisualizer;
 	local vector Source, Target;
-	//local UnitValue DeflectTarget;
-	//local ProjectileSpread Spread;
-	//local int ProjectileIndex;
-	//local float Radian;
 	local vector EmptyVector;
+	local XComWorldData World;
+	local TTile Tile;
+
+	World = `XWORLD;
 	
-	if (ReflectTargetID == 0 || ProjectileTemplate == none)
+	if (ReflectTargetID == 0)
 	{
 		return;
+	}
+
+	if (ProjectileTemplate == none)
+	{
+		InstigatingAction = X2Action_Fire(`XCOMVISUALIZATIONMGR.GetCurrentActionForVisualizer(TargetUnitState.GetVisualizer()));
+		ProjectileTemplate = InstigatingAction.ProjectileVolleys[0];
 	}
 	
 	FireVolleyNotify.bCosmeticVolley = true;
@@ -77,29 +103,50 @@ function SendProjectile(AnimNotify_FireWeaponVolley FireVolleyNotify)
 		Target = TargetVisualizer.GetShootAtLocation(eHit_Success, Metadata.StateObject_NewState.GetReference());
 	}
 	//`log("X2Action_LightsaberDeflect Target Unit" @ TargetUnitState.GetMyTemplateName() @ ReflectTargetID @ Target,, 'X2JediClassWOTC');
-	if (!bHit)
+	if (bHit)
 	{
-		//Radian = Pi / 2;
-		//Target = Source - InstigatorUnitState.GetVisualizer().Location;
-		//Target = Target + VRandCone2(Target, Radian, Radian) * VSize(Target) * Rand(10);
-		Target = InstigatorUnitState.GetVisualizer().Location;
-		if (Rand(2) == 0)
-		{
-			 Target += VRand() * Rand(1000);
-		}
-		else
-		{
-			Target -= VRand() * Rand(1000);
-		}
-
-		//`log("X2Action_LightsaberDeflect Randomize Target" @ Target,, 'X2JediClassWOTC');
+		SpawnAndConfigureNewProjectile(ProjectileTemplate, FireVolleyNotify, AbilityContext, XComWeapon(WeaponVisualizer.m_kEntity));
 	}
+	else
+	{
+		Tile = World.GetTileCoordinatesFromPosition(Target);
+		Tile.X += `SYNC_RAND(10) + 1 * `SYNC_RAND(1) == 0 ? 1 : -1;
+		Tile.Y += `SYNC_RAND(10) + 1 * `SYNC_RAND(1) == 0 ? 1 : -1;
+		Tile.Z += `SYNC_RAND(3);
+		Target = World.GetPositionFromTileCoordinates(Tile);
+
+		`log("X2Action_LightsaberDeflect Randomize Target" @ `ShowVar(Target),, 'X2JediClassWOTC');
+		SpawnAndConfigureNewCosmeticProjectile(ProjectileTemplate, FireVolleyNotify, AbilityContext, Source, Target);
+	}
+
+	`log("X2Action_LightsaberDeflect SendProjectile" @ bHit @ ProjectileTemplate.ObjectArchetype,, 'X2JediClassWOTC');
+}
+
+private function SpawnAndConfigureNewCosmeticProjectile(Actor ProjectileTemplateIn,
+												AnimNotify_FireWeaponVolley FireVolleyNotify,
+												XComGameStateContext_Ability AbilityContext,
+												vector Source,
+												vector Target)
+{
+	local X2UnifiedProjectile NewProjectile;
 	
-	NewProjectile = class'WorldInfo'.static.GetWorldInfo().Spawn(class'X2UnifiedProjectile', , , , , ProjectileTemplate);
-	NewProjectile.ConfigureNewProjectileCosmetic(FireVolleyNotify, AbilityContext, , , , Source, Target, bHit);
+	NewProjectile = class'WorldInfo'.static.GetWorldInfo().Spawn(class'X2UnifiedProjectile', , , , , ProjectileTemplateIn);
+	NewProjectile.ConfigureNewProjectileCosmetic(FireVolleyNotify, AbilityContext, , , , Source, Target, false);
 	NewProjectile.GotoState('Executing');
 
-	`log("X2Action_LightsaberDeflect SendProjectile" @ ProjectileTemplate @ bHit,, 'X2JediClassWOTC');
+}
+
+private function SpawnAndConfigureNewProjectile(Actor ProjectileTemplateIn,
+												AnimNotify_FireWeaponVolley InVolleyNotify,
+												XComGameStateContext_Ability AbilityContext,
+												XComWeapon InSourceWeapon)
+{
+	local X2UnifiedProjectile NewProjectile;
+
+	NewProjectile = Spawn(class'X2UnifiedProjectile', self, , , , ProjectileTemplateIn);
+	NewProjectile.ConfigureNewProjectile(self, InVolleyNotify, AbilityContext, InSourceWeapon);
+	NewProjectile.GotoState('Executing');
+	AddProjectileVolley(NewProjectile);
 }
 
 function GetAttackerWeaponVolleyNotify(out array<AnimNotify_FireWeaponVolley> OutNotifies, out array<float> LocalOutNotifyTimes)

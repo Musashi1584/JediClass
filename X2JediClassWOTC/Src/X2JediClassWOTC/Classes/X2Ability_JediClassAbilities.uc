@@ -2473,7 +2473,7 @@ static function X2AbilityTemplate LightsaberDeflect()
 
 	PersistentStatChangeEffect = new class'X2Effect_PersistentStatChange';
 	PersistentStatChangeEffect.BuildPersistentEffect(1, true, false, false);
-	PersistentStatChangeEffect.AddPersistentStatChange(eStat_Offense, -50);
+	PersistentStatChangeEffect.AddPersistentStatChange(eStat_Defense, -50);
 	Template.AddTargetEffect(PersistentStatChangeEffect);
 
 	return Template;
@@ -2512,7 +2512,7 @@ static function X2AbilityTemplate LightsaberDeflectShot()
 	DamageEffect.EffectDamageValue.DamageType = 'Psi';
 	Template.AddTargetEffect(DamageEffect);
 
-	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildNewGameStateFn = LightsaberDeflectShot_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 	//Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
 	Template.MergeVisualizationFn = LightsaberDeflectShotMergeVisualization;
@@ -2520,10 +2520,9 @@ static function X2AbilityTemplate LightsaberDeflectShot()
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
 
-	// The Action will fire off the animation at the right time, so leave the jedi idling until then
 	Template.bFrameEvenWhenUnitIsHidden = true;
-	Template.CustomFireAnim = 'HL_Idle';
-	Template.CustomFireKillAnim = 'HL_Idle';
+	Template.CustomFireAnim = 'HL_ReflectStart';
+	Template.CustomFireKillAnim = 'HL_ReflectStart';
 	Template.ActionFireClass = class'X2Action_LightsaberDeflect';
 
 	Template.LocMissMessage = "";
@@ -2533,6 +2532,28 @@ static function X2AbilityTemplate LightsaberDeflectShot()
 
 	return Template;
 }
+
+static function XComGameState LightsaberDeflectShot_BuildGameState(XComGameStateContext Context)
+{
+	local XComGameState NewGameState;
+	local XComGameState_Unit DeflectUnit;
+	local UnitValue DeflectValue;
+	local XComGameStateContext_Ability AbilityContext;
+
+	NewGameState = `XCOMHISTORY.CreateNewGameState(true, Context);
+
+	TypicalAbility_FillOutGameState(NewGameState);
+
+	AbilityContext = XComGameStateContext_Ability(NewGameState.GetContext());
+
+	// updated deflected this turn
+	DeflectUnit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+	DeflectUnit.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.DeflectUsed, DeflectValue);
+	DeflectUnit.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.DeflectUsed, int(DeflectValue.fValue) + 1, eCleanup_BeginTurn);
+
+	return NewGameState;
+}
+
 
 static function X2AbilityTemplate LightsaberReflect()
 {
@@ -2557,7 +2578,7 @@ static function X2AbilityTemplate LightsaberReflect()
 
 	PersistentStatChangeEffect = new class'X2Effect_PersistentStatChange';
 	PersistentStatChangeEffect.BuildPersistentEffect(1, true, false, false);
-	PersistentStatChangeEffect.AddPersistentStatChange(eStat_Offense, -50);
+	PersistentStatChangeEffect.AddPersistentStatChange(eStat_Defense, -50);
 	Template.AddTargetEffect(PersistentStatChangeEffect);
 
 	return Template;
@@ -2600,7 +2621,6 @@ function LightsaberDeflectShotMergeVisualization(X2Action BuildTree, out X2Actio
 {
 	local XComGameStateVisualizationMgr VisMgr;
 	local X2Action_ExitCover SourceExitCover;
-	//local Array<X2Action> SourceReacts;
 	local X2Action_LightsaberDeflect SourceFire;
 	local X2Action_ExitCover TargetExitCover;
 	local X2Action_Fire TargetFire;
@@ -2609,9 +2629,7 @@ function LightsaberDeflectShotMergeVisualization(X2Action BuildTree, out X2Actio
 	local X2Action_MarkerTreeInsertBegin InsertHere;
 	local Actor SourceUnit;
 	local Actor TargetUnit;
-	local XComGameState NewGameState;
-	local XComGameState_Unit DeflectUnit, NewDeflectUnitState;
-	local UnitValue DeflectValue;
+	
 
 	VisMgr = `XCOMVISUALIZATIONMGR;
 
@@ -2619,15 +2637,6 @@ function LightsaberDeflectShotMergeVisualization(X2Action BuildTree, out X2Actio
 	SourceUnit = SourceFire.Metadata.VisualizeActor;
 	TargetReact = X2Action_ApplyWeaponDamageToUnit(VisMgr.GetNodeOfType(BuildTree, class'X2Action_ApplyWeaponDamageToUnit'));
 	TargetUnit = TargetReact.Metadata.VisualizeActor;
-
-	// Tell the unit how many times it's deflected this turn
-	DeflectUnit = XComGameState_Unit(SourceFire.Metadata.StateObject_NewState);
-	DeflectUnit.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.DeflectUsed, DeflectValue);
-	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(String(GetFuncName()));
-	NewDeflectUnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', DeflectUnit.ObjectID));
-	NewDeflectUnitState.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.DeflectUsed, int(DeflectValue.fValue) + 1, eCleanup_BeginTurn);
-	DeflectUnit.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.DeflectUsed, int(DeflectValue.fValue) + 1, eCleanup_BeginTurn);
-	`GAMERULES.SubmitGameState(NewGameState);
 
 	SourceExitCover = X2Action_ExitCover(VisMgr.GetNodeOfType(BuildTree, class'X2Action_ExitCover', SourceUnit));
 	//VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_ApplyWeaponDamageToUnit', SourceReacts, SourceUnit);
@@ -2637,7 +2646,7 @@ function LightsaberDeflectShotMergeVisualization(X2Action BuildTree, out X2Actio
 	TargetEnterCover = X2Action_EnterCover(VisMgr.GetNodeOfType(VisualizationTree, class'X2Action_EnterCover', TargetUnit));
 
 	// Inject the shooter's projectile into the reflector's fire action
-	SourceFire.SetInstigatingAction(TargetFire);
+	//SourceFire.SetInstigatingAction(TargetFire);
 
 	// First let's link up the start of our trees
 	InsertHere = X2Action_MarkerTreeInsertBegin(VisMgr.GetNodeOfType(VisualizationTree, class'X2Action_MarkerTreeInsertBegin'));

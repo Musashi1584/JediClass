@@ -96,21 +96,18 @@ function bool ChangeHitResultForTarget(XComGameState_Effect EffectState, XComGam
 		DeflectRoll += DeflectModifier;
 
 		// Check to see if we can reflect and our roll was high enough, so we can tell the reflect shot to hit
-		if (bReflect && (DeflectRoll > (AttackHitChance + class'X2Ability_JediClassAbilities'.default.REFLECT_HIT_DIFFICULTY)))
+		//  && (DeflectRoll > (AttackHitChance + class'X2Ability_JediClassAbilities'.default.REFLECT_HIT_DIFFICULTY))
+		if (bReflect)
 		{
 			DidReflectHit = 1;
-			//NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(GetFuncName());
-			//NewTargetUnit = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', TargetUnit.ObjectID));
-			//NewTargetUnit.SetUnitFloatValue(default.AttackHit, 1, eCleanup_BeginTurn);
 			TargetUnit.SetUnitFloatValue(default.AttackHit, DidReflectHit, eCleanup_BeginTurn);
-			//`GAMERULES.SubmitGameState(NewGameState);
 		}
 		`log(default.class @ GetFuncName() @ "did deflect roll hit attacker:" @
 			`ShowVar(DidReflectHit) @
 			`ShowVar(bReflect) @ 
 			`ShowVar(DeflectRoll) @
-			`ShowVar(AttackHitChance) @ "+REFLECT_HIT_DIFFICULTY" @
-			class'X2Ability_JediClassAbilities'.default.REFLECT_HIT_DIFFICULTY
+			`ShowVar(AttackHitChance) @ 
+			"+REFLECT_HIT_DIFFICULTY" @ class'X2Ability_JediClassAbilities'.default.REFLECT_HIT_DIFFICULTY
 		,, 'X2JediClassWOTC');
 
 		// Check for the auto-deflect condition - do this after the reflect check so we have the option of hitting with it

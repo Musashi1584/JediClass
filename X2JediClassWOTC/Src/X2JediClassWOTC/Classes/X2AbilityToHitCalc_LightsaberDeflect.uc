@@ -4,10 +4,12 @@ function RollForAbilityHit(XComGameState_Ability kAbility, AvailableTarget kTarg
 {
 	local XComGameState_Unit UnitState;
 	local UnitValue DidAttackHit;
-
+	
 	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(kAbility.OwnerStateObject.ObjectID));
 	UnitState.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, DidAttackHit);
 
+	`LOG(default.class @ GetFuncName() @ ResultContext.HitResult @ DidAttackHit.fValue,, 'X2JediClassWOTC');
+	UnitState.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, 0, eCleanup_BeginTurn);
 
 	if (DidAttackHit.fValue > 0)
 	{
@@ -19,21 +21,22 @@ function RollForAbilityHit(XComGameState_Ability kAbility, AvailableTarget kTarg
 }
 
 
-protected function int GetHitChance(XComGameState_Ability kAbility, AvailableTarget kTarget, optional out ShotBreakdown m_ShotBreakdown, optional bool bDebugLog=false)
-{
-	local XComGameState_Unit UnitState;
-	local UnitValue DidAttackHit;
-
-	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(kAbility.OwnerStateObject.ObjectID));
-	UnitState.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, DidAttackHit);
-
-	`log(default.class @ GetFuncName() @ UnitState.SummaryString() @ "did deflect roll reflect at attacker:" @ DidAttackHit.fValue,, 'X2JediClassWOTC');
-
-	if (DidAttackHit.fValue > 0)
-	{
-		UnitState.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, 0, eCleanup_BeginTurn);
-		return 100;
-	}
-	
-	return 0;
-}
+//protected function int GetHitChance(XComGameState_Ability kAbility, AvailableTarget kTarget, optional out ShotBreakdown m_ShotBreakdown, optional bool bDebugLog=false)
+//{
+//	local XComGameState_Unit UnitState;
+//	local UnitValue DidAttackHit;
+//
+//	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(kAbility.OwnerStateObject.ObjectID));
+//	UnitState.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, DidAttackHit);
+//
+//	//`log(default.class @ GetFuncName() @ UnitState.SummaryString() @ "did deflect roll reflect at attacker:" @ DidAttackHit.fValue,, 'X2JediClassWOTC');
+//
+//	if (DidAttackHit.fValue > 0)
+//	{
+//		`log(default.class @ GetFuncName() @ UnitState.SummaryString() @ "did deflect roll reflect at attacker:" @ DidAttackHit.fValue,, 'X2JediClassWOTC');
+//		//UnitState.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, 0, eCleanup_BeginTurn);
+//		return 100;
+//	}
+//	
+//	return 0;
+//}
