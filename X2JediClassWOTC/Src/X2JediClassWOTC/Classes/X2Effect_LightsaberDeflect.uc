@@ -11,17 +11,21 @@ var privatewrite name AttackHit;
 
 var protected bool bReflect;
 
-function bool ChangeHitResultForTarget(XComGameState_Effect EffectState, XComGameState_Unit Attacker, XComGameState_Unit TargetUnit, XComGameState_Ability AbilityState, bool bIsPrimaryTarget, const EAbilityHitResult CurrentResult, out EAbilityHitResult NewHitResult)
+function bool ChangeHitResultForTarget(
+	XComGameState_Effect EffectState,
+	XComGameState_Unit Attacker,
+	XComGameState_Unit TargetUnit,
+	XComGameState_Ability AbilityState,
+	bool bIsPrimaryTarget,
+	const EAbilityHitResult CurrentResult,
+	out EAbilityHitResult NewHitResult
+)
 {
 	local X2AbilityToHitCalc_StandardAim AttackToHit;
 	local X2AbilityTemplate AbilityTemplate;
 	local X2Effect_ApplyWeaponDamage DamageEffect;
 	local name CurrentEffect, DamageType;
-	local XComGameStateContext_Ability AbilityContext;
-	local int i, AttackHitChance, DeflectModifier, DeflectRoll, DidReflectHit;
-	local UnitValue CurrentValue;
-	//local XComGameState NewGameState;
-	//local XComGameState_Unit NewTargetUnit;
+	local int i;
 
 	AbilityTemplate = AbilityState.GetMyTemplate();
 
@@ -72,44 +76,6 @@ function bool ChangeHitResultForTarget(XComGameState_Effect EffectState, XComGam
 	//	Deflect cannot block melee abilities, so only check ranged single-target
 	if (!AbilityState.IsMeleeAbility() && bIsPrimaryTarget)
 	{
-		// Set the difficulty to deflect the attack - we cannot obtain context to the attacker's roll, so set difficulty to his chance instead
-		foreach `XCOMHISTORY.IterateContextsByClassType(class'XComGameStateContext_Ability', AbilityContext)
-		{
-			if (AbilityContext.InputContext.AbilityRef.ObjectID == AbilityState.ObjectID)
-			{
-				AttackHitChance = AbilityContext.ResultContext.CalculatedHitChance;
-				break;
-			}
-		}
-
-		// Set bonus chance that the X2Effect_ExtraDeflectChance effects wrote in - the bonus chance from Reflect is included here
-		TargetUnit.GetUnitValue(default.DeflectBonus, CurrentValue);
-		DeflectModifier = CurrentValue.fValue;
-
-		// Reduce chance to deflect by number of times deflected already this turn
-		TargetUnit.GetUnitValue(default.DeflectUsed, CurrentValue);
-		DeflectModifier -= (CurrentValue.fValue * class'X2Ability_JediClassAbilities'.default.REFLECT_REPEAT_MALUS);
-		`log(default.class @ GetFuncName() @ "Deflect has been used" @ CurrentValue.fValue @ "times this round",, 'X2JediClassWOTC');
-
-		// Roll, then add any modifiers
-		DeflectRoll = `SYNC_RAND(100);
-		DeflectRoll += DeflectModifier;
-
-		// Check to see if we can reflect and our roll was high enough, so we can tell the reflect shot to hit
-		//  && (DeflectRoll > (AttackHitChance + class'X2Ability_JediClassAbilities'.default.REFLECT_HIT_DIFFICULTY))
-		if (bReflect)
-		{
-			DidReflectHit = 1;
-			TargetUnit.SetUnitFloatValue(default.AttackHit, DidReflectHit, eCleanup_BeginTurn);
-		}
-		`log(default.class @ GetFuncName() @ "did deflect roll hit attacker:" @
-			`ShowVar(DidReflectHit) @
-			`ShowVar(bReflect) @ 
-			`ShowVar(DeflectRoll) @
-			`ShowVar(AttackHitChance) @ 
-			"+REFLECT_HIT_DIFFICULTY" @ class'X2Ability_JediClassAbilities'.default.REFLECT_HIT_DIFFICULTY
-		,, 'X2JediClassWOTC');
-
 		// Check for the auto-deflect condition - do this after the reflect check so we have the option of hitting with it
 		foreach default.UnlimitedUsesEffects(CurrentEffect)
 		{
@@ -120,12 +86,11 @@ function bool ChangeHitResultForTarget(XComGameState_Effect EffectState, XComGam
 			}
 		}
 
-		// Check to see if we exceeded their hit roll
-		if (true == true) //(DeflectRoll > AttackHitChance)
-		{
-			NewHitResult = DidReflectHit == 1 ? eHit_Reflect : eHit_Deflect;
-			return true;
-		}
+		NewHitResult = bReflect ? eHit_Reflect : eHit_Deflect;
+
+		`LOG(default.class @ GetFuncName() @ NewHitResult @ bReflect,, 'X2JediClassWOTC');
+
+		return true;
 	}
 
 	return false;

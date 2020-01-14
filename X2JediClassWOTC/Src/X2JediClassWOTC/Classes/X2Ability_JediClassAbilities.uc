@@ -117,8 +117,9 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(LightsaberTelekinesis());
 	AbilityTemplates.AddItem(LightsaberToss());
 	AbilityTemplates.AddItem(LightsaberDeflect());
-	AbilityTemplates.AddItem(LightsaberDeflectShot());
+	AbilityTemplates.AddItem(LightsaberDeflectShot('LightsaberDeflectShot'));
 	AbilityTemplates.AddItem(LightsaberReflect());
+	AbilityTemplates.AddItem(LightsaberDeflectShot('LightsaberReflectShot'));
 
 	// Helper abilities, should not be assigned directly
 	AbilityTemplates.AddItem(LeapStrikeFleche());
@@ -2479,13 +2480,13 @@ static function X2AbilityTemplate LightsaberDeflect()
 	return Template;
 }
 
-static function X2AbilityTemplate LightsaberDeflectShot()
+static function X2AbilityTemplate LightsaberDeflectShot(name TemplateName)
 {
 	local X2AbilityTemplate						Template;
 	local X2AbilityTrigger_EventListener		EventListener;
 	local X2Effect_ApplyReflectDamage			DamageEffect;
 	
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberDeflectShot');
+	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
 
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
@@ -2565,7 +2566,7 @@ static function X2AbilityTemplate LightsaberReflect()
 	Template = PurePassive('LightsaberReflect', "img:///LightSaber_CV.UI.UIPerk_Reflect", , 'eAbilitySource_Perk');
 	Template.PrerequisiteAbilities.AddItem('LightsaberDeflect');
 	Template.OverrideAbilities.AddItem('LightsaberDeflect');
-	Template.AdditionalAbilities.AddItem('LightsaberDeflectShot');
+	Template.AdditionalAbilities.AddItem('LightsaberReflectShot');
 
 	RedirectEffect = new class'X2Effect_LightsaberReflect';
 	RedirectEffect.BuildPersistentEffect(1, true, false);
@@ -2590,6 +2591,7 @@ static function EventListenerReturn JediReflectListener(Object EventData, Object
 	local XComGameState						NewGameState;
 	local XComGameState_Unit				UnitState;
 	local XComGameState_Ability				JediAbilityState;
+	local name								AbilityName;
 
 	AbilityContext = XComGameStateContext_Ability(GameState.GetContext());
 	JediAbilityState = XComGameState_Ability(CallbackData);
@@ -2599,21 +2601,40 @@ static function EventListenerReturn JediReflectListener(Object EventData, Object
 		return ELR_NoInterrupt;
 	}
 
-	
-	if (AbilityContext.InterruptionStatus != eInterruptionStatus_Interrupt)
-	{
-		if (AbilityContext.InputContext.PrimaryTarget.ObjectID == JediAbilityState.OwnerStateObject.ObjectID &&
-			(AbilityContext.ResultContext.HitResult == eHit_Reflect || AbilityContext.ResultContext.HitResult == eHit_Deflect))
-		{
-			//	set the data needed to apply reflect damage correctly
-			NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("Jedi Class De/Reflect Data");
-			UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', JediAbilityState.OwnerStateObject.ObjectID));
-			UnitState.ReflectedAbilityContext = AbilityContext;
-			`TACTICALRULES.SubmitGameState(NewGameState);
+	AbilityName = JediAbilityState.GetMyTemplateName();
 
-			JediAbilityState.AbilityTriggerAgainstSingleTarget(AbilityContext.InputContext.SourceObject, false);
-		}
+	if (AbilityContext.InputContext.PrimaryTarget.ObjectID != JediAbilityState.OwnerStateObject.ObjectID)
+	{
+		return ELR_NoInterrupt;
 	}
+
+	//`LOG(default.class @ GetFuncName() @
+	//	AbilityContext.InputContext.AbilityTemplateName @ "->" @
+	//	AbilityName @
+	//	AbilityContext.InterruptionStatus @
+	//	AbilityContext.ResultContext.HitResult @
+	//	AbilityContext.InputContext.PrimaryTarget.ObjectID @
+	//	JediAbilityState.OwnerStateObject.ObjectID
+	//,, 'X2JediClassWOTC');
+
+	if ((AbilityName == 'LightsaberDeflectShot' &&
+		 AbilityContext.ResultContext.HitResult == eHit_Deflect &&
+		 AbilityContext.InterruptionStatus != eInterruptionStatus_Interrupt)
+		 ||
+		(AbilityName == 'LightsaberReflectShot' &&
+		 AbilityContext.ResultContext.HitResult == eHit_Reflect &&
+		 AbilityContext.InterruptionStatus == eInterruptionStatus_Interrupt)
+	)
+	{
+		//	set the data needed to apply reflect damage correctly
+		NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(AbilityName @ "Set De/Reflect Context");
+		UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', JediAbilityState.OwnerStateObject.ObjectID));
+		UnitState.ReflectedAbilityContext = AbilityContext;
+		`TACTICALRULES.SubmitGameState(NewGameState);
+
+		JediAbilityState.AbilityTriggerAgainstSingleTarget(AbilityContext.InputContext.SourceObject, false);
+	}
+	
 	return ELR_NoInterrupt;
 }
 

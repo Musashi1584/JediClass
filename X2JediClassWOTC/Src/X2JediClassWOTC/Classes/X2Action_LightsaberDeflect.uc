@@ -281,11 +281,11 @@ Begin:
 				Sleep(0.0f);
 			}
 			Sleep(0.0f);
-			if (FireVolleyNotifies.Length > 1)
-			{
-				PlayingSequence.ReplayAnim();
-				FinishAnim(PlayingSequence);
-			}
+			//if (FireVolleyNotifies.Length > 1)
+			//{
+			//	PlayingSequence.ReplayAnim();
+			//	FinishAnim(PlayingSequence);
+			//}
 			`log("X2Action_LightsaberDeflect FinishAnim",, 'X2JediClassWOTC');
 			`LOG("*******************************************************************************************************",, 'X2JediClassWOTC');
 		}
@@ -304,11 +304,6 @@ Begin:
 event bool BlocksAbilityActivation()
 {
 	return true;
-}
-
-function SetInstigatingAction(X2Action_Fire _InstigatingAction)
-{
-	InstigatingAction = _InstigatingAction;
 }
 
 DefaultProperties

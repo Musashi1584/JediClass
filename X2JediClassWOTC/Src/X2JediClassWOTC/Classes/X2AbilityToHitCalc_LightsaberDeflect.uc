@@ -3,21 +3,38 @@ class X2AbilityToHitCalc_LightsaberDeflect extends X2AbilityToHitCalc;
 function RollForAbilityHit(XComGameState_Ability kAbility, AvailableTarget kTarget, out AbilityResultContext ResultContext)
 {
 	local XComGameState_Unit UnitState;
-	local UnitValue DidAttackHit;
-	
+	local UnitValue DidAttackHit, DeflectUsed, ReflectBonusVal;
+	local int RandRoll, HitChance, ReflectMalus, ReflectBonus, ModifiedHitChance;
+
 	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(kAbility.OwnerStateObject.ObjectID));
 	UnitState.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, DidAttackHit);
 
-	`LOG(default.class @ GetFuncName() @ ResultContext.HitResult @ DidAttackHit.fValue,, 'X2JediClassWOTC');
+	`LOG(default.class @ GetFuncName() @ ResultContext.HitResult @ DidAttackHit.fValue @ kAbility.GetMyTemplateName(),, 'X2JediClassWOTC');
+
 	UnitState.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.AttackHit, 0, eCleanup_BeginTurn);
 
-	if (DidAttackHit.fValue > 0)
+	if (kAbility.GetMyTemplateName() == 'LightsaberDeflectShot')
 	{
-		ResultContext.HitResult = eHit_Success;
-		return;
+		ResultContext.HitResult = eHit_Miss;
 	}
-	
-	ResultContext.HitResult = eHit_Miss;
+
+	if (kAbility.GetMyTemplateName() == 'LightsaberReflectShot')
+	{
+		UnitState.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.DeflectUsed, DeflectUsed);
+		ReflectMalus = int(DeflectUsed.fValue * class'X2Ability_JediClassAbilities'.default.REFLECT_REPEAT_MALUS);
+
+		UnitState.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.DeflectBonus, ReflectBonusVal);
+		ReflectBonus = int(ReflectBonusVal.fValue);
+
+		RandRoll = `SYNC_RAND_TYPED(100, ESyncRandType_Generic);
+		HitChance = 100;
+
+		ModifiedHitChance = HitChance - ReflectMalus + ReflectBonus;
+
+		ResultContext.HitResult =  (RandRoll < ModifiedHitChance) ? eHit_Success : eHit_Miss;
+
+		`LOG(default.class @ GetFuncName() @ ResultContext.HitResult @ `ShowVar(RandRoll) @ "<" @ `ShowVar(ModifiedHitChance) @ `ShowVar(ReflectMalus) @ `ShowVar(ReflectBonus),, 'X2JediClassWOTC');
+	}
 }
 
 
