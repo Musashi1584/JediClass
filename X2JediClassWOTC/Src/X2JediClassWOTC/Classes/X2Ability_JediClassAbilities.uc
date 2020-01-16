@@ -79,7 +79,7 @@ var config int LIGHTSABER_TOSS_COST;
 var config int LEAP_STRIKE_COST;
 
 var config int REFLECT_BONUS;
-var config int REFLECT_REPEAT_MALUS;
+var config int REPEATING_MALUS;
 var config int REFLECT_HIT_DIFFICULTY;
 
 var privatewrite name ForceDrainEventName;
@@ -89,6 +89,7 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> AbilityTemplates;
 
+	AbilityTemplates.AddItem(TestGrapple());
 	AbilityTemplates.AddItem(ForcePowerPool());
 	AbilityTemplates.AddItem(Holocron('HolocronPool_CV',3));
 	AbilityTemplates.AddItem(Holocron('HolocronPool_MG',2));
@@ -131,6 +132,99 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(ForceAlignmentModifier());
 
 	return AbilityTemplates;
+}
+
+static function X2AbilityTemplate TestGrapple()
+{
+	local X2AbilityTemplate					Template;
+	local X2Condition_UnitProperty			UnitProperty;
+	local X2AbilityTarget_Cursor			CursorTarget;
+
+	Template = class'X2Ability_DefaultAbilitySet'.static.AddGrapple('TestGrapple');
+
+	Template.AbilityShooterConditions.Length = 0;
+
+	Template.TargetingMethod = class'X2TargetingMethod_ForceJump';
+	//Template.SkipRenderOfTargetingTemplate = true;
+
+	Template.bUseThrownGrenadeEffects = true;
+
+	CursorTarget = new class'X2AbilityTarget_Cursor';
+	CursorTarget.bRestrictToSquadsightRange = true;
+	Template.AbilityTargetStyle = CursorTarget;
+
+	UnitProperty = new class'X2Condition_UnitProperty';
+	UnitProperty.ExcludeDead = true;
+	UnitProperty.ExcludeHostileToSource = true;
+	UnitProperty.ExcludeFriendlyToSource = false;
+	Template.AbilityShooterConditions.AddItem(UnitProperty);
+
+	Template.BuildVisualizationFn = ForceJump_BuildVisualization;
+	Template.CinescriptCameraType = "";
+
+	return Template;
+}
+
+simulated function ForceJump_BuildVisualization(XComGameState VisualizeGameState)
+{
+	local XComGameStateHistory History;
+	local StateObjectReference MovingUnitRef;	
+	local VisualizationActionMetadata ActionMetadata;
+	local VisualizationActionMetadata EmptyTrack;
+	local XComGameStateContext_Ability AbilityContext;
+	local XComGameState_EnvironmentDamage EnvironmentDamage;
+	local X2Action_PlaySoundAndFlyOver CharSpeechAction;
+	local X2Action_ForceJump ForceJumpAction;
+	local X2Action_ExitCover ExitCoverAction;
+	local X2Action_RevealArea RevealAreaAction;
+	local X2Action_UpdateFOW FOWUpdateAction;
+	
+	History = `XCOMHISTORY;
+	AbilityContext = XComGameStateContext_Ability(VisualizeGameState.GetContext());
+	MovingUnitRef = AbilityContext.InputContext.SourceObject;
+	
+	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(MovingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
+	ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(MovingUnitRef.ObjectID);
+	ActionMetadata.VisualizeActor = History.GetVisualizer(MovingUnitRef.ObjectID);
+
+	CharSpeechAction = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyOver'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
+	CharSpeechAction.SetSoundAndFlyOverParameters(None, "", 'GrapplingHook', eColor_Good);
+
+	RevealAreaAction = X2Action_RevealArea(class'X2Action_RevealArea'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
+	RevealAreaAction.TargetLocation = AbilityContext.InputContext.TargetLocations[0];
+	RevealAreaAction.AssociatedObjectID = MovingUnitRef.ObjectID;
+	RevealAreaAction.ScanningRadius = class'XComWorldData'.const.WORLD_StepSize * 4;
+	RevealAreaAction.bDestroyViewer = false;
+
+	FOWUpdateAction = X2Action_UpdateFOW(class'X2Action_UpdateFOW'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
+	FOWUpdateAction.BeginUpdate = true;
+
+	ExitCoverAction = X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
+	ExitCoverAction.bUsePreviousGameState = true;
+
+	ForceJumpAction = X2Action_ForceJump(class'X2Action_ForceJump'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
+	ForceJumpAction.DesiredLocation = AbilityContext.InputContext.TargetLocations[0];
+
+	// destroy any windows we flew through
+	foreach VisualizeGameState.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamage)
+	{
+		ActionMetadata = EmptyTrack;
+
+		//Don't necessarily have a previous state, so just use the one we know about
+		ActionMetadata.StateObject_OldState = EnvironmentDamage;
+		ActionMetadata.StateObject_NewState = EnvironmentDamage;
+		ActionMetadata.VisualizeActor = History.GetVisualizer(EnvironmentDamage.ObjectID);
+
+		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree(ActionMetadata, VisualizeGameState.GetContext(), false, ActionMetadata.LastActionAdded);
+		class'X2Action_ApplyWeaponDamageToTerrain'.static.AddToVisualizationTree(ActionMetadata, VisualizeGameState.GetContext());
+	}
+
+	FOWUpdateAction = X2Action_UpdateFOW(class'X2Action_UpdateFOW'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
+	FOWUpdateAction.EndUpdate = true;
+
+	RevealAreaAction = X2Action_RevealArea(class'X2Action_RevealArea'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
+	RevealAreaAction.AssociatedObjectID = MovingUnitRef.ObjectID;
+	RevealAreaAction.bDestroyViewer = true;
 }
 
 static function X2AbilityTemplate ForcePowerPool()
@@ -2485,6 +2579,7 @@ static function X2AbilityTemplate LightsaberDeflectShot(name TemplateName)
 	local X2AbilityTemplate						Template;
 	local X2AbilityTrigger_EventListener		EventListener;
 	local X2Effect_ApplyReflectDamage			DamageEffect;
+	local X2Effect_IncrementUnitValue			IncrementDeflectCount;
 	
 	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
 
@@ -2513,7 +2608,13 @@ static function X2AbilityTemplate LightsaberDeflectShot(name TemplateName)
 	DamageEffect.EffectDamageValue.DamageType = 'Psi';
 	Template.AddTargetEffect(DamageEffect);
 
-	Template.BuildNewGameStateFn = LightsaberDeflectShot_BuildGameState;
+	IncrementDeflectCount = new class'X2Effect_IncrementUnitValue';
+	IncrementDeflectCount.NewValueToSet = 1;
+	IncrementDeflectCount.UnitName = 'DeflectUsed';
+	IncrementDeflectCount.CleanupType = eCleanup_BeginTurn;
+	Template.AddShooterEffect(IncrementDeflectCount);
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 	//Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
 	Template.MergeVisualizationFn = LightsaberDeflectShotMergeVisualization;
@@ -2533,28 +2634,6 @@ static function X2AbilityTemplate LightsaberDeflectShot(name TemplateName)
 
 	return Template;
 }
-
-static function XComGameState LightsaberDeflectShot_BuildGameState(XComGameStateContext Context)
-{
-	local XComGameState NewGameState;
-	local XComGameState_Unit DeflectUnit;
-	local UnitValue DeflectValue;
-	local XComGameStateContext_Ability AbilityContext;
-
-	NewGameState = `XCOMHISTORY.CreateNewGameState(true, Context);
-
-	TypicalAbility_FillOutGameState(NewGameState);
-
-	AbilityContext = XComGameStateContext_Ability(NewGameState.GetContext());
-
-	// updated deflected this turn
-	DeflectUnit = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
-	DeflectUnit.GetUnitValue(class'X2Effect_LightsaberDeflect'.default.DeflectUsed, DeflectValue);
-	DeflectUnit.SetUnitFloatValue(class'X2Effect_LightsaberDeflect'.default.DeflectUsed, int(DeflectValue.fValue) + 1, eCleanup_BeginTurn);
-
-	return NewGameState;
-}
-
 
 static function X2AbilityTemplate LightsaberReflect()
 {

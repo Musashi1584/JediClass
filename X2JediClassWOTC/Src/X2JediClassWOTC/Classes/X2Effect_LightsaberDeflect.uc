@@ -4,10 +4,10 @@ var config array<name> IgnoreDamageTypes;       //  effects with the listed dama
 var config array<name> IgnoreAbilities;         //  abilities listed here will be allowed to hit the original target
 var config array<name> IgnoreEffects;           //  if the original target is affected by this effects allow to hit
 var config array<name> UnlimitedUsesEffects;    //  if the original target is affected by this effects allow unlimited deflects/reflects
+var config int BaseChance;
 
 var privatewrite name DeflectUsed;
 var privatewrite name DeflectBonus;
-var privatewrite name AttackHit;
 
 var protected bool bReflect;
 
@@ -25,7 +25,8 @@ function bool ChangeHitResultForTarget(
 	local X2AbilityTemplate AbilityTemplate;
 	local X2Effect_ApplyWeaponDamage DamageEffect;
 	local name CurrentEffect, DamageType;
-	local int i;
+	local UnitValue DeflectUsedValue, ReflectBonusValue;
+	local int Index, RandRoll, ReflectMalus, ReflectBonus, ModifiedHitChance;;
 
 	AbilityTemplate = AbilityState.GetMyTemplate();
 
@@ -47,9 +48,9 @@ function bool ChangeHitResultForTarget(
 		return false;
 
 	// incoming attack must not have a non-reflectable damage type
-	for (i = 0; i < AbilityTemplate.AbilityTargetEffects.Length; i++)
+	for (Index = 0; Index < AbilityTemplate.AbilityTargetEffects.Length; Index++)
 	{
-		DamageEffect = X2Effect_ApplyWeaponDamage(AbilityTemplate.AbilityTargetEffects[i]);
+		DamageEffect = X2Effect_ApplyWeaponDamage(AbilityTemplate.AbilityTargetEffects[Index]);
 		if (DamageEffect != none)
 		{
 			foreach default.IgnoreDamageTypes(DamageType)
@@ -86,11 +87,31 @@ function bool ChangeHitResultForTarget(
 			}
 		}
 
-		NewHitResult = bReflect ? eHit_Reflect : eHit_Deflect;
+		// Do the hit roll
+		TargetUnit.GetUnitValue(default.DeflectUsed, DeflectUsedValue);
+		ReflectMalus = int(DeflectUsedValue.fValue * class'X2Ability_JediClassAbilities'.default.REPEATING_MALUS);
 
-		`LOG(default.class @ GetFuncName() @ NewHitResult @ bReflect,, 'X2JediClassWOTC');
+		TargetUnit.GetUnitValue(default.DeflectBonus, ReflectBonusValue);
+		ReflectBonus = int(ReflectBonusValue.fValue);
 
-		return true;
+		RandRoll = `SYNC_RAND_TYPED(100, ESyncRandType_Generic);
+
+		ModifiedHitChance = default.BaseChance - ReflectMalus + bReflect ? ReflectBonus : 0;
+
+		`LOG(default.class @ GetFuncName() @
+			`ShowVar(RandRoll) @ "<" @ `ShowVar(ModifiedHitChance) @
+			`ShowVar(bReflect) @
+			`ShowVar(ReflectMalus) @
+			`ShowVar(ReflectBonus) @
+			`ShowVar(int(DeflectUsedValue.fValue))
+		,, 'X2JediClassWOTC');
+
+		if (RandRoll < ModifiedHitChance)
+		{
+			NewHitResult = bReflect ? eHit_Reflect : eHit_Deflect;
+			`LOG(default.class @ GetFuncName() @ NewHitResult @ bReflect,, 'X2JediClassWOTC');
+			return true;
+		}
 	}
 
 	return false;
@@ -100,7 +121,6 @@ defaultproperties
 {
 	DeflectUsed="DeflectUsed"
 	DeflectBonus="DeflectBonus"
-	AttackHit="AttackHit"
 	EffectName="LightsaberRedirect"
 	DuplicateResponse=eDupe_Ignore
 	bReflect=false
