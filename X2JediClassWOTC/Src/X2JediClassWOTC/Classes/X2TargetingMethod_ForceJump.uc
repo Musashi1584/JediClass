@@ -42,8 +42,8 @@ function Init(AvailableAction InAction, int NewTargetIndex)
 	if (CursorTarget != none)
 		bRestrictToSquadsightRange = CursorTarget.bRestrictToSquadsightRange;
 
-	PrecomputedPathData.InitialPathTime = 0.5;
-	PrecomputedPathData.MaxPathTime = 1.5;
+	PrecomputedPathData.InitialPathTime = 1;
+	PrecomputedPathData.MaxPathTime = 2.5;
 	PrecomputedPathData.MaxNumberOfBounces = 0;
 
 	if (UseGrenadePath())

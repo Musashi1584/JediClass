@@ -23,18 +23,19 @@ simulated function bool MoveAlongPath(float fTime, XComUnitPawn pActor)
 {
 	local XKeyframe KF;
 	local float UnitTileZ;
-	local vector TargetLocation;
+	local vector TargetLocation, PathEndPosition;
 	
 	// Double speed
-	fTime *= 2;
+	fTime *= 1.5;
 
 	KF = Path.ExtractInterpolatedKeyframe(fTime);
-	UnitTileZ = `XWORLD.GetFloorZForPosition(KF.vLoc, true) + pActor.CollisionHeight + class'XComWorldData'.const.Cover_BufferDistance;
 	TargetLocation = KF.vLoc;
 
 	// Clamp to floor tile when landing
 	if (fTime > Path.akKeyframes[Path.iNumKeyframes/2].fTime)
 	{
+		PathEndPosition = Path.GetEndPosition();
+		UnitTileZ = `XWORLD.GetFloorZForPosition(PathEndPosition, true) + pActor.CollisionHeight + class'XComWorldData'.const.Cover_BufferDistance;
 		TargetLocation.Z = Max(UnitTileZ, KF.vLoc.Z);
 	}
 
@@ -48,9 +49,30 @@ simulated function bool MoveAlongPath(float fTime, XComUnitPawn pActor)
 	else return false;
 }
 
+function InterpolatePath(float StartZ)
+{
+	local int Index;
+	local float Diff, MaxDiff;
+
+	Diff = Path.akKeyframes[0].vLoc.Z - StartZ;
+	MaxDiff = Diff;
+
+	for(Index = 0; Index < Path.iNumKeyframes; Index++)
+	{
+		if (Index >= Path.iNumKeyframes / 2)
+		{
+			Diff -= Max((MaxDiff / Path.iNumKeyframes) * 2, 0);
+		}
+
+		`LOG(GetFuncName() @ `ShowVar(Diff),, 'X2JediClassWOTC');
+
+		Path.akKeyframes[Index].vLoc.Z -= Diff;
+	}
+}
+
 function vector AdjustZPositionForPawn(vector Loc)
 {
-	Loc.Z = `XWORLD.GetFloorZForPosition(Loc, true) + UnitPawn.CollisionHeight + class'XComWorldData'.const.Cover_BufferDistance;
+	Loc.Z = `XWORLD.GetFloorZForPosition(Loc, true); // + UnitPawn.CollisionHeight + class'XComWorldData'.const.Cover_BufferDistance;
 	return Loc;
 }
 
@@ -80,7 +102,18 @@ simulated state Executing
 	}
 
 Begin:
+	`LOG(GetFuncName() @ `ShowVar(UnitPawn.Location),, 'X2JediClassWOTC');
+	
 	Path = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).GetPrecomputedPath();
+
+	UnitPawn.EnableRMA(true, true);
+	UnitPawn.EnableRMAInteractPhysics(true);
+	UnitPawn.bSkipIK = true;
+
+	Params.AnimName = 'HL_TeleportStart';
+	UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
+
+	sleep(0.1);
 
 	Path.bUseOverrideTargetLocation = true;
 	Path.bUseOverrideSourceLocation = true;
@@ -90,13 +123,50 @@ Begin:
 	Path.UpdateTrajectory();
 	Path.bUseOverrideTargetLocation = false;
 	Path.bUseOverrideSourceLocation = false;
+	InterpolatePath(UnitPawn.Location.Z);
+
+	`LOG(GetFuncName() @ `ShowVar(UnitPawn.Location),, 'X2JediClassWOTC');
+
+	bStartTraversalAlongPath = true;
+
+	while(!bArrivedAtLocation)
+	{
+		sleep(0);
+	}
 
 	UnitPawn.EnableRMA(true, true);
 	UnitPawn.EnableRMAInteractPhysics(true);
-	UnitPawn.bSkipIK = true;
+	UnitPawn.SnapToGround();
 
-	Params.AnimName = 'HL_TeleportStart';
+	Params = default.Params;
+	Params.AnimName = 'HL_TeleportStop';
+	Params.DesiredEndingAtoms.Add(1);
+	Params.DesiredEndingAtoms[0].Scale = 1.0f;
+	Params.DesiredEndingAtoms[0].Translation = DesiredLocation;
+	DesiredRotation = UnitPawn.Rotation;
+	DesiredRotation.Pitch = 0.0f;
+	DesiredRotation.Roll = 0.0f;
+	Params.DesiredEndingAtoms[0].Rotation = QuatFromRotator(DesiredRotation);
 	FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params));
+	UnitPawn.bSkipIK = false;
+
+	CompleteAction();
+}
+
+function CompleteAction()
+{
+	super.CompleteAction();
+
+	// since we step out of and step into cover from different tiles, 
+	// need to set the enter cover restore to the destination location
+	Unit.RestoreLocation = DesiredLocation;
+}
+
+defaultproperties
+{
+	ProjectileHit = false;
+}
+
 
 	//while( ProjectileHit == false )
 	//{
@@ -141,43 +211,3 @@ Begin:
 
 	// send messages to do the window break visualization
 	//SendWindowBreakNotifies();
-
-	bStartTraversalAlongPath = true;
-
-	while(!bArrivedAtLocation)
-	{
-		sleep(0);
-	}
-
-	UnitPawn.EnableRMA(true, true);
-	UnitPawn.EnableRMAInteractPhysics(true);
-	UnitPawn.SnapToGround();
-
-	Params = default.Params;
-	Params.AnimName = 'HL_TeleportStop';
-	Params.DesiredEndingAtoms.Add(1);
-	Params.DesiredEndingAtoms[0].Scale = 1.0f;
-	Params.DesiredEndingAtoms[0].Translation = DesiredLocation;
-	DesiredRotation = UnitPawn.Rotation;
-	DesiredRotation.Pitch = 0.0f;
-	DesiredRotation.Roll = 0.0f;
-	Params.DesiredEndingAtoms[0].Rotation = QuatFromRotator(DesiredRotation);
-	FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params));
-	UnitPawn.bSkipIK = false;
-
-	CompleteAction();
-}
-
-function CompleteAction()
-{
-	super.CompleteAction();
-
-	// since we step out of and step into cover from different tiles, 
-	// need to set the enter cover restore to the destination location
-	Unit.RestoreLocation = DesiredLocation;
-}
-
-defaultproperties
-{
-	ProjectileHit = false;
-}
