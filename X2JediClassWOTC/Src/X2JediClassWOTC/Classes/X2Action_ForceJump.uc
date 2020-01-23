@@ -1,4 +1,4 @@
-class X2Action_ForceJump extends X2Action;
+class X2Action_ForceJump extends X2Action_Move;
 
 const StartLandingAnimationTime = 0.2;
 
@@ -88,15 +88,15 @@ function vector AdjustZPositionForPawn(vector Loc)
 
 simulated state Executing
 {
-	function SendWindowBreakNotifies()
-	{	
-		//local XComGameState_EnvironmentDamage EnvironmentDamage;
-		//		
-		//foreach VisualizeGameState.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamage)
-		//{
-		//	`XEVENTMGR.TriggerEvent('Visualizer_WorldDamage', EnvironmentDamage, self);
-		//}
-	}
+	//function SendWindowBreakNotifies()
+	//{	
+	//	local XComGameState_EnvironmentDamage EnvironmentDamage;
+	//			
+	//	foreach VisualizeGameState.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamage)
+	//	{
+	//		`XEVENTMGR.TriggerEvent('Visualizer_WorldDamage', EnvironmentDamage, self);
+	//	}
+	//}
 
 	simulated event Tick(float fDelta)
 	{
@@ -147,7 +147,7 @@ Begin:
 	UnitPawn.EnableRMAInteractPhysics(true);
 	UnitPawn.SnapToGround();
 
-	SendWindowBreakNotifies();
+	//SendWindowBreakNotifies();
 
 	DesiredLocation = Path.OverrideTargetLocation;
 

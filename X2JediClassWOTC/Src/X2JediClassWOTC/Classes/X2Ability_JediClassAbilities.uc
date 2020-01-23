@@ -237,11 +237,15 @@ static simulated function LeapStrike_ModifyActivatedAbilityContext(XComGameState
 	local PathingInputData InputData;
 	local XComWorldData World;
 	local vector NewLocation;
-	local TTile NewTileLocation;
+	local TTile NewTileLocation, EndTileLocation;
 	local array<TTile> PathTiles;
+	local XComPrecomputedPath Path;
+	local int Index;
 
 	History = `XCOMHISTORY;
 	World = `XWORLD;
+
+	Path = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).GetPrecomputedPath();
 	
 	AbilityContext = XComGameStateContext_Ability(Context);
 	`assert(AbilityContext.InputContext.TargetLocations.Length > 0);
@@ -259,23 +263,38 @@ static simulated function LeapStrike_ModifyActivatedAbilityContext(XComGameState
 
 	if(`PRES.GetTacticalHUD().GetTargetingMethod().GetPreAbilityPath(PathTiles))
 	{
-		NewTileLocation = PathTiles[PathTiles.Length - 1];
-		NewLocation = World.GetPositionFromTileCoordinates(NewTileLocation);
+		EndTileLocation = PathTiles[PathTiles.Length - 1];
 	}
 	else
 	{
-		NewTileLocation = XComTacticalController(`PRES.GetTacticalHUD().PC).m_kPathingPawn.LastDestinationTile;
-		NewLocation = World.GetPositionFromTileCoordinates(NewTileLocation);
+		EndTileLocation = XComTacticalController(`PRES.GetTacticalHUD().PC).m_kPathingPawn.LastDestinationTile;
 	}
+
+	for(Index = 0; Index < Path.iNumKeyframes; Index++)
+	{
+		NewTileLocation = World.GetTileCoordinatesFromPosition(Path.akKeyframes[Index].vLoc);
+
+		if (NewTileLocation != EndTileLocation &&
+			class'Helpers'.static.FindTileInList(NewTileLocation, InputData.MovementTiles) == INDEX_NONE)
+		{
+			NextPoint = EmptyPoint;
+			NextPoint.Position = World.GetPositionFromTileCoordinates(NewTileLocation);
+			NextPoint.Traversal = eTraversal_Teleport;
+			NextPoint.PathTileIndex = InputData.MovementTiles.Length;
+			InputData.MovementData.AddItem(NextPoint);
+			InputData.MovementTiles.AddItem(NewTileLocation);
+		}
+	}
+
 
 	//`LOG(GetFuncName() @ NewTileLocation.X @ NewTileLocation.Y @ NewTileLocation.Z,, 'X2JediClassWOTC');
 
 	NextPoint = EmptyPoint;
-	NextPoint.Position = NewLocation;
+	NextPoint.Position = World.GetPositionFromTileCoordinates(EndTileLocation);
 	NextPoint.Traversal = eTraversal_Landing;
-	NextPoint.PathTileIndex = 1;
+	NextPoint.PathTileIndex = InputData.MovementTiles.Length;
 	InputData.MovementData.AddItem(NextPoint);
-	InputData.MovementTiles.AddItem(NewTileLocation);
+	InputData.MovementTiles.AddItem(EndTileLocation);
 	
     //Now add the path to the input context
 	InputData.MovingUnitRef = UnitState.GetReference();
