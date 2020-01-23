@@ -39,7 +39,7 @@ static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent Mes
 	local int i;
 	local MaterialInterface Mat, ParentMat;
 	local MaterialInstanceTimeVarying MITV, ParentMITV, NewMITV;
-	local SkeletalMeshComponent AttachedMesh;
+	//local SkeletalMeshComponent AttachedMesh;
 
 	//`LOG(GetFuncName() @ XComWeapon(WeaponArchetype.m_kEntity) @ MeshComp.GetNumElements(),, 'X2JediClassWotc');
 

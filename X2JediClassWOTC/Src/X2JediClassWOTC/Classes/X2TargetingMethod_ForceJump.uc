@@ -6,11 +6,10 @@ var private XComActionIconManager IconManager;
 function Init(AvailableAction InAction, int NewTargetIndex)
 {
 	local XComGameStateHistory History;
-	local XComWeapon WeaponEntity;
 	local PrecomputedPathData PrecomputedPathData;
 	local float TargetingRange;
 	local X2AbilityTarget_Cursor CursorTarget;
-	local X2AbilityTemplate AbilityTemplate;
+	//local X2AbilityTemplate AbilityTemplate;
 	local XGBattle Battle;
 	
 	super(X2TargetingMethod).Init(InAction, NewTargetIndex);
@@ -28,7 +27,7 @@ function Init(AvailableAction InAction, int NewTargetIndex)
 	`assert(AssociatedPlayerState != none);
 
 	// determine our targeting range
-	AbilityTemplate = Ability.GetMyTemplate();
+	//AbilityTemplate = Ability.GetMyTemplate();
 	TargetingRange = Ability.GetAbilityCursorRangeMeters();
 
 	// lock the cursor to that range
@@ -61,7 +60,6 @@ function Update(float DeltaTime)
 	local vector NewTargetLocation;
 	local array<vector> TargetLocations;
 	local array<TTile> Tiles;
-	local array<Actor> CurrentlyMarkedTargets;
 	local XComWorldData World;
 
 	NewTargetLocation = GetSplashRadiusCenter();
