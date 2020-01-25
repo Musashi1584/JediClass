@@ -1248,8 +1248,14 @@ simulated function ForceJump_BuildVisualization(XComGameState VisualizeGameState
 	local X2Action_ExitCover ExitCoverAction;
 	local X2Action_RevealArea RevealAreaAction;
 	local X2Action_UpdateFOW FOWUpdateAction;
+	local XComGameStateVisualizationMgr VisualizationMgr;
+	local PathingInputData PathInputData;
+	local PathingResultData PathResultData;
+	local X2Action_CameraFollowUnit CameraFollowAction;
 	
 	History = `XCOMHISTORY;
+	VisualizationMgr = `XCOMVISUALIZATIONMGR;
+
 	AbilityContext = XComGameStateContext_Ability(VisualizeGameState.GetContext());
 	MovingUnitRef = AbilityContext.InputContext.SourceObject;
 	
@@ -1271,6 +1277,18 @@ simulated function ForceJump_BuildVisualization(XComGameState VisualizeGameState
 
 	ExitCoverAction = X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
 	ExitCoverAction.bUsePreviousGameState = true;
+
+	PathInputData = AbilityContext.InputContext.MovementPaths[0];
+	PathResultData = AbilityContext.ResultContext.PathResults[0];
+
+	CameraFollowAction = X2Action_CameraFollowUnit(VisualizationMgr.GetNodeOfType(VisualizationMgr.BuildVisTree, class'X2Action_CameraFollowUnit', ActionMetadata.VisualizeActor));
+	if(CameraFollowAction == none)
+	{
+		CameraFollowAction = X2Action_CameraFollowUnit(class'X2Action_CameraFollowUnit'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
+	}
+	CameraFollowAction.AbilityToFrame = AbilityContext;
+	CameraFollowAction.ParsePathSetParameters(PathInputData, PathResultData);
+	CameraFollowAction.CameraTag = 'MovementFramingCamera';
 
 	ForceJumpAction = X2Action_ForceJump(class'X2Action_ForceJump'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
 	ForceJumpAction.DesiredLocation = AbilityContext.InputContext.TargetLocations[0];

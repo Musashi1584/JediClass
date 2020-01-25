@@ -149,37 +149,49 @@ Begin:
 	UnitPawn.EnableRMAInteractPhysics(true);
 	UnitPawn.bSkipIK = true;
 
-	Params.AnimName = 'HL_TeleportStart';
+	Params.AnimName = 'HL_ForceJumpStart';
 	UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
+
+	`LOG(default.class @ GetFuncName() @ `ShowVar(Params.AnimName),, 'X2JediClassWOTC');
 
 	sleep(0.2);
 
 	Path.bUseOverrideTargetLocation = true;
 	Path.bUseOverrideSourceLocation = true;
 	Path.OverrideSourceLocation = UnitPawn.Location;
-	Path.OverrideTargetLocation = AdjustZPositionForPawn(DesiredLocation);
+	//Path.OverrideTargetLocation = AdjustZPositionForPawn(DesiredLocation);
+	Path.OverrideTargetLocation = DesiredLocation;
+	Path.OverrideTargetLocation.Z = Unit.GetDesiredZForLocation(DesiredLocation);
 	Path.bNoSpinUntilBounce = true;
 	Path.UpdateTrajectory();
 	Path.bUseOverrideTargetLocation = false;
 	Path.bUseOverrideSourceLocation = false;
 	InterpolatePath(UnitPawn.Location.Z);
 
-	`LOG(GetFuncName() @ `ShowVar(UnitPawn.Location),, 'X2JediClassWOTC');
+	`LOG(default.class @ GetFuncName() @ `ShowVar(UnitPawn.Location),, 'X2JediClassWOTC');
 
 	bStartTraversalAlongPath = true;
+
+	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
+	Params.AnimName = 'HL_ForceJumpLoop';
+	PlayingSequence = UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
 	while(!bStartLandingAnimation)
 	{
+		PlayingSequence.ReplayAnim();
+		`LOG(default.class @ GetFuncName() @ `ShowVar(Params.AnimName),, 'X2JediClassWOTC');
 		sleep(0);
 	}
+	PlayingSequence.StopAnim();
 
+	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
 	UnitPawn.EnableRMA(true, true);
 	UnitPawn.EnableRMAInteractPhysics(true);
 	UnitPawn.SnapToGround();
 
 	//SendWindowBreakNotifies();
-
+	DesiredRotation = Rotator(Normal(DesiredLocation - UnitPawn.Location));
 	Params = default.Params;
-	Params.AnimName = 'HL_TeleportStop';
+	Params.AnimName = 'HL_ForceJumpStop';
 	Params.DesiredEndingAtoms.Add(1);
 	Params.DesiredEndingAtoms[0].Scale = 1.0f;
 	Params.DesiredEndingAtoms[0].Translation = Path.OverrideTargetLocation;
@@ -189,6 +201,8 @@ Begin:
 	Params.DesiredEndingAtoms[0].Rotation = QuatFromRotator(DesiredRotation);
 	FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params));
 	UnitPawn.bSkipIK = false;
+
+	`LOG(default.class @ GetFuncName() @ `ShowVar(Params.AnimName),, 'X2JediClassWOTC');
 
 	UnitPawn.SetLocation(Path.OverrideTargetLocation);
 
