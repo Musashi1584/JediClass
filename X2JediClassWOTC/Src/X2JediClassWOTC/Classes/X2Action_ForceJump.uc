@@ -9,12 +9,36 @@ var private Rotator DesiredRotation;
 var private CustomAnimParams Params;
 var private vector StartingLocation;
 var private float DistanceFromStartSquared;
-var private bool ProjectileHit;
+var private bool ProjectileHit, bSkipJump;
 var private float StopDistanceSquared; // distance from the origin of the grapple past which we are done
 var private AnimNodeSequence PlayingSequence;
 var private bool bStartTraversalAlongPath, bStartLandingAnimation;
 var float TraversalTime;
 var XComPrecomputedPath Path;
+var XComGameStateContext_Ability AbilityContext;
+
+function Init()
+{
+	local vector EmptyVector;
+	
+	super.Init();
+
+	AbilityContext = XComGameStateContext_Ability(StateChangeContext);
+
+	if (DesiredLocation == EmptyVector)
+	{
+		if (AbilityContext.InputContext.MovementPaths[0].MovementData.Length > 0)
+		{
+			DesiredLocation = AbilityContext.InputContext.MovementPaths[0].MovementData[AbilityContext.InputContext.MovementPaths[0].MovementData.Length - 1].Position;
+		}
+		else
+		{
+			DesiredLocation = UnitPawn.Location;
+			bSkipJump = true;
+		}
+	}
+	`LOG(default.class @ GetFuncName() @ `ShowVar(AbilityContext) @ `ShowVar(DesiredLocation),, 'X2JediClassWOTC');
+}
 
 function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
 {
@@ -112,7 +136,12 @@ simulated state Executing
 	}
 
 Begin:
-	`LOG(GetFuncName() @ `ShowVar(UnitPawn.Location),, 'X2JediClassWOTC');
+	`LOG(default.class @ GetFuncName() @ `ShowVar(UnitPawn.Location) @ `ShowVar(DesiredLocation) @ `ShowVar(bSkipJump),, 'X2JediClassWOTC');
+
+	if (bSkipJump)
+	{
+		CompleteAction();
+	}
 	
 	Path = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).GetPrecomputedPath();
 
@@ -128,7 +157,7 @@ Begin:
 	Path.bUseOverrideTargetLocation = true;
 	Path.bUseOverrideSourceLocation = true;
 	Path.OverrideSourceLocation = UnitPawn.Location;
-	Path.OverrideTargetLocation = AdjustZPositionForPawn(Path.GetEndPosition());
+	Path.OverrideTargetLocation = AdjustZPositionForPawn(DesiredLocation);
 	Path.bNoSpinUntilBounce = true;
 	Path.UpdateTrajectory();
 	Path.bUseOverrideTargetLocation = false;
@@ -149,13 +178,11 @@ Begin:
 
 	//SendWindowBreakNotifies();
 
-	DesiredLocation = Path.OverrideTargetLocation;
-
 	Params = default.Params;
 	Params.AnimName = 'HL_TeleportStop';
 	Params.DesiredEndingAtoms.Add(1);
 	Params.DesiredEndingAtoms[0].Scale = 1.0f;
-	Params.DesiredEndingAtoms[0].Translation = DesiredLocation;
+	Params.DesiredEndingAtoms[0].Translation = Path.OverrideTargetLocation;
 	DesiredRotation = UnitPawn.Rotation;
 	DesiredRotation.Pitch = 0.0f;
 	DesiredRotation.Roll = 0.0f;
@@ -163,7 +190,7 @@ Begin:
 	FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params));
 	UnitPawn.bSkipIK = false;
 
-	UnitPawn.SetLocation(DesiredLocation);
+	UnitPawn.SetLocation(Path.OverrideTargetLocation);
 
 	CompleteAction();
 }

@@ -23,6 +23,20 @@ function Init(AvailableAction InAction, int NewTargetIndex)
 	PathingPawn.RenderablePath.SetHidden(true);
 }
 
+function SetTargetByObjectID(int ObjectID)
+{
+	local int CurrentTargetIndex;
+
+	for(CurrentTargetIndex = 0; CurrentTargetIndex < Action.AvailableTargets.Length; CurrentTargetIndex++)
+	{
+		if (Action.AvailableTargets[CurrentTargetIndex].PrimaryTarget.ObjectID == ObjectID)
+		{
+			DirectSetTarget(CurrentTargetIndex);
+		}
+	}
+}
+
+
 function DirectSetTarget(int TargetIndex)
 {
 	local array<TTile> PathTiles;

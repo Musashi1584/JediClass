@@ -1,6 +1,8 @@
 class X2Ability_JediClassAbilities extends X2Ability
 	dependson (XComGameStateContext_Ability) config(JediClass);
 
+
+var config int FORCE_JUMP_COST;
 var config int FORCE_MEDITATE_CHARGES;
 var config float FORCE_MEDITATE_REGEN_PERCENT;
 
@@ -89,6 +91,8 @@ static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> AbilityTemplates;
 
+	AbilityTemplates.AddItem(BattlePrecognition());
+	AbilityTemplates.AddItem(BattlePrecognitionLeapStrike());
 	AbilityTemplates.AddItem(LeapStrike());
 	AbilityTemplates.AddItem(ForceJumpMovement());
 	AbilityTemplates.AddItem(ForcePowerPool());
@@ -133,6 +137,197 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(ForceAlignmentModifier());
 
 	return AbilityTemplates;
+}
+
+static function X2AbilityTemplate BattlePrecognition()
+{
+	local X2AbilityTemplate                 Template;	
+	local X2AbilityCost_ActionPoints        ActionPointCost;
+	local X2Effect_ReserveActionPoints      ReserveActionPointsEffect;
+	local X2Effect_GrantActionPoints		GrantActionPointsEffect;
+	local array<name>                       SkipExclusions;
+	local X2Effect_TriggerAbilityReaction   CoveringFireEffect;
+	local X2Condition_AbilityProperty       CoveringFireCondition;
+	local X2Condition_UnitProperty          ConcealedCondition;
+	local X2Effect_SetUnitValue             UnitValueEffect;
+	local X2Condition_UnitEffects           SuppressedCondition;
+	local X2Effect_BattlePrecognition		BattlePrecognitionEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'BattlePrecognition');
+	
+	Template.bDontDisplayInAbilitySummary = false;
+	
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.bConsumeAllPoints = true;   //  this will guarantee the unit has at least 1 action point
+	ActionPointCost.bFreeCost = true;           //  ReserveActionPoints effect will take all action points away
+	ActionPointCost.DoNotConsumeAllEffects.Length = 0;
+	ActionPointCost.DoNotConsumeAllSoldierAbilities.Length = 0;
+	ActionPointCost.AllowedTypes.RemoveItem(class'X2CharacterTemplateManager'.default.SkirmisherInterruptActionPoint);
+	Template.AbilityCosts.AddItem(ActionPointCost);
+	
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+
+	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName);
+	Template.AddShooterEffectExclusions(SkipExclusions);
+
+	SuppressedCondition = new class'X2Condition_UnitEffects';
+	SuppressedCondition.AddExcludeEffect(class'X2Effect_Suppression'.default.EffectName, 'AA_UnitIsSuppressed');
+	SuppressedCondition.AddExcludeEffect(class'X2Effect_SkirmisherInterrupt'.default.EffectName, 'AA_AbilityUnavailable');
+	Template.AbilityShooterConditions.AddItem(SuppressedCondition);
+	
+	ReserveActionPointsEffect = new class'X2Effect_ReserveOverwatchPoints';
+	Template.AddTargetEffect(ReserveActionPointsEffect);
+	Template.DefaultKeyBinding = class'UIUtilities_Input'.const.FXS_KEY_Y;
+	
+	BattlePrecognitionEffect = new class'X2Effect_BattlePrecognition';
+	BattlePrecognitionEffect.EffectName = 'BattlePrecognition';
+	BattlePrecognitionEffect.DuplicateResponse = eDupe_Refresh;
+	BattlePrecognitionEffect.BuildPersistentEffect(1, , , , eGameRule_PlayerTurnEnd);
+	Template.AddTargetEffect(BattlePrecognitionEffect);
+
+	CoveringFireEffect = new class'X2Effect_TriggerAbilityReaction';
+	//CoveringFireEffect.GrantActionPoint = 'Move';
+	CoveringFireEffect.bPreEmptiveFire = true;
+	CoveringFireEffect.bDirectAttackOnly = false;
+	CoveringFireEffect.bUseMultiTargets = false;
+	CoveringFireEffect.AbilityToActivate = 'BattlePrecognitionLeapStrike'; //'SwordSlice';
+	CoveringFireEffect.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
+	Template.AddTargetEffect(CoveringFireEffect);
+
+	ConcealedCondition = new class'X2Condition_UnitProperty';
+	ConcealedCondition.ExcludeFriendlyToSource = false;
+	ConcealedCondition.IsConcealed = true;
+	UnitValueEffect = new class'X2Effect_SetUnitValue';
+	UnitValueEffect.UnitName = class'X2Ability_DefaultAbilitySet'.default.ConcealedOverwatchTurn;
+	UnitValueEffect.CleanupType = eCleanup_BeginTurn;
+	UnitValueEffect.NewValueToSet = 1;
+	UnitValueEffect.TargetConditions.AddItem(ConcealedCondition);
+	Template.AddTargetEffect(UnitValueEffect);
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+	
+	Template.AbilitySourceName = 'eAbilitySource_Standard';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_HideIfOtherAvailable;
+	Template.HideIfAvailable.AddItem('LongWatch');
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_overwatch";
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.OVERWATCH_PRIORITY;
+	Template.bNoConfirmationWithHotKey = true;
+	Template.bDisplayInUITooltip = false;
+	Template.bDisplayInUITacticalText = false;
+	Template.AbilityConfirmSound = "Unreal2DSounds_OverWatch";
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = class'X2Ability_DefaultAbilitySet'.static.OverwatchAbility_BuildVisualization;
+	Template.CinescriptCameraType = "Overwatch";
+
+	Template.Hostility = eHostility_Defensive;
+
+	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
+
+	Template.AdditionalAbilities.AddItem('BattlePrecognitionLeapStrike');
+
+	return Template;	
+}
+
+static function X2AbilityTemplate BattlePrecognitionLeapStrike()
+{
+	local X2AbilityTemplate									Template;
+	local X2AbilityToHitCalc_StandardMelee					StandardMelee;
+	local X2Effect_ApplyWeaponDamage						WeaponDamageEffect;
+	local array<name>										SkipExclusions;
+	local X2AbilityCost_ReserveActionPoints					ReserveActionPointCost;
+	local X2AbilityCost_ForcePoints							FPCost;
+	local X2Effect_Persistent								ShadowStepEffect;
+	local X2Condition_Visibility							VisibilityCondition;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'BattlePrecognitionLeapStrike');
+
+	Template.AbilitySourceName = 'eAbilitySource_Item';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	
+	Template.CinescriptCameraType = "Ranger_Reaper";
+	Template.IconImage = "img:///JediClassUI.UIPerk_LeapStrike";
+	Template.bHideOnClassUnlock = true;
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SQUADDIE_PRIORITY;
+	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
+	
+	ReserveActionPointCost = new class'X2AbilityCost_ReserveActionPoints';
+	ReserveActionPointCost.iNumPoints = 1;
+	ReserveActionPointCost.AllowedTypes.AddItem(class'X2CharacterTemplateManager'.default.OverwatchReserveActionPoint);
+	Template.AbilityCosts.AddItem(ReserveActionPointCost);
+
+	FPCost = new class'X2AbilityCost_ForcePoints';
+	FPCost.ForceAmount = default.LEAP_STRIKE_COST;
+	FPCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(FPCost);
+
+	StandardMelee = new class'X2AbilityToHitCalc_StandardMelee';
+	Template.AbilityToHitCalc = StandardMelee;
+	
+	Template.AbilityTargetStyle = new class'X2AbilityTarget_MovingMelee';
+	Template.TargetingMethod = class'X2TargetingMethod_LeapStrike';
+
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+	//Template.AbilityTriggers.AddItem(new class'X2AbilityTrigger_EndOfMove');
+
+	//EventListener = new class'X2AbilityTrigger_EventListener';
+	//EventListener.ListenerData.Deferral = ELD_OnStateSubmitted;
+	//EventListener.ListenerData.EventFn = class'X2Ability_JediClassAbilities'.static.BattlePrecognitionListener;
+	//EventListener.ListenerData.EventID = 'AbilityActivated';
+	//EventListener.ListenerData.Filter = eFilter_None;
+	//Template.AbilityTriggers.AddItem(EventListener);
+
+	// Target Conditions
+	//
+	Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);
+	VisibilityCondition = new class'X2Condition_Visibility';
+	VisibilityCondition.bRequireBasicVisibility = true;
+	Template.AbilityTargetConditions.AddItem(VisibilityCondition);
+
+	// Shooter Conditions
+	//
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	SkipExclusions.AddItem(class'X2StatusEffects'.default.BurningName);
+	Template.AddShooterEffectExclusions(SkipExclusions);
+
+	// Do not trigger overwatch
+	ShadowStepEffect = new class'X2Effect_Persistent';
+	ShadowStepEffect.EffectName = 'Shadowstep';
+	ShadowStepEffect.DuplicateResponse = eDupe_Ignore;
+	ShadowStepEffect.BuildPersistentEffect(1, false, false);
+	Template.AddShooterEffect(ShadowStepEffect);
+
+	// Damage Effect
+	//
+	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
+	Template.AddTargetEffect(WeaponDamageEffect);
+	
+	Template.bAllowBonusWeaponEffects = true;
+	Template.bSkipMoveStop = true;
+	
+
+	// Voice events
+	//
+	Template.SourceMissSpeech = 'SwordMiss';
+
+	Template.CustomFireKillAnim = 'MV_MeleeKill';
+
+	//Template.ModifyNewContextFn = LeapStrike_ModifyActivatedAbilityContext;
+	Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
+	Template.BuildVisualizationFn = LeapStrike_BuildVisualization;
+
+	Template.AdditionalAbilities.AddItem('ForceAbilitiesAnimSet');
+	//Template.AdditionalAbilities.AddItem('LeapStrikeFleche');
+
+	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
+	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
+	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
+	
+	Template.DefaultSourceItemSlot = eInvSlot_PrimaryWeapon;
+
+	return Template;
 }
 
 
@@ -213,8 +408,8 @@ static function X2AbilityTemplate LeapStrike()
 
 	Template.CustomFireKillAnim = 'MV_MeleeKill';
 
-	Template.ModifyNewContextFn = LeapStrike_ModifyActivatedAbilityContext;
-	Template.BuildNewGameStateFn = LeapStrike_BuildGameState;
+	//Template.ModifyNewContextFn = LeapStrike_ModifyActivatedAbilityContext;
+	Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
 	Template.BuildVisualizationFn = LeapStrike_BuildVisualization;
 
 	Template.AdditionalAbilities.AddItem('ForceAbilitiesAnimSet');
@@ -236,7 +431,6 @@ static simulated function LeapStrike_ModifyActivatedAbilityContext(XComGameState
 	local PathPoint NextPoint, EmptyPoint;
 	local PathingInputData InputData;
 	local XComWorldData World;
-	local vector NewLocation;
 	local TTile NewTileLocation, EndTileLocation;
 	local array<TTile> PathTiles;
 	local XComPrecomputedPath Path;
@@ -287,7 +481,7 @@ static simulated function LeapStrike_ModifyActivatedAbilityContext(XComGameState
 	}
 
 
-	//`LOG(GetFuncName() @ NewTileLocation.X @ NewTileLocation.Y @ NewTileLocation.Z,, 'X2JediClassWOTC');
+	`LOG(GetFuncName() @ NewTileLocation.X @ NewTileLocation.Y @ NewTileLocation.Z,, 'X2JediClassWOTC');
 
 	NextPoint = EmptyPoint;
 	NextPoint.Position = World.GetPositionFromTileCoordinates(EndTileLocation);
@@ -296,7 +490,7 @@ static simulated function LeapStrike_ModifyActivatedAbilityContext(XComGameState
 	InputData.MovementData.AddItem(NextPoint);
 	InputData.MovementTiles.AddItem(EndTileLocation);
 	
-    //Now add the path to the input context
+	//Now add the path to the input context
 	InputData.MovingUnitRef = UnitState.GetReference();
 	AbilityContext.InputContext.MovementPaths.Length = 0;
 	AbilityContext.InputContext.MovementPaths.AddItem(InputData);
@@ -326,12 +520,16 @@ static simulated function XComGameState LeapStrike_BuildGameState(XComGameStateC
 
 	// Set the unit's new location
 	// The last position in MovementData will be the end location
-	`assert(LastElementIndex > 0);
-	NewLocation = AbilityContext.InputContext.MovementPaths[0].MovementData[LastElementIndex].Position;
-	NewTileLocation = World.GetTileCoordinatesFromPosition(NewLocation);
-	UnitState.SetVisibilityLocation(NewTileLocation);
-
-	//`LOG(GetFuncName() @ NewTileLocation.X @ NewTileLocation.Y @ NewTileLocation.Z,, 'X2JediClassWOTC');
+	//`assert(LastElementIndex > 0);
+	`LOG(GetFuncName() @ LastElementIndex,, 'X2JediClassWOTC');
+	if (LastElementIndex > 0)
+	{
+		NewLocation = AbilityContext.InputContext.MovementPaths[0].MovementData[LastElementIndex].Position;
+		NewTileLocation = World.GetTileCoordinatesFromPosition(NewLocation);
+		UnitState.SetVisibilityLocation(NewTileLocation);
+		`LOG(GetFuncName() @ NewTileLocation.X @ NewTileLocation.Y @ NewTileLocation.Z,, 'X2JediClassWOTC');
+	}
+	
 
 	AbilityContext.ResultContext.bPathCausesDestruction = MoveAbility_StepCausesDestruction(UnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
 	MoveAbility_AddTileStateObjects(NewGameState, UnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
@@ -921,18 +1119,32 @@ static function X2AbilityTemplate ForceJumpMovement()
 	local X2AbilityTemplate					Template;
 	local X2Condition_UnitProperty			UnitProperty;
 	local X2AbilityTarget_Cursor			CursorTarget;
+	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2AbilityCost_ForcePoints			ForcePointCost;
 
 	Template = class'X2Ability_DefaultAbilitySet'.static.AddGrapple('ForceJumpMovement');
 
 	Template.AbilityShooterConditions.Length = 0;
 
 	Template.TargetingMethod = class'X2TargetingMethod_ForceJump';
-	//Template.SkipRenderOfTargetingTemplate = true;
 
-	Template.bUseThrownGrenadeEffects = true;
+	Template.AbilityCosts.Length = 0;
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bMoveCost = true;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	ForcePointCost = new class'X2AbilityCost_ForcePoints';
+	ForcePointCost.ForceAmount = default.FORCE_JUMP_COST;
+	ForcePointCost.ConsumeAllForce = false;
+	Template.AbilityCosts.AddItem(ForcePointCost);
+
+	Template.AbilityCooldown = none;
 
 	CursorTarget = new class'X2AbilityTarget_Cursor';
-	CursorTarget.bRestrictToSquadsightRange = true;
+	CursorTarget.bRestrictToSquadsightRange = false;
+	CursorTarget.FixedAbilityRange = 24;
 	Template.AbilityTargetStyle = CursorTarget;
 
 	UnitProperty = new class'X2Condition_UnitProperty';
@@ -943,6 +1155,7 @@ static function X2AbilityTemplate ForceJumpMovement()
 
 	Template.BuildNewGameStateFn = ForceJump_BuildGameState;
 	Template.BuildVisualizationFn = ForceJump_BuildVisualization;
+	Template.ModifyNewContextFn = LeapStrike_ModifyActivatedAbilityContext;
 	Template.CinescriptCameraType = "";
 
 	return Template;
@@ -1001,14 +1214,17 @@ simulated function XComGameState ForceJump_BuildGameState(XComGameStateContext C
 
 	if (UnitTile != PrevUnitTile)
 	{
-		TilePos = `XWORLD.GetPositionFromTileCoordinates( UnitTile );
-		PrevTilePos = `XWORLD.GetPositionFromTileCoordinates( PrevUnitTile );
+		TilePos = `XWORLD.GetPositionFromTileCoordinates(UnitTile);
+		PrevTilePos = `XWORLD.GetPositionFromTileCoordinates(PrevUnitTile);
 		TilePosDiff = TilePos - PrevTilePos;
 		TilePosDiff.Z = 0;
 
-		MovingUnitState.MoveOrientation = Rotator( TilePosDiff );
+		MovingUnitState.MoveOrientation = Rotator(TilePosDiff);
 	}
-	
+
+	AbilityContext.ResultContext.bPathCausesDestruction = MoveAbility_StepCausesDestruction(MovingUnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
+	MoveAbility_AddTileStateObjects(NewGameState, MovingUnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
+
 	//Apply the cost of the ability
 	AbilityTemplate.ApplyCost(AbilityContext, AbilityState, MovingUnitState, none, NewGameState);
 
@@ -1439,8 +1655,8 @@ static function X2AbilityTemplate LightsaberSlash()
 	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
 	Template.bCrossClassEligible = false;
 	Template.bDisplayInUITooltip = true;
-    Template.bDisplayInUITacticalText = true;
-    Template.DisplayTargetHitChance = true;
+	Template.bDisplayInUITacticalText = true;
+	Template.DisplayTargetHitChance = true;
 	Template.bShowActivation = true;
 	Template.bSkipFireAction = false;
 
@@ -1452,7 +1668,7 @@ static function X2AbilityTemplate LightsaberSlash()
 	StandardMelee = new class'X2AbilityToHitCalc_StandardMelee';
 	Template.AbilityToHitCalc = StandardMelee;
 
-    Template.AbilityTargetStyle = default.SimpleSingleMeleeTarget;
+	Template.AbilityTargetStyle = default.SimpleSingleMeleeTarget;
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 
 	// Target Conditions
@@ -1478,7 +1694,7 @@ static function X2AbilityTemplate LightsaberSlash()
 	Template.bSkipMoveStop = true;
 
 	Template.CinescriptCameraType = "Ranger_Reaper";
-    Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
+	Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
 	Template.BuildInterruptGameStateFn = TypicalMoveEndAbility_BuildInterruptGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 
