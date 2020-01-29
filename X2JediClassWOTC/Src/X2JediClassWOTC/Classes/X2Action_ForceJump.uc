@@ -177,7 +177,8 @@ Begin:
 	PlayingSequence = UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
 	while(!bStartLandingAnimation)
 	{
-		PlayingSequence.ReplayAnim();
+		//PlayingSequence.ReplayAnim();
+		FinishAnim(PlayingSequence, true, 0.05);
 		`LOG(default.class @ GetFuncName() @ `ShowVar(Params.AnimName),, 'X2JediClassWOTC');
 		sleep(0);
 	}
@@ -186,19 +187,19 @@ Begin:
 	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
 	UnitPawn.EnableRMA(true, true);
 	UnitPawn.EnableRMAInteractPhysics(true);
+	
 	UnitPawn.SnapToGround();
 
-	//SendWindowBreakNotifies();
-	DesiredRotation = Rotator(Normal(DesiredLocation - UnitPawn.Location));
+	//DesiredRotation = Rotator(Normal(DesiredLocation - UnitPawn.Location));
 	Params = default.Params;
 	Params.AnimName = 'HL_ForceJumpStop';
-	Params.DesiredEndingAtoms.Add(1);
-	Params.DesiredEndingAtoms[0].Scale = 1.0f;
-	Params.DesiredEndingAtoms[0].Translation = Path.OverrideTargetLocation;
-	DesiredRotation = UnitPawn.Rotation;
-	DesiredRotation.Pitch = 0.0f;
-	DesiredRotation.Roll = 0.0f;
-	Params.DesiredEndingAtoms[0].Rotation = QuatFromRotator(DesiredRotation);
+	//Params.DesiredEndingAtoms.Add(1);
+	//Params.DesiredEndingAtoms[0].Scale = 1.0f;
+	//Params.DesiredEndingAtoms[0].Translation = Path.OverrideTargetLocation;
+	//DesiredRotation = UnitPawn.Rotation;
+	//DesiredRotation.Pitch = 0.0f;
+	//DesiredRotation.Roll = 0.0f;
+	//Params.DesiredEndingAtoms[0].Rotation = QuatFromRotator(DesiredRotation);
 	FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params));
 	UnitPawn.bSkipIK = false;
 
