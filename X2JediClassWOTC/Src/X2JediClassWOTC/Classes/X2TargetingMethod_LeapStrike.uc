@@ -9,7 +9,7 @@ function Init(AvailableAction InAction, int NewTargetIndex)
 
 	super.Init(InAction, NewTargetIndex);
 	
-	PrecomputedPathData.InitialPathTime = 0.5;
+	PrecomputedPathData.InitialPathTime = 0.8;
 	PrecomputedPathData.MaxPathTime = 2.5;
 	PrecomputedPathData.MaxNumberOfBounces = 0;
 
@@ -65,6 +65,9 @@ function UpdatePathComponents(TTile Destination)
 function Canceled()
 {
 	super.Canceled();
+
+	// unlock the 3d cursor
+	Cursor.m_fMaxChainedDistance = -1;
 	
 	if (UseGrenadePath())
 	{

@@ -442,3 +442,23 @@ exec function GiveDarkSidePoint(int Amount = 1)
 		`LOG("EXEC AddDarkSidePoints for" @ NewSourceUnit.GetFullName() @ Amount @ "(" @ DarkSidePoints.fValue + Amount @ ")",, 'X2JediClassWOTC');
 	}
 }
+
+
+exec function LogCrossClassAbilities()
+{
+	local X2AbilityTemplateManager						TemplateManager;
+	local X2AbilityTemplate								Template;
+	local array<name>									TemplateNames;
+	local name											TemplateName;
+	
+	TemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+	TemplateManager.GetTemplateNames(TemplateNames);
+	foreach TemplateNames(TemplateName)
+	{
+		Template = TemplateManager.FindAbilityTemplate(TemplateName);
+		if (Template.bCrossClassEligible)
+		{
+			`Log(TemplateName,, 'AWC Ability');
+		}
+	}
+}

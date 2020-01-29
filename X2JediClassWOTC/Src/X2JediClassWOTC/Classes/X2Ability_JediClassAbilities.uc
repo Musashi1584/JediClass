@@ -179,6 +179,7 @@ static function X2AbilityTemplate BattlePrecognition()
 	Template.AddTargetEffect(ReserveActionPointsEffect);
 	Template.DefaultKeyBinding = class'UIUtilities_Input'.const.FXS_KEY_Y;
 	
+	// Give 1 standard action point on turn end so BattlePrecognitionLeapStrike targeting thinks it can pay its movement costs
 	BattlePrecognitionEffect = new class'X2Effect_BattlePrecognition';
 	BattlePrecognitionEffect.EffectName = 'BattlePrecognition';
 	BattlePrecognitionEffect.DuplicateResponse = eDupe_Refresh;

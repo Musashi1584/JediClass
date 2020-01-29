@@ -1,7 +1,7 @@
 //-----------------------------------------------------------
 //	Class:	X2Effect_TriggerAbilityReaction
 //	Author: Musashi
-//	
+//	Pretty much a copy from X2Effect_CoveringFire with some tweaks to support melee ability triggers
 //-----------------------------------------------------------
 
 class X2Effect_TriggerAbilityReaction extends X2Effect_Persistent;

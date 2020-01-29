@@ -41,7 +41,7 @@ function Init(AvailableAction InAction, int NewTargetIndex)
 	if (CursorTarget != none)
 		bRestrictToSquadsightRange = CursorTarget.bRestrictToSquadsightRange;
 
-	PrecomputedPathData.InitialPathTime = 0.5;
+	PrecomputedPathData.InitialPathTime = 0.8;
 	PrecomputedPathData.MaxPathTime = 2.5;
 	PrecomputedPathData.MaxNumberOfBounces = 0;
 
@@ -104,6 +104,22 @@ simulated protected function DrawInvalidTile()
 	InvalidTileActor.SetLocation(Center);
 }
 
+
+function Canceled()
+{
+	super.Canceled();
+
+	// clean up the ui
+	InvalidTileActor.Destroy();
+
+	// unlock the 3d cursor
+	Cursor.m_fMaxChainedDistance = -1;
+	
+	if (UseGrenadePath())
+	{
+		GrenadePath.ClearPathGraphics();
+	}
+}
 
 function name ValidateTargetLocations(const array<Vector> TargetLocations)
 {

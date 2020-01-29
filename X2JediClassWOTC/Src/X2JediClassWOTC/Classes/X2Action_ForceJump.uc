@@ -4,6 +4,9 @@ const StartLandingAnimationTime = 0.5;
 const MinPathTime = 0.1;
 const JumpStartPlayRate = 2.0;
 const JumpStopPlayRate = 3.0;
+const JumpRateScale = 0.7;
+const StartScaleFrom = 1.5;
+const StartJumpLoopTransitionEarly = 0.2;
 
 var vector  DesiredLocation;
 
@@ -63,7 +66,7 @@ simulated function bool MoveAlongPath(float fTime, XComUnitPawn pActor)
 	TargetLocation = KF.vLoc;
 
 	// Clamp to floor tile when landing
-	if (fTime > Path.akKeyframes[Path.iNumKeyframes / 3].fTime)
+	if (fTime > Path.akKeyframes[Path.iNumKeyframes / 4].fTime)
 	{
 		PathEndPosition = Path.GetEndPosition();
 		Tile = `XWORLD.GetTileCoordinatesFromPosition(PathEndPosition);
@@ -114,14 +117,12 @@ function InterpolatePath(float StartZ)
 		//`LOG(GetFuncName() @ `ShowVar(Diff),, 'X2JediClassWOTC');
 
 		Path.akKeyframes[Index].vLoc.Z -= Diff;
-		Path.akKeyframes[Index].fTime *= 0.7;
+		
+		if (Path.akKeyframes[Path.iNumKeyframes-1].fTime >= StartScaleFrom)
+		{
+			Path.akKeyframes[Index].fTime *= JumpRateScale;
+		}
 	}
-}
-
-function vector AdjustZPositionForPawn(vector Loc)
-{
-	Loc.Z = `XWORLD.GetFloorZForPosition(Loc, true); // + UnitPawn.CollisionHeight + class'XComWorldData'.const.Cover_BufferDistance;
-	return Loc;
 }
 
 simulated state Executing
@@ -169,19 +170,18 @@ Begin:
 
 	`LOG(default.class @ GetFuncName() @ `ShowVar(Params.AnimName),, 'X2JediClassWOTC');
 
-	sleep(PlayingSequence.GetAnimPlaybackLength() - 0.2);
+	sleep(PlayingSequence.GetAnimPlaybackLength() - StartJumpLoopTransitionEarly);
 
 	Path.bUseOverrideTargetLocation = true;
 	Path.bUseOverrideSourceLocation = true;
 	Path.OverrideSourceLocation = UnitPawn.Location;
-	//Path.OverrideTargetLocation = AdjustZPositionForPawn(DesiredLocation);
 	Path.OverrideTargetLocation = DesiredLocation;
 	Path.OverrideTargetLocation.Z = Unit.GetDesiredZForLocation(DesiredLocation);
 	Path.bNoSpinUntilBounce = true;
 	Path.UpdateTrajectory();
 	Path.bUseOverrideTargetLocation = false;
 	Path.bUseOverrideSourceLocation = false;
-	InterpolatePath(UnitPawn.Location.Z);
+	InterpolatePath(Unit.Location.Z);
 
 	`LOG(default.class @ GetFuncName() @ `ShowVar(UnitPawn.Location),, 'X2JediClassWOTC');
 

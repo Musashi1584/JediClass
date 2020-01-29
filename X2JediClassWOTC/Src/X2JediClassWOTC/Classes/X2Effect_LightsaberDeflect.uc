@@ -73,6 +73,12 @@ function bool ChangeHitResultForTarget(
 		if (TargetUnit.IsUnitAffectedByEffectName(CurrentEffect))
 			return false;
 	}
+
+	// target must not be in overwatch
+	if (TargetUnit.ReserveActionPoints.Length > 0)
+	{
+		return false;
+	}
 	
 	//	Deflect cannot block melee abilities, so only check ranged single-target
 	if (!AbilityState.IsMeleeAbility() && bIsPrimaryTarget)
