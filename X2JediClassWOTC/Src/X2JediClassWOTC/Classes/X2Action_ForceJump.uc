@@ -1,6 +1,7 @@
 class X2Action_ForceJump extends X2Action_Move;
 
-const StartLandingAnimationTime = 0.2;
+const StartLandingAnimationTime = 0.5;
+const MinPathTime = 0.1;
 
 var vector  DesiredLocation;
 
@@ -48,7 +49,7 @@ function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
 simulated function bool MoveAlongPath(float fTime, XComUnitPawn pActor)
 {
 	local XKeyframe KF;
-	local float UnitTileZ;
+	local float UnitTileZ, FinishTime;
 	local vector TargetLocation, PathEndPosition;
 	local TTile Tile;
 	local Rotator PawnRotation;
@@ -76,7 +77,17 @@ simulated function bool MoveAlongPath(float fTime, XComUnitPawn pActor)
 	PawnRotation.Yaw = KF.rRot.Yaw;
 	pActor.SetRotation(PawnRotation);
 
-	if (fTime >= Path.akKeyframes[Path.iNumKeyframes-1].fTime - StartLandingAnimationTime)
+	FinishTime = Path.akKeyframes[Path.iNumKeyframes-1].fTime;
+	if (FinishTime - StartLandingAnimationTime > MinPathTime)
+	{
+		FinishTime -= StartLandingAnimationTime;
+	}
+	else
+	{
+		FinishTime -= MinPathTime;
+	}
+
+	if (fTime >= FinishTime)
 		return true;
 	else return false;
 }
@@ -179,8 +190,13 @@ Begin:
 	{
 		//PlayingSequence.ReplayAnim();
 		FinishAnim(PlayingSequence, true, 0.05);
-		`LOG(default.class @ GetFuncName() @ `ShowVar(Params.AnimName),, 'X2JediClassWOTC');
+		if (bStartLandingAnimation)
+		{
+			PlayingSequence.StopAnim();
+		}
 		sleep(0);
+		`LOG(default.class @ GetFuncName() @ `ShowVar(Params.AnimName),, 'X2JediClassWOTC');
+		
 	}
 	PlayingSequence.StopAnim();
 

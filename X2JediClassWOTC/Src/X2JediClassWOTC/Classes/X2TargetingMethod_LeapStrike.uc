@@ -9,7 +9,7 @@ function Init(AvailableAction InAction, int NewTargetIndex)
 
 	super.Init(InAction, NewTargetIndex);
 	
-	PrecomputedPathData.InitialPathTime = 1;
+	PrecomputedPathData.InitialPathTime = 0.5;
 	PrecomputedPathData.MaxPathTime = 2.5;
 	PrecomputedPathData.MaxNumberOfBounces = 0;
 
