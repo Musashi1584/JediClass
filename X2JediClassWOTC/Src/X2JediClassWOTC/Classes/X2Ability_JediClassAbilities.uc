@@ -607,7 +607,7 @@ function LeapStrike_BuildVisualization(XComGameState VisualizeGameState)
 	local bool bGoodAbility;
 
 	// LeapStrike Additions
-	//local X2Action_ForceJump ForceJumpAction;
+	local X2Action_ForceJump ForceJumpAction;
 	local X2Action_CameraFollowUnit CameraFollowAction;
 	local PathingInputData PathInputData;
 	local PathingResultData PathResultData;
@@ -690,7 +690,8 @@ function LeapStrike_BuildVisualization(XComGameState VisualizeGameState)
 			CameraFollowAction.ParsePathSetParameters(PathInputData, PathResultData);
 			CameraFollowAction.CameraTag = 'MovementFramingCamera';
 
-			X2Action_ForceJump(class'X2Action_ForceJump'.static.AddToVisualizationTree(SourceData, Context, false, none));
+			ForceJumpAction = X2Action_ForceJump(class'X2Action_ForceJump'.static.AddToVisualizationTree(SourceData, Context, false, none));
+			ForceJumpAction.bSkipLandingAnimation = true;
 
 			if( !AbilityTemplate.bSkipFireAction )
 			{
