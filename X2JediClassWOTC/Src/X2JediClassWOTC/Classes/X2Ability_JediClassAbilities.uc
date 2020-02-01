@@ -111,7 +111,6 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(MindControl());
 	AbilityTemplates.AddItem(ForceHeal());
 	AbilityTemplates.AddItem(MindTricks());
-	AbilityTemplates.AddItem(ForceJump());
 	AbilityTemplates.AddItem(ForceWind());
 	AbilityTemplates.AddItem(ForcePush());
 	AbilityTemplates.AddItem(ForceChoke());
@@ -128,6 +127,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(LightsaberDeflectShot('LightsaberReflectShot'));
 
 	// Helper abilities, should not be assigned directly
+	AbilityTemplates.AddItem(ForceJumpTraversal());
 	AbilityTemplates.AddItem(LeapStrikeFleche());
 	AbilityTemplates.AddItem(ForceDrainTriggered());
 	AbilityTemplates.AddItem(ForceSenseTrigger());
@@ -1125,6 +1125,8 @@ static function X2AbilityTemplate ForceJumpMovement()
 	local X2AbilityCost_ForcePoints			ForcePointCost;
 
 	Template = class'X2Ability_DefaultAbilitySet'.static.AddGrapple('ForceJumpMovement');
+
+	Template.IconImage = "img:///JediClassUI.UIPerk_jump";
 
 	Template.AbilityShooterConditions.Length = 0;
 
@@ -2428,16 +2430,18 @@ static function X2AbilityTemplate MindTricks()
 	return Template;
 }
 
-static function X2AbilityTemplate ForceJump()
+static function X2AbilityTemplate ForceJumpTraversal()
 {
 	local X2AbilityTemplate						Template;
 	local X2AbilityTrigger						Trigger;
 	local X2Effect_PersistentTraversalChange	JumpEffect;
 	
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceJump');
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceJumpTraversal');
 	Template.IconImage = "img:///JediClassUI.UIPerk_jump";
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
+	Template.bDisplayInUITacticalText = false;
+	Template.bDontDisplayInAbilitySummary = true;
 	Template.Hostility = eHostility_Neutral;
 	Template.bIsPassive = true;
 
@@ -2449,7 +2453,7 @@ static function X2AbilityTemplate ForceJump()
 
 	JumpEffect = new class'X2Effect_PersistentTraversalChange';
 	JumpEffect.BuildPersistentEffect(1, true, false, false, eGameRule_TacticalGameStart);
-	JumpEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage, true,, Template.AbilitySourceName);
+	//JumpEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage, false,, Template.AbilitySourceName);
 	JumpEffect.AddTraversalChange(eTraversal_JumpUp, true);
 	Template.AddTargetEffect(JumpEffect);
 
