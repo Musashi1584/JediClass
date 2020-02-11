@@ -32,6 +32,8 @@ var config array<LootTableEntry> ADVANCED_LOOT_ENTRIES;
 var config name SUPERIOR_LOOT_ENTRIES_TO_TABLE;
 var config array<LootTableEntry> SUPERIOR_LOOT_ENTRIES;
 
+var config array<name> DebugAnimSequences;
+
 static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent MeshComp)
 {
 	local XComLinearColorPalette Palette;
@@ -295,11 +297,16 @@ static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameStat
 	if (UnitState.GetSoldierClassTemplateName() != 'Jedi')
 		return;
 
-	if (HasDualMeleeEquipped(UnitState))
+	if (HasSaberStaffEquipped(UnitState))
+	{
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("saberstaff.Anims.AS_Soldier")));
+	}
+	else if (HasDualMeleeEquipped(UnitState))
 	{
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("Lightsaber_CV.Anims.AS_JediDual")));
 		
 	}
+
 	CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers")));
 
 }
@@ -310,11 +317,23 @@ static function bool HasDualMeleeEquipped(XComGameState_Unit UnitState, optional
 		IsSecondaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
 }
 
+static function bool HasSaberStaffEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	return IsPrimarySaberStaffWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate()));
+}
+
 static function bool IsPrimaryMeleeWeaponTemplate(X2WeaponTemplate WeaponTemplate)
 {
 	return WeaponTemplate != none &&
 		WeaponTemplate.InventorySlot == eInvSlot_PrimaryWeapon &&
 		WeaponTemplate.iRange == 0;
+}
+
+static function bool IsPrimarySaberStaffWeaponTemplate(X2WeaponTemplate WeaponTemplate)
+{
+	return WeaponTemplate != none &&
+		WeaponTemplate.InventorySlot == eInvSlot_PrimaryWeapon &&
+		WeaponTemplate.WeaponCat == 'saberstaff';
 }
 
 static function bool IsSecondaryMeleeWeaponTemplate(X2WeaponTemplate WeaponTemplate)
@@ -462,3 +481,48 @@ exec function LogCrossClassAbilities()
 		}
 	}
 }
+
+
+exec function PlayAnim(name SequenceName, optional float PlayRate = 1.0)
+{
+	local XComTacticalController TacticalController;
+	local CustomAnimParams Params;
+	local XComUnitPawn UnitPawn;
+
+	TacticalController = XComTacticalController(class'WorldInfo'.static.GetWorldInfo().GetALocalPlayerController());
+	if (TacticalController != none)
+	{
+		UnitPawn = TacticalController.GetActiveUnit().GetPawn();
+
+		Params.AnimName = SequenceName;
+		Params.PlayRate = PlayRate;
+
+		UnitPawn.EnableRMA(true, true);
+		UnitPawn.EnableRMAInteractPhysics(true);
+
+		UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
+	}
+}
+
+exec function DebugAnimSequenceList(optional float PlayRate = 1.0)
+{
+	local XComTacticalController TacticalController;
+	local CustomAnimParams Params;
+	local XComUnitPawn UnitPawn;
+	local AnimationListAction PlayAnimAction;
+
+	TacticalController = XComTacticalController(class'WorldInfo'.static.GetWorldInfo().GetALocalPlayerController());
+	if (TacticalController != none)
+	{
+		UnitPawn = TacticalController.GetActiveUnit().GetPawn();
+		Params.PlayRate = PlayRate;
+
+		PlayAnimAction = class'WorldInfo'.static.GetWorldInfo().Spawn(class'AnimationListAction');
+		PlayAnimAction.Params = Params;
+		PlayAnimAction.UnitPawn = UnitPawn;
+		PlayAnimAction.AnimSequenceList = default.DebugAnimSequences;
+		PlayAnimAction.GotoState('Executing');
+	}
+}
+
+

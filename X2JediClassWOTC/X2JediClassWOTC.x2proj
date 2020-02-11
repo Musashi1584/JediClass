@@ -63,10 +63,16 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Content\Perk_Force_Lightning_Assets.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\SaberStaff.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="ForcePowers.txt">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\X2JediClassWOTC.int">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Notes.txt">
       <SubType>Content</SubType>
     </Content>
     <Content Include="ReadMe.txt" />
@@ -75,6 +81,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Config\XComEngine.ini" />
     <Content Include="Config\XComGame.ini" />
     <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\X2JediClassWOTC\Classes\AnimationListAction.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\AnimNotify_UpdateWeaponMaterial.uc">
       <SubType>Content</SubType>
     </Content>
@@ -194,6 +203,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Item_LightSaber.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Item_SaberStaff.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Item_WeaponUpgrade_Lightsaber.uc">

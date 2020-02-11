@@ -1,0 +1,22 @@
+TODO Anims Saberstaff:
+
+HL_PeekFwd_LoopA
+HL_PeekFwd_StartA
+HL_PeekFwd_StopA
+
+HL_StunnedIdleA
+HL_StunnedStartA
+HL_StunnedStopA
+
+MV_WalkFwdYellowAlertA
+
+Photobooth
+
+
+
+
+Twinblades_attack02 -> MV_Left
+Twinblades_attack07 -> MV_Right
+
+Inplace_Twinblades_Attack14 / 17 -> MV_LeftKill
+Inplace_Twinblades_Attack15 / 16 -> MV_RightKill
