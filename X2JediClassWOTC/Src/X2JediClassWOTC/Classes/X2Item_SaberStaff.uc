@@ -47,7 +47,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_CV()
 	Template.WeaponCat = 'saberstaff';
 	Template.WeaponTech = 'conventional';
 	//Template.strImage = "img:///WP_WOTC_LightSaber_CV.LightsaberIcon";
-	Template.strImage = "img:///WOTC_LightSaber_CV.UI.SaberstaffIcon";
+	Template.strImage = "img:///saberstaff.UI.SaberstaffUI";
 
 	Template.EquipSound = "Sword_Equip_Magnetic";
 	Template.InventorySlot = eInvSlot_PrimaryWeapon;
@@ -93,7 +93,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_MG()
 	Template.WeaponCat = 'saberstaff';
 	Template.WeaponTech = 'conventional';
 	//Template.strImage = "img:///WP_WOTC_LightSaber_CV.LightsaberIcon";
-	Template.strImage = "img:///WOTC_LightSaber_CV.UI.SaberstaffIcon";
+	Template.strImage = "img:///saberstaff.UI.SaberstaffUI";
 
 	Template.EquipSound = "Sword_Equip_Magnetic";
 
@@ -146,7 +146,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_BM()
 	Template.WeaponCat = 'saberstaff';
 	Template.WeaponTech = 'conventional';
 	//Template.strImage = "img:///WP_WOTC_LightSaber_CV.LightsaberIcon";
-	Template.strImage = "img:///WOTC_LightSaber_CV.UI.SaberstaffIcon";
+	Template.strImage = "img:///saberstaff.UI.SaberstaffUI";
 
 	Template.EquipSound = "Sword_Equip_Magnetic";
 	//Template.InventorySlot = eInvSlot_SecondaryWeapon;

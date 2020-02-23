@@ -19,4 +19,4 @@ Twinblades_attack02 -> MV_Left
 Twinblades_attack07 -> MV_Right
 
 Inplace_Twinblades_Attack14 / 17 -> MV_LeftKill
-Inplace_Twinblades_Attack15 / 16 -> MV_RightKill
+Inplace_Twinblades_Attack14 -> MV_RightKill

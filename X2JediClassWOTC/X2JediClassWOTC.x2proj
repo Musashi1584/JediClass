@@ -87,6 +87,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\AnimNotify_UpdateWeaponMaterial.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\JediClassDataStructure.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\JediClassHelper.uc">
       <SubType>Content</SubType>
     </Content>
@@ -105,6 +108,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Ability_LightsaberComponent.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Action_Fire_SyncedAnimation.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Action_ForceJump.uc">
       <SubType>Content</SubType>
     </Content>
@@ -118,6 +124,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Action_Revive.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Action_SyncedAnimationDeath.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_BattlePrecognition.uc">

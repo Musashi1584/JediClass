@@ -94,7 +94,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(BattlePrecognition());
 	AbilityTemplates.AddItem(BattlePrecognitionLeapStrike());
 	AbilityTemplates.AddItem(LeapStrike());
-	AbilityTemplates.AddItem(ForceJumpMovement());
+	AbilityTemplates.AddItem(ForceJump());
 	AbilityTemplates.AddItem(ForcePowerPool());
 	AbilityTemplates.AddItem(Holocron('HolocronPool_CV',3));
 	AbilityTemplates.AddItem(Holocron('HolocronPool_MG',2));
@@ -135,8 +135,24 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(ForcLightningAnimSets());
 	AbilityTemplates.AddItem(ForceAbilitiesAnimSet());
 	AbilityTemplates.AddItem(ForceAlignmentModifier());
+	AbilityTemplates.AddItem(AddSyncedAnimationDeathOverride());
 
 	return AbilityTemplates;
+}
+
+static function X2AbilityTemplate LightsaberSlash()
+{
+	local X2AbilityTemplate				Template;
+	local X2Effect_OverrideDeathAction	DeathActionEffect;
+
+	Template = class'X2Ability_RangerAbilitySet'.static.AddSwordSliceAbility('LightsaberSlash');
+	Template.ActionFireClass = class'X2Action_Fire_SyncedAnimation';
+
+	DeathActionEffect = new class'X2Effect_OverrideDeathAction';
+	DeathActionEffect.DeathActionClass = class'X2Action_SyncedAnimationDeath';
+	Template.AddTargetEffect(DeathActionEffect);
+	
+	return Template;
 }
 
 static function X2AbilityTemplate BattlePrecognition()
@@ -144,7 +160,6 @@ static function X2AbilityTemplate BattlePrecognition()
 	local X2AbilityTemplate                 Template;	
 	local X2AbilityCost_ActionPoints        ActionPointCost;
 	local X2Effect_ReserveActionPoints      ReserveActionPointsEffect;
-	local X2Effect_GrantActionPoints		GrantActionPointsEffect;
 	local array<name>                       SkipExclusions;
 	local X2Effect_TriggerAbilityReaction   CoveringFireEffect;
 	local X2Condition_AbilityProperty       CoveringFireCondition;
@@ -342,6 +357,7 @@ static function X2AbilityTemplate LeapStrike()
 	local X2AbilityCost_ForcePoints							FPCost;
 	local X2Effect_Persistent								ShadowStepEffect;
 	local X2Condition_Visibility							VisibilityCondition;
+	local X2Effect_OverrideDeathAction						DeathActionEffect;
 	//local X2Effect_PersistentTraversalChange				TeleportEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'LeapStrike');
@@ -394,6 +410,10 @@ static function X2AbilityTemplate LeapStrike()
 	ShadowStepEffect.BuildPersistentEffect(1, false, false);
 	Template.AddShooterEffect(ShadowStepEffect);
 
+	DeathActionEffect = new class'X2Effect_OverrideDeathAction';
+	DeathActionEffect.DeathActionClass = class'X2Action_SyncedAnimationDeath';
+	Template.AddTargetEffect(DeathActionEffect);
+
 	// Damage Effect
 	//
 	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
@@ -402,12 +422,8 @@ static function X2AbilityTemplate LeapStrike()
 	Template.bAllowBonusWeaponEffects = true;
 	Template.bSkipMoveStop = true;
 	
-
-	// Voice events
-	//
 	Template.SourceMissSpeech = 'SwordMiss';
-
-	Template.CustomFireKillAnim = 'MV_MeleeKill';
+	//Template.CustomFireKillAnim = 'MV_MeleeKill';
 
 	//Template.ModifyNewContextFn = LeapStrike_ModifyActivatedAbilityContext;
 	Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
@@ -416,85 +432,13 @@ static function X2AbilityTemplate LeapStrike()
 	Template.AdditionalAbilities.AddItem('ForceAbilitiesAnimSet');
 	//Template.AdditionalAbilities.AddItem('LeapStrikeFleche');
 
+	Template.ActionFireClass = class'X2Action_Fire_SyncedAnimation';
+
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
 	
 	return Template;
-}
-
-
-static simulated function LeapStrike_ModifyActivatedAbilityContext(XComGameStateContext Context)
-{
-	local XComGameState_Unit UnitState;
-	local XComGameStateContext_Ability AbilityContext;
-	local XComGameStateHistory History;
-	local PathPoint NextPoint, EmptyPoint;
-	local PathingInputData InputData;
-	local XComWorldData World;
-	local TTile NewTileLocation, EndTileLocation;
-	local array<TTile> PathTiles;
-	local XComPrecomputedPath Path;
-	local int Index;
-
-	History = `XCOMHISTORY;
-	World = `XWORLD;
-
-	Path = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).GetPrecomputedPath();
-	
-	AbilityContext = XComGameStateContext_Ability(Context);
-	`assert(AbilityContext.InputContext.TargetLocations.Length > 0);
-	
-	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
-	
-	// Build the MovementData for the path
-	// First posiiton is the current location
-	InputData.MovementTiles.AddItem(UnitState.TileLocation);
-	
-	NextPoint.Position = World.GetPositionFromTileCoordinates(UnitState.TileLocation);
-	NextPoint.Traversal = eTraversal_Teleport;
-	NextPoint.PathTileIndex = 0;
-	InputData.MovementData.AddItem(NextPoint);
-
-	if(`PRES.GetTacticalHUD().GetTargetingMethod().GetPreAbilityPath(PathTiles))
-	{
-		EndTileLocation = PathTiles[PathTiles.Length - 1];
-	}
-	else
-	{
-		EndTileLocation = XComTacticalController(`PRES.GetTacticalHUD().PC).m_kPathingPawn.LastDestinationTile;
-	}
-
-	for(Index = 0; Index < Path.iNumKeyframes; Index++)
-	{
-		NewTileLocation = World.GetTileCoordinatesFromPosition(Path.akKeyframes[Index].vLoc);
-
-		if (NewTileLocation != EndTileLocation &&
-			class'Helpers'.static.FindTileInList(NewTileLocation, InputData.MovementTiles) == INDEX_NONE)
-		{
-			NextPoint = EmptyPoint;
-			NextPoint.Position = World.GetPositionFromTileCoordinates(NewTileLocation);
-			NextPoint.Traversal = eTraversal_Teleport;
-			NextPoint.PathTileIndex = InputData.MovementTiles.Length;
-			InputData.MovementData.AddItem(NextPoint);
-			InputData.MovementTiles.AddItem(NewTileLocation);
-		}
-	}
-
-
-	`LOG(GetFuncName() @ NewTileLocation.X @ NewTileLocation.Y @ NewTileLocation.Z,, 'X2JediClassWOTC');
-
-	NextPoint = EmptyPoint;
-	NextPoint.Position = World.GetPositionFromTileCoordinates(EndTileLocation);
-	NextPoint.Traversal = eTraversal_Landing;
-	NextPoint.PathTileIndex = InputData.MovementTiles.Length;
-	InputData.MovementData.AddItem(NextPoint);
-	InputData.MovementTiles.AddItem(EndTileLocation);
-	
-	//Now add the path to the input context
-	InputData.MovingUnitRef = UnitState.GetReference();
-	AbilityContext.InputContext.MovementPaths.Length = 0;
-	AbilityContext.InputContext.MovementPaths.AddItem(InputData);
 }
 
 static simulated function XComGameState LeapStrike_BuildGameState(XComGameStateContext Context)
@@ -1116,7 +1060,7 @@ function LeapStrike_BuildVisualization(XComGameState VisualizeGameState)
 	}
 }
 
-static function X2AbilityTemplate ForceJumpMovement()
+static function X2AbilityTemplate ForceJump()
 {
 	local X2AbilityTemplate					Template;
 	local X2Condition_UnitProperty			UnitProperty;
@@ -1124,7 +1068,7 @@ static function X2AbilityTemplate ForceJumpMovement()
 	local X2AbilityCost_ActionPoints		ActionPointCost;
 	local X2AbilityCost_ForcePoints			ForcePointCost;
 
-	Template = class'X2Ability_DefaultAbilitySet'.static.AddGrapple('ForceJumpMovement');
+	Template = class'X2Ability_DefaultAbilitySet'.static.AddGrapple('ForceJump');
 
 	Template.IconImage = "img:///JediClassUI.UIPerk_jump";
 
@@ -1159,10 +1103,85 @@ static function X2AbilityTemplate ForceJumpMovement()
 
 	Template.BuildNewGameStateFn = ForceJump_BuildGameState;
 	Template.BuildVisualizationFn = ForceJump_BuildVisualization;
-	Template.ModifyNewContextFn = LeapStrike_ModifyActivatedAbilityContext;
+	Template.ModifyNewContextFn = ForceJump_ModifyActivatedAbilityContext;
 	Template.CinescriptCameraType = "";
 
+	Template.AdditionalAbilities.AddItem('ForceJumpTraversal');
+
 	return Template;
+}
+
+static simulated function ForceJump_ModifyActivatedAbilityContext(XComGameStateContext Context)
+{
+	local XComGameState_Unit UnitState;
+	local XComGameStateContext_Ability AbilityContext;
+	local XComGameStateHistory History;
+	local PathPoint NextPoint, EmptyPoint;
+	local PathingInputData InputData;
+	local XComWorldData World;
+	local TTile NewTileLocation, EndTileLocation;
+	local array<TTile> PathTiles;
+	local XComPrecomputedPath Path;
+	local int Index;
+
+	History = `XCOMHISTORY;
+	World = `XWORLD;
+
+	Path = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).GetPrecomputedPath();
+	
+	AbilityContext = XComGameStateContext_Ability(Context);
+	`assert(AbilityContext.InputContext.TargetLocations.Length > 0);
+	
+	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
+	
+	// Build the MovementData for the path
+	// First posiiton is the current location
+	InputData.MovementTiles.AddItem(UnitState.TileLocation);
+	
+	NextPoint.Position = World.GetPositionFromTileCoordinates(UnitState.TileLocation);
+	NextPoint.Traversal = eTraversal_Teleport;
+	NextPoint.PathTileIndex = 0;
+	InputData.MovementData.AddItem(NextPoint);
+
+	if(`PRES.GetTacticalHUD().GetTargetingMethod().GetPreAbilityPath(PathTiles))
+	{
+		EndTileLocation = PathTiles[PathTiles.Length - 1];
+	}
+	else
+	{
+		EndTileLocation = XComTacticalController(`PRES.GetTacticalHUD().PC).m_kPathingPawn.LastDestinationTile;
+	}
+
+	for(Index = 0; Index < Path.iNumKeyframes; Index++)
+	{
+		NewTileLocation = World.GetTileCoordinatesFromPosition(Path.akKeyframes[Index].vLoc);
+
+		if (NewTileLocation != EndTileLocation &&
+			class'Helpers'.static.FindTileInList(NewTileLocation, InputData.MovementTiles) == INDEX_NONE)
+		{
+			NextPoint = EmptyPoint;
+			NextPoint.Position = World.GetPositionFromTileCoordinates(NewTileLocation);
+			NextPoint.Traversal = eTraversal_Teleport;
+			NextPoint.PathTileIndex = InputData.MovementTiles.Length;
+			InputData.MovementData.AddItem(NextPoint);
+			InputData.MovementTiles.AddItem(NewTileLocation);
+		}
+	}
+
+
+	`LOG(GetFuncName() @ NewTileLocation.X @ NewTileLocation.Y @ NewTileLocation.Z,, 'X2JediClassWOTC');
+
+	NextPoint = EmptyPoint;
+	NextPoint.Position = World.GetPositionFromTileCoordinates(EndTileLocation);
+	NextPoint.Traversal = eTraversal_Landing;
+	NextPoint.PathTileIndex = InputData.MovementTiles.Length;
+	InputData.MovementData.AddItem(NextPoint);
+	InputData.MovementTiles.AddItem(EndTileLocation);
+	
+	//Now add the path to the input context
+	InputData.MovingUnitRef = UnitState.GetReference();
+	AbilityContext.InputContext.MovementPaths.Length = 0;
+	AbilityContext.InputContext.MovementPaths.AddItem(InputData);
 }
 
 simulated function XComGameState ForceJump_BuildGameState(XComGameStateContext Context)
@@ -1658,7 +1677,7 @@ static function EventListenerReturn ForceDrainListener(Object EventData, Object 
 }
 
 
-static function X2AbilityTemplate LightsaberSlash()
+static function X2AbilityTemplate LightsaberSlashOld()
 {
 	local X2AbilityTemplate                 Template;
 	local X2AbilityCost_ActionPoints        ActionPointCost;
@@ -1667,7 +1686,7 @@ static function X2AbilityTemplate LightsaberSlash()
 	local array<name>                       SkipExclusions;
 	local X2Condition_UnitProperty			AdjacencyCondition;	
 
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberSlash');
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberSlashOld');
 
 	Template.AbilitySourceName = 'eAbilitySource_Standard';
 	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_AlwaysShow;
@@ -3524,8 +3543,8 @@ static function X2AbilityTemplate LightsaberDeflectShot(name TemplateName)
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
 
 	Template.bFrameEvenWhenUnitIsHidden = true;
-	Template.CustomFireAnim = 'HL_ReflectStart';
-	Template.CustomFireKillAnim = 'HL_ReflectStart';
+	Template.CustomFireAnim = 'HL_LightsaberReflectStartA';
+	Template.CustomFireKillAnim = 'HL_LightsaberReflectStartA';
 	Template.ActionFireClass = class'X2Action_LightsaberDeflect';
 
 	Template.LocMissMessage = "";
@@ -3665,6 +3684,31 @@ function LightsaberDeflectShotMergeVisualization(X2Action BuildTree, out X2Actio
 
 	// The Target needs to wait to enter cover until after the attack
 	VisMgr.ConnectAction(TargetEnterCover, VisualizationTree, false, TargetReact);
+}
+
+static function X2AbilityTemplate AddSyncedAnimationDeathOverride()
+{
+	local X2AbilityTemplate Template;
+	local X2Effect_OverrideDeathAction DeathActionEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'SyncedAnimationDeathOverride');
+	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_hunter"; // TODO: This needs to be changed
+
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Neutral;
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	DeathActionEffect = new class'X2Effect_OverrideDeathAction';
+	DeathActionEffect.DeathActionClass = class'X2Action_SyncedAnimationDeath';
+	Template.AddTargetEffect(DeathActionEffect);
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+
+	return Template;
 }
 
 DefaultProperties

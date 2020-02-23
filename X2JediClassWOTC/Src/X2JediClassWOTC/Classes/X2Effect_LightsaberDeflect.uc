@@ -1,5 +1,6 @@
 class X2Effect_LightsaberDeflect extends X2Effect_Persistent config(JediClass);
 
+var config array<name> ValidWeaponCategories;        // valid weapon categories for deflect/reflect
 var config array<name> IgnoreDamageTypes;       //  effects with the listed damage type will be allowed to hit the original target
 var config array<name> IgnoreAbilities;         //  abilities listed here will be allowed to hit the original target
 var config array<name> IgnoreEffects;           //  if the original target is affected by this effects allow to hit
@@ -24,7 +25,7 @@ function bool ChangeHitResultForTarget(
 	local X2AbilityToHitCalc_StandardAim AttackToHit;
 	local X2AbilityTemplate AbilityTemplate;
 	local X2Effect_ApplyWeaponDamage DamageEffect;
-	local name CurrentEffect, DamageType;
+	local name CurrentEffect, DamageType, WeaponCat;
 	local UnitValue DeflectUsedValue, ReflectBonusValue;
 	local int Index, RandRoll, ReflectMalus, ReflectBonus, ModifiedHitChance;;
 
@@ -44,7 +45,8 @@ function bool ChangeHitResultForTarget(
 		return false;
 
 	// target must be wielding a lightsaber as their primary weapon (we'll deal with dual wielding conditions later?)
-	if (X2WeaponTemplate(TargetUnit.GetPrimaryWeapon().GetMyTemplate()).WeaponCat != 'lightsaber')
+	WeaponCat = X2WeaponTemplate(TargetUnit.GetPrimaryWeapon().GetMyTemplate()).WeaponCat;
+	if (default.ValidWeaponCategories.Find(WeaponCat) == INDEX_NONE)
 		return false;
 
 	// incoming attack must not have a non-reflectable damage type
@@ -65,18 +67,24 @@ function bool ChangeHitResultForTarget(
 
 	// incoming attack must not be a non-reflectable ability
 	if (default.IgnoreAbilities.Find(AbilityTemplate.DataName) != INDEX_NONE)
+	{
 		return false;
+	}
 
 	// target must not be affected by an effect that stops them from reflecting
 	foreach default.IgnoreEffects(CurrentEffect)
 	{
 		if (TargetUnit.IsUnitAffectedByEffectName(CurrentEffect))
+		{
+			`LOG(default.class @ GetFuncName() @ "false, IgnoreEffects" @ CurrentEffect,, ,, 'X2JediClassWOTC');
 			return false;
+		}
 	}
 
 	// target must not be in overwatch
 	if (TargetUnit.ReserveActionPoints.Length > 0)
 	{
+		`LOG(default.class @ GetFuncName() @ "false, is in overwatch",, ,, 'X2JediClassWOTC');
 		return false;
 	}
 	

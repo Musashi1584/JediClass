@@ -16,7 +16,7 @@ simulated function bool OnEffectTicked(const out EffectAppliedData ApplyEffectPa
 
 	// This happens while it is not the unit's turn, so it should have no action points
 	UnitState.ActionPoints.Length = 0;
-	UnitState.ActionPoints.AddItem(class'X2CharacterTemplateManager'.default.StandardActionPoint);
+	UnitState.ActionPoints.AddItem(class'X2CharacterTemplateManager'.default.MoveActionPoint);
 
 	bKeepEffect = super.OnEffectTicked(ApplyEffectParameters, kNewEffectState, NewGameState, FirstApplication, Player);
 
