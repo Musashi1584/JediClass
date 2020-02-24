@@ -2,7 +2,7 @@ class X2Action_ForceJump extends X2Action_Move;
 
 const StartLandingAnimationTime = 0.5;
 const MinPathTime = 0.1;
-const JumpStartPlayRate = 2.0;
+const JumpStartPlayRate = 2.3;
 const JumpStopPlayRate = 3.0;
 const JumpRateScale = 0.7;
 const StartScaleFrom = 1.5;
@@ -34,7 +34,7 @@ function Init()
 
 	if (DesiredLocation == EmptyVector)
 	{
-		if (AbilityContext.InputContext.MovementPaths[0].MovementData.Length > 0)
+		if (AbilityContext.InputContext.MovementPaths[0].MovementData.Length > 1)
 		{
 			DesiredLocation = AbilityContext.InputContext.MovementPaths[0].MovementData[AbilityContext.InputContext.MovementPaths[0].MovementData.Length - 1].Position;
 		}

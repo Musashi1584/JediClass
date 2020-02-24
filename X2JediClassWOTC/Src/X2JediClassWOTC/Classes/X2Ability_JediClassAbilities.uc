@@ -368,7 +368,7 @@ static function X2AbilityTemplate LeapStrike()
 	Template.CinescriptCameraType = "Ranger_Reaper";
 	Template.IconImage = "img:///JediClassUI.UIPerk_LeapStrike";
 	Template.bHideOnClassUnlock = false;
-	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SQUADDIE_PRIORITY;
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.STANDARD_SHOT_PRIORITY + 1;
 	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
 	
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
@@ -425,7 +425,7 @@ static function X2AbilityTemplate LeapStrike()
 	Template.SourceMissSpeech = 'SwordMiss';
 	//Template.CustomFireKillAnim = 'MV_MeleeKill';
 
-	//Template.ModifyNewContextFn = LeapStrike_ModifyActivatedAbilityContext;
+	Template.ModifyNewContextFn = PrecomputedPathMovement_ModifyActivatedAbilityContext;
 	Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
 	Template.BuildVisualizationFn = LeapStrike_BuildVisualization;
 
@@ -441,7 +441,7 @@ static function X2AbilityTemplate LeapStrike()
 	return Template;
 }
 
-static simulated function XComGameState LeapStrike_BuildGameState(XComGameStateContext Context)
+static simulated function XComGameState LeapStrike_BuildGameState_UNUSED(XComGameStateContext Context)
 {
 	local XComGameState NewGameState;
 	local XComGameState_Unit UnitState;
@@ -1068,15 +1068,15 @@ static function X2AbilityTemplate ForceJump()
 	local X2AbilityCost_ActionPoints		ActionPointCost;
 	local X2AbilityCost_ForcePoints			ForcePointCost;
 
-	Template = class'X2Ability_DefaultAbilitySet'.static.AddGrapple('ForceJump');
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceJump');
 
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.ARMOR_ACTIVE_PRIORITY;
+	Template.Hostility = eHostility_Movement;
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 	Template.IconImage = "img:///JediClassUI.UIPerk_jump";
-
-	Template.AbilityShooterConditions.Length = 0;
+	Template.bLimitTargetIcons = true;
 
 	Template.TargetingMethod = class'X2TargetingMethod_ForceJump';
-
-	Template.AbilityCosts.Length = 0;
 
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
 	ActionPointCost.iNumPoints = 1;
@@ -1090,10 +1090,14 @@ static function X2AbilityTemplate ForceJump()
 
 	Template.AbilityCooldown = none;
 
-	CursorTarget = new class'X2AbilityTarget_Cursor';
-	CursorTarget.bRestrictToSquadsightRange = false;
-	CursorTarget.FixedAbilityRange = 24;
-	Template.AbilityTargetStyle = CursorTarget;
+	//CursorTarget = new class'X2AbilityTarget_Cursor';
+	//CursorTarget.bRestrictToSquadsightRange = false;
+	//CursorTarget.FixedAbilityRange = 24;
+	//Template.AbilityTargetStyle = CursorTarget;
+
+	Template.AbilityTargetStyle = new class'X2AbilityTarget_Path';
+
+	Template.AbilityTriggers.AddItem(new class'X2AbilityTrigger_PlayerInput');
 
 	UnitProperty = new class'X2Condition_UnitProperty';
 	UnitProperty.ExcludeDead = true;
@@ -1101,9 +1105,11 @@ static function X2AbilityTemplate ForceJump()
 	UnitProperty.ExcludeFriendlyToSource = false;
 	Template.AbilityShooterConditions.AddItem(UnitProperty);
 
-	Template.BuildNewGameStateFn = ForceJump_BuildGameState;
+	Template.AddShooterEffectExclusions();
+
+	Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState; //ForceJump_BuildGameState;
 	Template.BuildVisualizationFn = ForceJump_BuildVisualization;
-	Template.ModifyNewContextFn = ForceJump_ModifyActivatedAbilityContext;
+	Template.ModifyNewContextFn = PrecomputedPathMovement_ModifyActivatedAbilityContext;
 	Template.CinescriptCameraType = "";
 
 	Template.AdditionalAbilities.AddItem('ForceJumpTraversal');
@@ -1111,7 +1117,7 @@ static function X2AbilityTemplate ForceJump()
 	return Template;
 }
 
-static simulated function ForceJump_ModifyActivatedAbilityContext(XComGameStateContext Context)
+static simulated function PrecomputedPathMovement_ModifyActivatedAbilityContext(XComGameStateContext Context)
 {
 	local XComGameState_Unit UnitState;
 	local XComGameStateContext_Ability AbilityContext;
@@ -1119,7 +1125,8 @@ static simulated function ForceJump_ModifyActivatedAbilityContext(XComGameStateC
 	local PathPoint NextPoint, EmptyPoint;
 	local PathingInputData InputData;
 	local XComWorldData World;
-	local TTile NewTileLocation, EndTileLocation;
+	local TTile EmptyTile, NewTileLocation, EndTileLocation, PathEndTile;
+	local vector PathEndPosition;
 	local array<TTile> PathTiles;
 	local XComPrecomputedPath Path;
 	local int Index;
@@ -1133,7 +1140,7 @@ static simulated function ForceJump_ModifyActivatedAbilityContext(XComGameStateC
 	`assert(AbilityContext.InputContext.TargetLocations.Length > 0);
 	
 	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityContext.InputContext.SourceObject.ObjectID));
-	
+
 	// Build the MovementData for the path
 	// First posiiton is the current location
 	InputData.MovementTiles.AddItem(UnitState.TileLocation);
@@ -1147,59 +1154,68 @@ static simulated function ForceJump_ModifyActivatedAbilityContext(XComGameStateC
 	{
 		EndTileLocation = PathTiles[PathTiles.Length - 1];
 	}
-	else
+	else if (AbilityContext.InputContext.AbilityTemplateName == 'ForceJump')
 	{
-		EndTileLocation = XComTacticalController(`PRES.GetTacticalHUD().PC).m_kPathingPawn.LastDestinationTile;
+		PathEndPosition = AbilityContext.InputContext.TargetLocations[0];
+		EndTileLocation = World.GetTileCoordinatesFromPosition(PathEndPosition);
 	}
-
-	for(Index = 0; Index < Path.iNumKeyframes; Index++)
-	{
-		NewTileLocation = World.GetTileCoordinatesFromPosition(Path.akKeyframes[Index].vLoc);
-
-		if (NewTileLocation != EndTileLocation &&
-			class'Helpers'.static.FindTileInList(NewTileLocation, InputData.MovementTiles) == INDEX_NONE)
-		{
-			NextPoint = EmptyPoint;
-			NextPoint.Position = World.GetPositionFromTileCoordinates(NewTileLocation);
-			NextPoint.Traversal = eTraversal_Teleport;
-			NextPoint.PathTileIndex = InputData.MovementTiles.Length;
-			InputData.MovementData.AddItem(NextPoint);
-			InputData.MovementTiles.AddItem(NewTileLocation);
-		}
-	}
-
-
-	`LOG(GetFuncName() @ NewTileLocation.X @ NewTileLocation.Y @ NewTileLocation.Z,, 'X2JediClassWOTC');
-
-	NextPoint = EmptyPoint;
-	NextPoint.Position = World.GetPositionFromTileCoordinates(EndTileLocation);
-	NextPoint.Traversal = eTraversal_Landing;
-	NextPoint.PathTileIndex = InputData.MovementTiles.Length;
-	InputData.MovementData.AddItem(NextPoint);
-	InputData.MovementTiles.AddItem(EndTileLocation);
 	
+	//PathEndPosition = Path.GetEndPosition();
+	//PathEndTile = World.GetTileCoordinatesFromPosition(PathEndPosition);
+	//EndTileLocation.Z = World.GetFloorTileZ(PathEndTile, true);
+
+	if (EndTileLocation != EmptyTile)
+	{
+		for(Index = 0; Index < Path.iNumKeyframes; Index++)
+		{
+			NewTileLocation = World.GetTileCoordinatesFromPosition(Path.akKeyframes[Index].vLoc);
+
+			if (NewTileLocation != EndTileLocation &&
+				class'Helpers'.static.FindTileInList(NewTileLocation, InputData.MovementTiles) == INDEX_NONE)
+			{
+				NextPoint = EmptyPoint;
+				NextPoint.Position = World.GetPositionFromTileCoordinates(NewTileLocation);
+				NextPoint.Traversal = eTraversal_Teleport;
+				NextPoint.PathTileIndex = InputData.MovementTiles.Length;
+				InputData.MovementData.AddItem(NextPoint);
+				InputData.MovementTiles.AddItem(NewTileLocation);
+
+				`LOG(GetFuncName() @ NewTileLocation.X @ NewTileLocation.Y @ NewTileLocation.Z,, 'X2JediClassWOTC');
+			}
+		}
+
+		NextPoint = EmptyPoint;
+		NextPoint.Position = World.GetPositionFromTileCoordinates(EndTileLocation);
+		NextPoint.Traversal = eTraversal_Landing;
+		NextPoint.PathTileIndex = InputData.MovementTiles.Length;
+		InputData.MovementData.AddItem(NextPoint);
+		InputData.MovementTiles.AddItem(EndTileLocation);
+		`LOG(GetFuncName() @ EndTileLocation.X @ EndTileLocation.Y @ EndTileLocation.Z,, 'X2JediClassWOTC');
+	}
+
 	//Now add the path to the input context
 	InputData.MovingUnitRef = UnitState.GetReference();
 	AbilityContext.InputContext.MovementPaths.Length = 0;
 	AbilityContext.InputContext.MovementPaths.AddItem(InputData);
 }
 
-simulated function XComGameState ForceJump_BuildGameState(XComGameStateContext Context)
+simulated function XComGameState ForceJump_BuildGameState_UNUSED(XComGameStateContext Context)
 {
 	local XComWorldData WorldData;
 	local XComGameState NewGameState;
 	local XComGameState_Unit MovingUnitState;
-	//local XComDestructibleActor WindowToBreak;
+	local XComDestructibleActor WindowToBreak;
 	local XComGameState_Ability AbilityState;	
 	local XComGameStateContext_Ability AbilityContext;
 	local X2AbilityTemplate AbilityTemplate;
 	
 	local TTile UnitTile;
 	local TTile PrevUnitTile;
-	//local TTile OverhangTile;
+	local TTile OverhangTile;
 	local XComGameStateHistory History;
 	local Vector TilePos, PrevTilePos, TilePosDiff;
-	//local UnitPeekSide PeekSide;
+	local UnitPeekSide PeekSide;
+	local X2Ability_DefaultAbilitySet DefaultSet;
 
 	WorldData = `XWORLD;
 	History = `XCOMHISTORY;
@@ -1226,7 +1242,8 @@ simulated function XComGameState ForceJump_BuildGameState(XComGameStateContext C
 	//{
 	//	if(WindowToBreak != none)
 	//	{
-	//		BreakGrappleWindow(NewGameState, WindowToBreak, MovingUnitState, UnitTile, OverhangTile);
+	//		DefaultSet = new class'X2Ability_DefaultAbilitySet';
+	//		DefaultSet.BreakGrappleWindow(NewGameState, WindowToBreak, MovingUnitState, UnitTile, OverhangTile);
 	//		MovingUnitState.BreakConcealmentNewGameState(NewGameState);
 	//	}
 	//}
@@ -1245,8 +1262,9 @@ simulated function XComGameState ForceJump_BuildGameState(XComGameStateContext C
 		MovingUnitState.MoveOrientation = Rotator(TilePosDiff);
 	}
 
-	AbilityContext.ResultContext.bPathCausesDestruction = MoveAbility_StepCausesDestruction(MovingUnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
+	AbilityContext.ResultContext.bPathCausesDestruction = AbilityContext.ResultContext.bPathCausesDestruction || MoveAbility_StepCausesDestruction(MovingUnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
 	MoveAbility_AddTileStateObjects(NewGameState, MovingUnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
+	MoveAbility_AddNewlySeenUnitStateObjects(NewGameState, MovingUnitState, AbilityContext.InputContext, 0);
 
 	//Apply the cost of the ability
 	AbilityTemplate.ApplyCost(AbilityContext, AbilityState, MovingUnitState, none, NewGameState);
@@ -1326,7 +1344,7 @@ simulated function ForceJump_BuildVisualization(XComGameState VisualizeGameState
 		ActionMetadata.StateObject_NewState = EnvironmentDamage;
 		ActionMetadata.VisualizeActor = History.GetVisualizer(EnvironmentDamage.ObjectID);
 
-		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree(ActionMetadata, VisualizeGameState.GetContext(), false, ActionMetadata.LastActionAdded);
+		class'X2Action_WaitForAbilityEffect'.static.AddToVisualizationTree(ActionMetadata, VisualizeGameState.GetContext(), false, ForceJumpAction);
 		class'X2Action_ApplyWeaponDamageToTerrain'.static.AddToVisualizationTree(ActionMetadata, VisualizeGameState.GetContext());
 	}
 
