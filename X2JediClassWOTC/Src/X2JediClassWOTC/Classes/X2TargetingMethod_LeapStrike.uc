@@ -56,10 +56,10 @@ function DirectSetTarget(int TargetIndex)
 	UpdatePathComponents(TargetTile);
 }
 
-function TickUpdatedDestinationTile(TTile NewDestination)
+function TickUpdatedDestinationTile(TTile TargetTile)
 {
-	super.TickUpdatedDestinationTile(NewDestination);
-	UpdatePathComponents(NewDestination);
+	super.TickUpdatedDestinationTile(TargetTile);
+	UpdatePathComponents(TargetTile);
 }
 
 function UpdatePathComponents(TTile Destination)
@@ -67,37 +67,6 @@ function UpdatePathComponents(TTile Destination)
 	GrenadePath.bUseOverrideTargetLocation = true;
 	GrenadePath.OverrideTargetLocation = `XWORLD.GetPositionFromTileCoordinates(Destination);
 	PathingPawn.RenderablePath.SetHidden(true);
-	UpdatePathingPawnTile(Destination);
-
-}
-
-function UpdatePathingPawnTile(TTile TargetTile)
-{
-	local array<Vector> TargetLocations;
-	local TTile Tile;
-	local int Index;
-
-	for (Index = PathingPawn.PossibleTiles.Length - 1; Index >=0; Index--)
-	{
-		Tile = PathingPawn.PossibleTiles[Index];
-
-		if (TargetTile != Tile)
-		{
-			continue;
-		}
-
-		TargetLocations.Length = 0;
-		TargetLocations.AddItem(`XWORLD.GetPositionFromTileCoordinates(Tile));
-
-		if (ValidateTargetLocations(TargetLocations) != 'AA_Success')
-		{
-			`LOG(default.class @ GetFuncName( )@ "Removing Tile" @ Index @ "from PossibleTiles" @ Tile.X @ Tile.Y @ Tile.Z,, 'X2JediClassWOTC');
-			PathingPawn.PossibleTiles.Remove(Index, 1);
-			
-		}
-	}
-
-	PathingPawn.UpdatePossibleTilesVisuals();
 }
 
 protected function Vector GetPathDestination()
@@ -143,11 +112,43 @@ function Update(float DeltaTime)
 		}
 		else
 		{
+			NewTile = `XWORLD.GetTileCoordinatesFromPosition(NewTargetLocation);
+			UpdatePathingPawnTile(NewTile);
 			DrawInvalidTile();
 		}
 	}
 
 	PathingPawn.RenderablePath.SetHidden(true);
+}
+
+function UpdatePathingPawnTile(TTile TargetTile)
+{
+	local vector GrenadePathLocation;
+	local array<Vector> TargetLocations;
+	local TTile Tile, GrenadePathTile;
+	local int Index;
+
+	for (Index = PathingPawn.PossibleTiles.Length - 1; Index >=0; Index--)
+	{
+		Tile = PathingPawn.PossibleTiles[Index];
+
+		if (TargetTile != Tile)
+		{
+			continue;
+		}
+
+		GrenadePathLocation = GrenadePath.GetEndPosition();
+		GrenadePathTile = `XWORLD.GetTileCoordinatesFromPosition(GrenadePathLocation);
+		
+		if (GrenadePathTile != TargetTile)
+		{
+			`LOG(default.class @ GetFuncName( )@ "Removing Tile" @ Index @ "from PossibleTiles" @ Tile.X @ Tile.Y @ Tile.Z,, 'X2JediClassWOTC');
+			PathingPawn.PossibleTiles.Remove(Index, 1);
+			
+		}
+	}
+
+	PathingPawn.UpdatePossibleTilesVisuals();
 }
 
 function name ValidateTargetLocations(const array<Vector> TargetLocations)
