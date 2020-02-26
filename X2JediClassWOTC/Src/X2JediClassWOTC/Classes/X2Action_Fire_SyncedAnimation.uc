@@ -1,6 +1,6 @@
 class X2Action_Fire_SyncedAnimation extends X2Action_Fire;
 
-const SyncedAnimChance = 99;//50;
+const SyncedAnimChance = 0;//50;
 
 function Init()
 {

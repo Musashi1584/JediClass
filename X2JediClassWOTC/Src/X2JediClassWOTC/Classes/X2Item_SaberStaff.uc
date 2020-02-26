@@ -72,10 +72,10 @@ static function X2DataTemplate CreateTemplate_Saberstaff_CV()
 	Template.iEnvironmentDamage = default.SABERSTAFF_CV_IENVIRONMENTDAMAGE;
 	Template.BaseDamage.DamageType = 'Melee';
 	
-	Template.StartingItem = true;
+	Template.StartingItem = false;
 	Template.CanBeBuilt = false;
 	
-	Template.bInfiniteItem = true;
+	Template.bInfiniteItem = false;
 	Template.DamageTypeTemplateName = 'Melee';
 	
 	return Template;
@@ -119,7 +119,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_MG()
 	Template.iEnvironmentDamage = default.SABERSTAFF_MAGNETIC_IENVIRONMENTDAMAGE;
 	Template.BaseDamage.DamageType = 'Melee';
 
-	Template.CreatorTemplateName = 'WOTCSaberstaff_Magnetic_Schematic'; // The schematic which creates this item
+	//Template.CreatorTemplateName = 'WOTCSaberstaff_Magnetic_Schematic'; // The schematic which creates this item
 
 	Template.BaseItem = 'Saberstaff_CV'; // Which item this will be upgraded from
 		
@@ -128,7 +128,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_MG()
 
 	//Template.BonusWeaponEffects.AddItem(class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, class'X2Item_DefaultWeapons'.default.RANGERSWORD_MAGNETIC_STUNCHANCE));
 		
-	Template.bInfiniteItem = true;
+	Template.bInfiniteItem = false;
 	Template.DamageTypeTemplateName = 'Melee';
 	
 	return Template;
@@ -173,7 +173,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_BM()
 	Template.iEnvironmentDamage = default.SABERSTAFF_BEAM_IENVIRONMENTDAMAGE;
 	Template.BaseDamage.DamageType = 'Melee';
 
-	Template.CreatorTemplateName = 'WOTCSaberstaff_Beam_Schematic'; // The schematic which creates this item
+	//Template.CreatorTemplateName = 'WOTCSaberstaff_Beam_Schematic'; // The schematic which creates this item
 
 	Template.BaseItem = 'Saberstaff_MG'; // Which item this will be upgraded from
 		
@@ -183,7 +183,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_BM()
 	//Template.BonusWeaponEffects.AddItem(class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, class'X2Item_DefaultWeapons'.default.RANGERSWORD_MAGNETIC_STUNCHANCE));
 	//Template.BonusWeaponEffects.AddItem(class'X2StatusEffects'.static.CreateBurningStatusEffect(3, 0));
 		
-	Template.bInfiniteItem = true;
+	Template.bInfiniteItem = false;
 	Template.DamageTypeTemplateName = 'Melee';
 	
 	return Template;

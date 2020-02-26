@@ -368,7 +368,7 @@ static function X2AbilityTemplate LeapStrike()
 	Template.CinescriptCameraType = "Ranger_Reaper";
 	Template.IconImage = "img:///JediClassUI.UIPerk_LeapStrike";
 	Template.bHideOnClassUnlock = false;
-	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.STANDARD_SHOT_PRIORITY + 1;
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SQUADDIE_PRIORITY + 1;
 	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
 	
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';

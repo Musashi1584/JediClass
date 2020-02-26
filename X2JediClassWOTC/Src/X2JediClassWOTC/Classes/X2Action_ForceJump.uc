@@ -24,6 +24,10 @@ var XComPrecomputedPath Path;
 var XComGameStateContext_Ability AbilityContext;
 var bool bSkipLandingAnimation;
 
+var string ForceJumpSoundCuePath;
+var SoundCue ForceJumpSoundCue;
+var AudioComponent ForceJumpSoundComponent;
+
 function Init()
 {
 	local vector EmptyVector;
@@ -44,6 +48,10 @@ function Init()
 			bSkipJump = true;
 		}
 	}
+
+	ForceJumpSoundCue = SoundCue(`CONTENT.RequestGameArchetype(ForceJumpSoundCuePath));
+	ForceJumpSoundComponent = CreateAudioComponent(ForceJumpSoundCue, false);
+
 	`LOG(default.class @ GetFuncName() @ `ShowVar(AbilityContext) @ `ShowVar(DesiredLocation),, 'X2JediClassWOTC');
 }
 
@@ -191,6 +199,7 @@ Begin:
 	Params = default.Params;
 	Params.AnimName = 'HL_ForceJumpLoop';
 	PlayingSequence = UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
+	ForceJumpSoundComponent.Play();
 	while(!bStartLandingAnimation)
 	{
 		//PlayingSequence.ReplayAnim();
@@ -204,6 +213,7 @@ Begin:
 		
 	}
 	PlayingSequence.StopAnim();
+	ForceJumpSoundComponent.Stop();
 
 	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
 	UnitPawn.EnableRMA(true, true);
@@ -213,17 +223,9 @@ Begin:
 
 	if (!bSkipLandingAnimation)
 	{
-		//DesiredRotation = Rotator(Normal(DesiredLocation - UnitPawn.Location));
 		Params = default.Params;
 		Params.AnimName = 'HL_ForceJumpStop';
 		Params.PlayRate = JumpStopPlayRate;
-		//Params.DesiredEndingAtoms.Add(1);
-		//Params.DesiredEndingAtoms[0].Scale = 1.0f;
-		//Params.DesiredEndingAtoms[0].Translation = Path.OverrideTargetLocation;
-		//DesiredRotation = UnitPawn.Rotation;
-		//DesiredRotation.Pitch = 0.0f;
-		//DesiredRotation.Roll = 0.0f;
-		//Params.DesiredEndingAtoms[0].Rotation = QuatFromRotator(DesiredRotation);
 		FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params));
 		UnitPawn.bSkipIK = false;
 	}
@@ -235,61 +237,8 @@ Begin:
 	CompleteAction();
 }
 
-//function CompleteAction()
-//{
-//	super.CompleteAction();
-//
-//	// since we step out of and step into cover from different tiles, 
-//	// need to set the enter cover restore to the destination location
-//	Unit.RestoreLocation = DesiredLocation;
-//}
-
 defaultproperties
 {
+	ForceJumpSoundCuePath="JediClassAbilities.SFX.Jumpbuild_Cue"
 	ProjectileHit = false;
 }
-
-
-	//while( ProjectileHit == false )
-	//{
-	//	Sleep(0.0f);
-	//}
-
-	// Have an emphasis on seeing the grapple tight
-	//Sleep(0.1f);
-
-	//Params.AnimName = 'NO_GrappleStart';
-	//DesiredLocation.Z = Unit.GetDesiredZForLocation(DesiredLocation);
-	//DesiredRotation = Rotator(Normal(DesiredLocation - UnitPawn.Location));
-	//StartingAtom.Rotation = QuatFromRotator(DesiredRotation);
-	//StartingAtom.Translation = UnitPawn.Location;
-	//StartingAtom.Scale = 1.0f;
-	//UnitPawn.GetAnimTreeController().GetDesiredEndingAtomFromStartingAtom(Params, StartingAtom);
-	//PlayingSequence = UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
-	//
-	//// hide the targeting icon
-	//Unit.SetDiscState(eDS_None);
-	//
-	//StartingLocation = UnitPawn.Location;
-	//StopDistanceSquared = Square(VSize(DesiredLocation - StartingLocation) - UnitPawn.fStrangleStopDistance);
-	//
-	//// to protect against overshoot, rather than check the distance to the target, we check the distance from the source.
-	//// Otherwise it is possible to go from too far away in front of the target, to too far away on the other side
-	//DistanceFromStartSquared = 0;
-	//while( DistanceFromStartSquared < StopDistanceSquared )
-	//{
-	//	if( !PlayingSequence.bRelevant || !PlayingSequence.bPlaying || PlayingSequence.AnimSeq == None )
-	//	{
-	//		if( DistanceFromStartSquared < StopDistanceSquared )
-	//		{
-	//			`RedScreen("Grapple never made it to the destination");
-	//		}
-	//		break;
-	//	}
-	//
-	//	Sleep(0.0f);
-	//	DistanceFromStartSquared = VSizeSq(UnitPawn.Location - StartingLocation);
-	//}
-
-	// send messages to do the window break visualization
-	//SendWindowBreakNotifies();

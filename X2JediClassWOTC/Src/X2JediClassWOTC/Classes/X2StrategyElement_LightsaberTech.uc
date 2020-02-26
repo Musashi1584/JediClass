@@ -36,7 +36,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_Conventional_Project()
 
 	// Cost
 	Artifacts.ItemTemplateName = 'EleriumCore';
-	Artifacts.Quantity = 1;
+	Artifacts.Quantity = 0;
 	Template.Cost.ArtifactCosts.AddItem(Artifacts);
 
 	Resources.ItemTemplateName = 'Supplies';
