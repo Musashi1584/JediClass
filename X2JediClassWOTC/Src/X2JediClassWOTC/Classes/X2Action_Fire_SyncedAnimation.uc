@@ -1,10 +1,10 @@
 class X2Action_Fire_SyncedAnimation extends X2Action_Fire;
 
-const SyncedAnimChance = 0;//50;
+const SyncedAnimChance = 40;//50;
 
 function Init()
 {
-	local name SyncedFireAnimName, SyncedDeathAnim;
+	local name SyncedFireAnimName;
 	local int Index, RandRoll;
 	local array<SyncedAnimation> FoundSequences;
 	local SyncedAnimation Sequence;

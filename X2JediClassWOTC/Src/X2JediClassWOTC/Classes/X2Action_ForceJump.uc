@@ -2,10 +2,10 @@ class X2Action_ForceJump extends X2Action_Move;
 
 const StartLandingAnimationTime = 0.5;
 const MinPathTime = 0.1;
-const JumpStartPlayRate = 2.3;
+const JumpStartPlayRate = 3.0;
 const JumpStopPlayRate = 3.0;
-const JumpRateScale = 0.7;
-const StartScaleFrom = 1.5;
+const JumpRateScale = 0.5;
+const StartScaleFrom = 0.1;
 const StartJumpLoopTransitionEarly = 0.2;
 
 var vector  DesiredLocation;
@@ -82,21 +82,24 @@ function NotifyEnvironmentDamage(int PreviousPathTileIndex, bool bFragileOnly = 
 
 		foreach LastInGameStateChain.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamage)
 		{
-			`log(`showvar(EnvironmentDamage));
+			`log(default.class @ GetFuncName() @ `showvar(EnvironmentDamage),, 'X2JediClassWOTC');
 			if (EnvironmentDamage.DamageCause.ObjectID != Unit.ObjectID)
 				continue;
+			
 			HitLocation = WorldData.GetPositionFromTileCoordinates(EnvironmentDamage.HitLocationTile);			
 			PathTile = AbilityContext.InputContext.MovementPaths[MovePathIndex].MovementTiles[Index];
 			TileLocation = WorldData.GetPositionFromTileCoordinates(PathTile);
 			
 			DestroyTileDistance = VSize(HitLocation - TileLocation);
-			`log(`showvar(TileLocation));
-			`log(`showvar(HitLocation));
-			`log(`showvar(DestroyTileDistance));
+
+			`log(default.class @ GetFuncName() @ `showvar(TileLocation),, 'X2JediClassWOTC');
+			`log(default.class @ GetFuncName() @ `showvar(HitLocation),, 'X2JediClassWOTC');
+			`log(default.class @ GetFuncName() @ `showvar(DestroyTileDistance),, 'X2JediClassWOTC');
+
 			if(DestroyTileDistance < (class'XComWorldData'.const.WORLD_StepSize * TriggerDistance)) /* for force jump purposes, don't care about the fragile flag */
 			{				
 				`XEVENTMGR.TriggerEvent('Visualizer_WorldDamage', EnvironmentDamage, self);				
-				`log("Shots fired!!");
+				`log(default.class @ GetFuncName() @ "Shots fired!!",, 'X2JediClassWOTC');
 			}
 		}
 	}
@@ -153,6 +156,10 @@ function InterpolatePath(float StartZ)
 	local int Index;
 	local float Diff, MaxDiff, Decrement;
 
+	`LOG(default.class @ GetFuncName() @
+		"PathTime" @ Path.akKeyframes[Path.iNumKeyframes-1].fTime
+	,, 'X2JediClassWOTC');
+
 	Diff = Path.akKeyframes[0].vLoc.Z - StartZ;
 	MaxDiff = Diff;
 
@@ -201,15 +208,19 @@ simulated state Executing
 	}
 
 Begin:
-	`LOG(default.class @ GetFuncName() @ `ShowVar(UnitPawn.Location) @ `ShowVar(DesiredLocation) @ `ShowVar(bSkipJump),, 'X2JediClassWOTC');
+	Path = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).GetPrecomputedPath();
+
+	`LOG(default.class @ GetFuncName() @
+		`ShowVar(bSkipJump) @
+		`ShowVar(UnitPawn.Location) @
+		`ShowVar(DesiredLocation)
+	,, 'X2JediClassWOTC');
 
 	if (bSkipJump)
 	{
 		CompleteAction();
 	}
 	
-	Path = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).GetPrecomputedPath();
-
 	UnitPawn.EnableRMA(true, true);
 	UnitPawn.EnableRMAInteractPhysics(true);
 	UnitPawn.bSkipIK = true;
@@ -255,7 +266,6 @@ Begin:
 		
 	}
 	PlayingSequence.StopAnim();
-	ForceJumpSoundComponent.Stop();
 
 	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
 	UnitPawn.EnableRMA(true, true);
@@ -271,10 +281,12 @@ Begin:
 		FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params));
 		UnitPawn.bSkipIK = false;
 	}
+	ForceJumpSoundComponent.Stop();
 
 	`LOG(default.class @ GetFuncName() @ `ShowVar(Params.AnimName),, 'X2JediClassWOTC');
 
 	UnitPawn.SetLocation(Path.OverrideTargetLocation);
+	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
 
 	CompleteAction();
 }
@@ -283,10 +295,5 @@ defaultproperties
 {
 	ForceJumpSoundCuePath="JediClassAbilities.SFX.Jumpbuild_Cue"
 	ProjectileHit = false;
+	TriggerDistance = 0.5
 }
-
-
-	defaultproperties
-	{
-		TriggerDistance = 0.5
-	}

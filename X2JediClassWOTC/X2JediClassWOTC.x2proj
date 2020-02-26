@@ -223,6 +223,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\X2StrategyElement_LightsaberTech.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2TargetingMethod_BattlePregognition.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2TargetingMethod_ForceJump.uc">
       <SubType>Content</SubType>
     </Content>

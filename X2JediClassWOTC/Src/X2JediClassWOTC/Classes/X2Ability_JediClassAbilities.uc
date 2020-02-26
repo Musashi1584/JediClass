@@ -162,7 +162,6 @@ static function X2AbilityTemplate BattlePrecognition()
 	local X2Effect_ReserveActionPoints      ReserveActionPointsEffect;
 	local array<name>                       SkipExclusions;
 	local X2Effect_TriggerAbilityReaction   CoveringFireEffect;
-	local X2Condition_AbilityProperty       CoveringFireCondition;
 	local X2Condition_UnitProperty          ConcealedCondition;
 	local X2Effect_SetUnitValue             UnitValueEffect;
 	local X2Condition_UnitEffects           SuppressedCondition;
@@ -257,6 +256,7 @@ static function X2AbilityTemplate BattlePrecognitionLeapStrike()
 	local X2AbilityCost_ForcePoints							FPCost;
 	local X2Effect_Persistent								ShadowStepEffect;
 	local X2Condition_Visibility							VisibilityCondition;
+	local X2Effect_OverrideDeathAction						DeathActionEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'BattlePrecognitionLeapStrike');
 
@@ -283,17 +283,9 @@ static function X2AbilityTemplate BattlePrecognitionLeapStrike()
 	Template.AbilityToHitCalc = StandardMelee;
 	
 	Template.AbilityTargetStyle = new class'X2AbilityTarget_MovingMelee';
-	Template.TargetingMethod = class'X2TargetingMethod_LeapStrike';
+	Template.TargetingMethod = class'X2TargetingMethod_BattlePregognition';
 
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
-	//Template.AbilityTriggers.AddItem(new class'X2AbilityTrigger_EndOfMove');
-
-	//EventListener = new class'X2AbilityTrigger_EventListener';
-	//EventListener.ListenerData.Deferral = ELD_OnStateSubmitted;
-	//EventListener.ListenerData.EventFn = class'X2Ability_JediClassAbilities'.static.BattlePrecognitionListener;
-	//EventListener.ListenerData.EventID = 'AbilityActivated';
-	//EventListener.ListenerData.Filter = eFilter_None;
-	//Template.AbilityTriggers.AddItem(EventListener);
 
 	// Target Conditions
 	//
@@ -315,6 +307,10 @@ static function X2AbilityTemplate BattlePrecognitionLeapStrike()
 	ShadowStepEffect.BuildPersistentEffect(1, false, false);
 	Template.AddShooterEffect(ShadowStepEffect);
 
+	DeathActionEffect = new class'X2Effect_OverrideDeathAction';
+	DeathActionEffect.DeathActionClass = class'X2Action_SyncedAnimationDeath';
+	Template.AddTargetEffect(DeathActionEffect);
+
 	// Damage Effect
 	//
 	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
@@ -328,9 +324,8 @@ static function X2AbilityTemplate BattlePrecognitionLeapStrike()
 	//
 	Template.SourceMissSpeech = 'SwordMiss';
 
-	Template.CustomFireKillAnim = 'MV_MeleeKill';
+	Template.ActionFireClass = class'X2Action_Fire_SyncedAnimation';
 
-	//Template.ModifyNewContextFn = LeapStrike_ModifyActivatedAbilityContext;
 	Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
 	Template.BuildVisualizationFn = LeapStrike_BuildVisualization;
 
@@ -358,7 +353,6 @@ static function X2AbilityTemplate LeapStrike()
 	local X2Effect_Persistent								ShadowStepEffect;
 	local X2Condition_Visibility							VisibilityCondition;
 	local X2Effect_OverrideDeathAction						DeathActionEffect;
-	//local X2Effect_PersistentTraversalChange				TeleportEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'LeapStrike');
 
@@ -640,7 +634,12 @@ function LeapStrike_BuildVisualization(XComGameState VisualizeGameState)
 
 			if( !AbilityTemplate.bSkipFireAction )
 			{
+				//MoveTurnAction = X2Action_MoveTurn(class'X2Action_MoveTurn'.static.AddToVisualizationTree(SourceData, Context, false, ForceJumpAction));
+				//MoveTurnAction.m_vFacePoint = Context.InputContext.TargetLocations[0];
+				//MoveTurnAction.ForceSetPawnRotation = true;
+
 				AddedAction = AbilityTemplate.ActionFireClass.static.AddToVisualizationTree(SourceData, Context, false, SourceData.LastActionAdded);
+				
 				//MoveEnd = X2Action_MoveEnd(VisualizationMgr.GetNodeOfType(VisualizationMgr.BuildVisTree, class'X2Action_MoveEnd', SourceData.VisualizeActor));				
 				//
 				//if (MoveEnd != none)
@@ -1064,7 +1063,6 @@ static function X2AbilityTemplate ForceJump()
 {
 	local X2AbilityTemplate					Template;
 	local X2Condition_UnitProperty			UnitProperty;
-	local X2AbilityTarget_Cursor			CursorTarget;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
 	local X2AbilityCost_ForcePoints			ForcePointCost;
 
@@ -1089,11 +1087,6 @@ static function X2AbilityTemplate ForceJump()
 	Template.AbilityCosts.AddItem(ForcePointCost);
 
 	Template.AbilityCooldown = none;
-
-	//CursorTarget = new class'X2AbilityTarget_Cursor';
-	//CursorTarget.bRestrictToSquadsightRange = false;
-	//CursorTarget.FixedAbilityRange = 24;
-	//Template.AbilityTargetStyle = CursorTarget;
 
 	Template.AbilityTargetStyle = new class'X2AbilityTarget_Path';
 
@@ -1125,7 +1118,7 @@ static simulated function PrecomputedPathMovement_ModifyActivatedAbilityContext(
 	local PathPoint NextPoint, EmptyPoint;
 	local PathingInputData InputData;
 	local XComWorldData World;
-	local TTile EmptyTile, NewTileLocation, EndTileLocation, PathEndTile;
+	local TTile EmptyTile, NewTileLocation, EndTileLocation;
 	local vector PathEndPosition;
 	local array<TTile> PathTiles;
 	local XComPrecomputedPath Path;
@@ -1204,18 +1197,14 @@ simulated function XComGameState ForceJump_BuildGameState_UNUSED(XComGameStateCo
 	local XComWorldData WorldData;
 	local XComGameState NewGameState;
 	local XComGameState_Unit MovingUnitState;
-	local XComDestructibleActor WindowToBreak;
 	local XComGameState_Ability AbilityState;	
 	local XComGameStateContext_Ability AbilityContext;
 	local X2AbilityTemplate AbilityTemplate;
 	
 	local TTile UnitTile;
 	local TTile PrevUnitTile;
-	local TTile OverhangTile;
 	local XComGameStateHistory History;
 	local Vector TilePos, PrevTilePos, TilePosDiff;
-	local UnitPeekSide PeekSide;
-	local X2Ability_DefaultAbilitySet DefaultSet;
 
 	WorldData = `XWORLD;
 	History = `XCOMHISTORY;
@@ -1234,19 +1223,6 @@ simulated function XComGameState ForceJump_BuildGameState_UNUSED(XComGameStateCo
 	`assert(AbilityContext.InputContext.TargetLocations.Length == 1);
 	TilePos = AbilityContext.InputContext.TargetLocations[0];
 	UnitTile = WorldData.GetTileCoordinatesFromPosition(TilePos);
-
-	// fetch the overhang tile we are grappling to. If we had to grapple through a window to get there,
-	// break the window. We need to make this check before we change the unit's location
-	// @TODO
-	//if(WorldData.IsValidGrappleDestination(UnitTile, MovingUnitState, PeekSide, OverhangTile, WindowToBreak))
-	//{
-	//	if(WindowToBreak != none)
-	//	{
-	//		DefaultSet = new class'X2Ability_DefaultAbilitySet';
-	//		DefaultSet.BreakGrappleWindow(NewGameState, WindowToBreak, MovingUnitState, UnitTile, OverhangTile);
-	//		MovingUnitState.BreakConcealmentNewGameState(NewGameState);
-	//	}
-	//}
 
 	//Set the unit's new location
 	PrevUnitTile = MovingUnitState.TileLocation;
@@ -1286,7 +1262,7 @@ simulated function ForceJump_BuildVisualization(XComGameState VisualizeGameState
 	local XComGameState_EnvironmentDamage EnvironmentDamage;
 	local X2Action_PlaySoundAndFlyOver CharSpeechAction;
 	local X2Action_ForceJump ForceJumpAction;
-	local X2Action_ExitCover ExitCoverAction;
+	//local X2Action_ExitCover ExitCoverAction;
 	local X2Action_RevealArea RevealAreaAction;
 	local X2Action_UpdateFOW FOWUpdateAction;
 	local XComGameStateVisualizationMgr VisualizationMgr;
@@ -1316,7 +1292,7 @@ simulated function ForceJump_BuildVisualization(XComGameState VisualizeGameState
 	FOWUpdateAction = X2Action_UpdateFOW(class'X2Action_UpdateFOW'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
 	FOWUpdateAction.BeginUpdate = true;
 
-	ExitCoverAction = X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
+	X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
 	//ExitCoverAction.bUsePreviousGameState = true;
 
 	PathInputData = AbilityContext.InputContext.MovementPaths[0];
@@ -1403,7 +1379,6 @@ static function X2AbilityTemplate Holocron(name TemplateName, int PoolDivisor)
 	Template.AbilityTargetStyle = default.SelfTarget;
 	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
 
-	//  This is a dummy effect so that an icon shows up in the UI.
 	ForcePoolEffect = new class'X2Effect_JediForcePool_Holocron';
 	ForcePoolEffect.BuildPersistentEffect(1);
 	ForcePoolEffect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.LocLongDescription, "img:///UILibrary_PerkIcons.UIPerk_standard", false,, Template.AbilitySourceName);

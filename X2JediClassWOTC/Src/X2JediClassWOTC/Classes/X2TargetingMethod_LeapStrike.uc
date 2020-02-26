@@ -30,6 +30,11 @@ function Init(AvailableAction InAction, int NewTargetIndex)
 	}
 }
 
+function bool BlockInvalidTiles()
+{
+	return true;
+}
+
 function SetTargetByObjectID(int ObjectID)
 {
 	local int CurrentTargetIndex;
@@ -86,7 +91,7 @@ protected function Vector GetPathDestination()
 function GetTargetLocations(out array<Vector> TargetLocations)
 {
 	TargetLocations.Length = 0;
-	TargetLocations.AddItem(GrenadePath.GetEndPosition());
+	TargetLocations.AddItem(TargetUnit.GetPawn().Location);
 }
 
 function Update(float DeltaTime)
@@ -94,8 +99,6 @@ function Update(float DeltaTime)
 	local vector NewTargetLocation;
 	local TTile NewTile;
 	local array<vector> TargetLocations;
-
-	PathingPawn.RenderablePath.SetHidden(true);
 
 	super.Update(DeltaTime);
 	
@@ -113,12 +116,13 @@ function Update(float DeltaTime)
 		else
 		{
 			NewTile = `XWORLD.GetTileCoordinatesFromPosition(NewTargetLocation);
-			UpdatePathingPawnTile(NewTile);
-			DrawInvalidTile();
+			if (BlockInvalidTiles())
+			{
+				UpdatePathingPawnTile(NewTile);
+				DrawInvalidTile();
+			}
 		}
 	}
-
-	PathingPawn.RenderablePath.SetHidden(true);
 }
 
 function UpdatePathingPawnTile(TTile TargetTile)
@@ -142,13 +146,14 @@ function UpdatePathingPawnTile(TTile TargetTile)
 		
 		if (GrenadePathTile != TargetTile)
 		{
-			`LOG(default.class @ GetFuncName( )@ "Removing Tile" @ Index @ "from PossibleTiles" @ Tile.X @ Tile.Y @ Tile.Z,, 'X2JediClassWOTC');
+			`LOG(default.class @ GetFuncName() @ "Removing Tile" @ Index @ "from PossibleTiles" @ Tile.X @ Tile.Y @ Tile.Z,, 'X2JediClassWOTC');
 			PathingPawn.PossibleTiles.Remove(Index, 1);
 			
 		}
 	}
 
 	PathingPawn.UpdatePossibleTilesVisuals();
+	PathingPawn.DoUpdatePuckVisuals(PathingPawn.PossibleTiles[0], TargetUnit, Ability.GetMyTemplate());
 }
 
 function name ValidateTargetLocations(const array<Vector> TargetLocations)
@@ -162,7 +167,7 @@ function name ValidateTargetLocations(const array<Vector> TargetLocations)
 
 	if (TargetLocations.Length == 1)
 	{
-		GrenadePathLocation = TargetLocations[0];
+		GrenadePathLocation = GrenadePath.GetEndPosition();
 		GrenadePathTile = WorldData.GetTileCoordinatesFromPosition(GrenadePathLocation);
 		
 		GetPreAbilityPath(PathTiles);
