@@ -1317,7 +1317,7 @@ simulated function ForceJump_BuildVisualization(XComGameState VisualizeGameState
 	FOWUpdateAction.BeginUpdate = true;
 
 	ExitCoverAction = X2Action_ExitCover(class'X2Action_ExitCover'.static.AddToVisualizationTree(ActionMetadata, AbilityContext));
-	ExitCoverAction.bUsePreviousGameState = true;
+	//ExitCoverAction.bUsePreviousGameState = true;
 
 	PathInputData = AbilityContext.InputContext.MovementPaths[0];
 	PathResultData = AbilityContext.ResultContext.PathResults[0];

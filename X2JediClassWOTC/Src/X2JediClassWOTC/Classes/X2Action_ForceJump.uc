@@ -23,6 +23,7 @@ var float TraversalTime;
 var XComPrecomputedPath Path;
 var XComGameStateContext_Ability AbilityContext;
 var bool bSkipLandingAnimation;
+var float TriggerDistance; // Distance (in tiles) for tile entry to trigger window breaks (or other enviromental destruction)
 
 var string ForceJumpSoundCuePath;
 var SoundCue ForceJumpSoundCue;
@@ -55,9 +56,50 @@ function Init()
 	`LOG(default.class @ GetFuncName() @ `ShowVar(AbilityContext) @ `ShowVar(DesiredLocation),, 'X2JediClassWOTC');
 }
 
-function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
+function NotifyEnvironmentDamage(int PreviousPathTileIndex, bool bFragileOnly = true, bool bCheckForDestructibleObject = false)
 {
-	ProjectileHit = true;
+	local float DestroyTileDistance;
+	local Vector HitLocation;
+	local Vector TileLocation;
+	local XComGameState_EnvironmentDamage EnvironmentDamage;		
+	local XComWorldData WorldData;
+	local TTile PathTile;
+	local int Index;		
+
+	WorldData = `XWORLD;
+	//If the unit jumped more than one tile index, make sure it is caught
+	for(Index = PreviousPathTileIndex; Index <= PathTileIndex; ++Index)
+	{
+		if (bCheckForDestructibleObject)
+		{
+			//Only trigger nearby environment damage if the traversal to the next tile has a destructible object
+			if (AbilityContext.InputContext.MovementPaths[MovePathIndex].Destructibles.Length == 0 || 
+				AbilityContext.InputContext.MovementPaths[MovePathIndex].Destructibles.Find(Index + 1) == INDEX_NONE)
+			{
+				continue;
+			}
+		}
+
+		foreach LastInGameStateChain.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamage)
+		{
+			`log(`showvar(EnvironmentDamage));
+			if (EnvironmentDamage.DamageCause.ObjectID != Unit.ObjectID)
+				continue;
+			HitLocation = WorldData.GetPositionFromTileCoordinates(EnvironmentDamage.HitLocationTile);			
+			PathTile = AbilityContext.InputContext.MovementPaths[MovePathIndex].MovementTiles[Index];
+			TileLocation = WorldData.GetPositionFromTileCoordinates(PathTile);
+			
+			DestroyTileDistance = VSize(HitLocation - TileLocation);
+			`log(`showvar(TileLocation));
+			`log(`showvar(HitLocation));
+			`log(`showvar(DestroyTileDistance));
+			if(DestroyTileDistance < (class'XComWorldData'.const.WORLD_StepSize * TriggerDistance)) /* for force jump purposes, don't care about the fragile flag */
+			{				
+				`XEVENTMGR.TriggerEvent('Visualizer_WorldDamage', EnvironmentDamage, self);				
+				`log("Shots fired!!");
+			}
+		}
+	}
 }
 
 simulated function bool MoveAlongPath(float fTime, XComUnitPawn pActor)
@@ -242,3 +284,9 @@ defaultproperties
 	ForceJumpSoundCuePath="JediClassAbilities.SFX.Jumpbuild_Cue"
 	ProjectileHit = false;
 }
+
+
+	defaultproperties
+	{
+		TriggerDistance = 0.5
+	}

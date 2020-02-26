@@ -62,6 +62,7 @@ function Update(float DeltaTime)
 	super.Update(DeltaTime);
 	
 	NewTargetLocation = GetPathDestination();
+	UpdatePathComponents(NewTargetLocation);
 
 	if (NewTargetLocation != CachedTargetLocation)
 	{
@@ -77,10 +78,6 @@ function Update(float DeltaTime)
 			DrawInvalidTile();
 		}
 	}
-
-	UpdatePathComponents(NewTargetLocation);
-
-	PathingPawn.RenderablePath.SetHidden(true);
 }
 
 
