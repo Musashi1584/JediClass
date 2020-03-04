@@ -116,7 +116,6 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(ForceChoke());
 	AbilityTemplates.AddItem(ForceLightning());
 	AbilityTemplates.AddItem(ForceChainLightning());
-	
 
 	// Pulled from PrimaryMeleeWeapons
 	AbilityTemplates.AddItem(LightsaberTelekinesis());
@@ -1431,12 +1430,12 @@ static function X2AbilityTemplate ForceMeditate()
 	Template.AbilityTargetStyle = default.SelfTarget;
 
 	MeditateEffect = new class'X2Effect_ForceMeditate';
-	MeditateEffect.BuildPersistentEffect(1);
+	MeditateEffect.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
 	MeditateEffect.RegenAmount = default.FORCE_MEDITATE_REGEN_PERCENT;
 	Template.AddTargetEffect(MeditateEffect);
 
 	NoDodgeEffect = new class'X2Effect_PersistentStatChange';
-	NoDodgeEffect.BuildPersistentEffect(1, false, false, false, eGameRule_PlayerTurnBegin);
+	NoDodgeEffect.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
 	NoDodgeEffect.AddPersistentStatChange(eStat_Dodge, 0, MODOP_PostMultiplication);       //  no dodge for you!
 	Template.AddTargetEffect(NoDodgeEffect);
 
@@ -1447,7 +1446,8 @@ static function X2AbilityTemplate ForceMeditate()
 	Template.bSkipPerkActivationActions = true;
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	Template.BuildVisualizationFn = ForceMeditate_BuildVisualization;
+	//Template.BuildAffectedVisualizationSyncFn = ForceMeditate_BuildVisualizationSync;
 
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
@@ -1455,6 +1455,51 @@ static function X2AbilityTemplate ForceMeditate()
 	Template.bFrameEvenWhenUnitIsHidden = true;
 
 	return Template;
+}
+
+simulated function ForceMeditate_BuildVisualization(XComGameState VisualizeGameState)
+{
+	local XComGameStateHistory			History;
+	local XComGameStateContext_Ability  Context;
+	local StateObjectReference          InteractingUnitRef;
+
+	local VisualizationActionMetadata			EmptyTrack;
+	local VisualizationActionMetadata			ActionMetadata;
+
+
+	History = `XCOMHISTORY;
+	Context = XComGameStateContext_Ability(VisualizeGameState.GetContext());
+
+	if (Context.InterruptionStatus == eInterruptionStatus_Interrupt)
+	{
+		// Only visualize InterruptionStatus eInterruptionStatus_None or eInterruptionStatus_Resume,
+		// if eInterruptionStatus_Interrupt then the jedi was killed (or removed)
+		return;
+	}
+
+	InteractingUnitRef = Context.InputContext.SourceObject;
+	ActionMetadata = EmptyTrack;
+	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(InteractingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
+	ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(InteractingUnitRef.ObjectID);
+	ActionMetadata.VisualizeActor = History.GetVisualizer(InteractingUnitRef.ObjectID);
+
+	class'X2Action_ForceMeditate'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
+
+	ForceMeditateAnimationVisualization(ActionMetadata, Context);
+}
+
+static function ForceMeditate_BuildVisualizationSync(name EffectName, XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata)
+{
+	//class'X2Action_ForceMeditate'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
+	//ForceMeditateAnimationVisualization(ActionMetadata, Context);
+}
+
+static simulated function ForceMeditateAnimationVisualization(out VisualizationActionMetadata ActionMetadata, XComGameStateContext Context)
+{
+	local X2Action_PersistentEffect		PersistentEffectAction;
+
+	PersistentEffectAction = X2Action_PersistentEffect(class'X2Action_PersistentEffect'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
+	PersistentEffectAction.IdleAnimName = 'NO_ForceMeditationLoop';
 }
 
 static function X2AbilityTemplate ForceDrain()
@@ -1514,6 +1559,7 @@ static function X2AbilityTemplate ForceDrain()
 	RadiusMultiTarget.bUseWeaponRadius = false;
 	RadiusMultiTarget.fTargetRadius = default.FORCE_DRAIN_RADIUS;
 	RadiusMultiTarget.bIgnoreBlockingCover = true; // skip the cover checks, the squad viewer will handle this once selected
+	RadiusMultiTarget.bExcludeSelfAsTargetIfWithinRadius = true;
 	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
 
 	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
@@ -1529,10 +1575,11 @@ static function X2AbilityTemplate ForceDrain()
 
 	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
 
-	Template.bStationaryWeapon = true;
-	Template.bSkipFireAction = true;
 	Template.bShowActivation = true;
 	Template.bSkipPerkActivationActions = true;
+
+	Template.CustomFireAnim = 'HL_GainingFocus';
+	Template.CinescriptCameraType = "Psionic_FireAtUnit";
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
@@ -1669,77 +1716,6 @@ static function EventListenerReturn ForceDrainListener(Object EventData, Object 
 	return ELR_NoInterrupt;
 }
 
-
-static function X2AbilityTemplate LightsaberSlashOld()
-{
-	local X2AbilityTemplate                 Template;
-	local X2AbilityCost_ActionPoints        ActionPointCost;
-	local X2AbilityToHitCalc_StandardMelee  StandardMelee;
-	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
-	local array<name>                       SkipExclusions;
-	local X2Condition_UnitProperty			AdjacencyCondition;	
-
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberSlashOld');
-
-	Template.AbilitySourceName = 'eAbilitySource_Standard';
-	Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_AlwaysShow;
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_swordSlash";
-	Template.bHideOnClassUnlock = false;
-	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SQUADDIE_PRIORITY;
-	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
-	Template.bCrossClassEligible = false;
-	Template.bDisplayInUITooltip = true;
-	Template.bDisplayInUITacticalText = true;
-	Template.DisplayTargetHitChance = true;
-	Template.bShowActivation = true;
-	Template.bSkipFireAction = false;
-
-	ActionPointCost = new class'X2AbilityCost_ActionPoints';
-	ActionPointCost.iNumPoints = 1;
-	ActionPointCost.bConsumeAllPoints = false;
-	Template.AbilityCosts.AddItem(ActionPointCost);
-	
-	StandardMelee = new class'X2AbilityToHitCalc_StandardMelee';
-	Template.AbilityToHitCalc = StandardMelee;
-
-	Template.AbilityTargetStyle = default.SimpleSingleMeleeTarget;
-	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
-
-	// Target Conditions
-	Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);
-	Template.AbilityTargetConditions.AddItem(default.MeleeVisibilityCondition);
-	AdjacencyCondition = new class'X2Condition_UnitProperty';
-	AdjacencyCondition.RequireWithinRange = true;
-	AdjacencyCondition.WithinRange = 144; //1.5 tiles in Unreal units, allows attacks on the diag
-	Template.AbilityTargetConditions.AddItem(AdjacencyCondition);
-
-	// Shooter Conditions
-	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
-	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName); //okay when disoriented
-	Template.AddShooterEffectExclusions(SkipExclusions);
-	
-	// Damage Effect
-	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
-	Template.AddTargetEffect(WeaponDamageEffect);
-	Template.bAllowBonusWeaponEffects = true;
-	
-	// VGamepliz matters
-	Template.SourceMissSpeech = 'SwordMiss';
-	Template.bSkipMoveStop = true;
-
-	Template.CinescriptCameraType = "Ranger_Reaper";
-	Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
-	Template.BuildInterruptGameStateFn = TypicalMoveEndAbility_BuildInterruptGameState;
-	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
-
-	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
-	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
-	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.MeleeLostSpawnIncreasePerUse;
-	Template.bFrameEvenWhenUnitIsHidden = true;
-
-	return Template;
-}
-
 static function X2AbilityTemplate ForceProtection()
 {
 	local X2AbilityTemplate             Template;
@@ -1762,9 +1738,9 @@ static function X2AbilityTemplate ForceProtection()
 	Template.AddTargetEffect(PersistentEffect);
 
 	Template.bSkipFireAction = true;
-	Template.bSkipPerkActivationActions = true; // we'll trigger this perk manually based on tile movement
+
+	Template.bSkipPerkActivationActions = true;
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 
 	return Template;
 }
@@ -1809,6 +1785,7 @@ static function X2AbilityTemplate ForceSenseTrigger()
 	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
 	RadiusMultiTarget.fTargetRadius = default.FORCE_SENSE_RADIUS;
 	RadiusMultiTarget.bIgnoreBlockingCover = true;
+	RadiusMultiTarget.bExcludeSelfAsTargetIfWithinRadius = true;
 	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
 
 	TargetProperty = new class'X2Condition_UnitProperty';
@@ -1841,6 +1818,7 @@ static function X2AbilityTemplate ForceSenseTrigger()
 
 	Template.bSkipFireAction = true;
 	Template.bSkipPerkActivationActions = true;
+	Template.bShowActivation = true;
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
@@ -1941,11 +1919,13 @@ static function X2AbilityTemplate BattleMeditation()
 	BattleMeditationEffect.BuildPersistentEffect(2, false, true, false, eGameRule_PlayerTurnEnd);
 	Template.AddTargetEffect(BattleMeditationEffect);
 
-	Template.bShowActivation = true;
 	Template.bSkipExitCoverWhenFiring = true;
+	Template.CustomFireAnim = 'HL_GainingFocus';
+	Template.CinescriptCameraType = "Psionic_FireAtUnit";
+	Template.bShowActivation = true;
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	//Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 	
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
 	
@@ -2049,6 +2029,8 @@ static function X2AbilityTemplate ForceFear()
 	//Template.bSkipFireAction = true;
 
 	Template.CustomFireAnim = 'FF_MindTricksA';
+	Template.CinescriptCameraType = "Psionic_FireAtUnit";
+	Template.bShowActivation = true;
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
@@ -2109,10 +2091,10 @@ static function X2AbilityTemplate ForceSpeed()
 	ForceSpeedEffect.SetDisplayInfo(ePerkBuff_Bonus, Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage, , , Template.AbilitySourceName);
 	Template.AddTargetEffect(ForceSpeedEffect);
 
-	//Template.CustomFireAnim = 'FF_Overdrive';
+	Template.CustomFireAnim = 'HL_ForceA';
+	Template.CinescriptCameraType = "Psionic_FireAtUnit";
 	Template.bShowActivation = true;
 	Template.bSkipExitCoverWhenFiring = true;
-	Template.bSkipFireAction = true;
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
@@ -2205,11 +2187,13 @@ static function X2AbilityTemplate MindControl()
 	Template.ActivationSpeech = 'Domination';
 	Template.SourceMissSpeech = 'SoldierFailsControl';
 
+	Template.bShowActivation = true;
 	Template.CustomFireAnim = 'HL_ForceA';
+	Template.CinescriptCameraType = "Psionic_FireAtUnit";
+
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
-	Template.CinescriptCameraType = "Psionic_FireAtUnit";
 
 	Template.AdditionalAbilities.AddItem('ForceAbilitiesAnimSet');
 
@@ -2309,7 +2293,9 @@ static function X2AbilityTemplate ForceHeal()
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 
+	Template.bShowActivation = true;
 	Template.CustomFireAnim = 'HL_ForceA';
+	//Template.CinescriptCameraType = "Psionic_FireAtUnit";
 
 	Template.AdditionalAbilities.AddItem('ForceAbilitiesAnimSet');
 
@@ -2398,6 +2384,7 @@ static function X2AbilityTemplate MindTricks()
 	
 	RadiusMultiTarget = new class'X2AbilityMultiTarget_Radius';
 	RadiusMultiTarget.fTargetRadius = default.MIND_TRICKS_RADIUS;
+	RadiusMultiTarget.bExcludeSelfAsTargetIfWithinRadius = true;
 	Template.AbilityMultiTargetStyle = RadiusMultiTarget;
 
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
@@ -2429,6 +2416,7 @@ static function X2AbilityTemplate MindTricks()
 	// MAKE IT LIVE!
 	//Template.bSkipFireAction = true;
 
+	Template.bShowActivation = true;
 	Template.CustomFireAnim = 'FF_MindTricksA';
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
@@ -2548,19 +2536,20 @@ static function X2AbilityTemplate ForceWind()
 	FPCost.ConsumeAllForce = false;
 	Template.AbilityCosts.AddItem(FPCost);
 
-	KnockBackEffect = new class'X2Effect_ForcePush';
-	KnockBackEffect.KnockbackDistance = default.FORCE_WIND_KNOCKBACK_DISTANCE;
-	KnockBackEffect.bKnockbackDestroysNonFragile = true;
-	KnockBackEffect.ForcePushAnimSequence = 'FF_ForceWindA';
-	//KnockBackEffect.bUseTargetLocation = true;
-	Template.AddMultiTargetEffect(KnockBackEffect);
-
 	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
 	DamageEffect.EnvironmentalDamageAmount = default.FORCE_WIND_ENVIRONMENTAL_DAMAGE;
 	DamageEffect.bIgnoreBaseDamage = true;
 	DamageEffect.bBypassShields = true;
+	DamageEffect.bApplyOnMiss = true;
 	DamageEffect.EffectDamageValue = default.FORCE_WIND_BASEDAMAGE;
+	DamageEffect.EffectDamageValue.DamageType = 'HarborWave';
 	Template.AddMultiTargetEffect(DamageEffect);
+
+	KnockBackEffect = new class'X2Effect_ForcePush';
+	KnockBackEffect.KnockbackDistance = default.FORCE_WIND_KNOCKBACK_DISTANCE;
+	KnockBackEffect.bKnockbackDestroysNonFragile = true;
+	KnockBackEffect.ForcePushAnimSequence = '';
+	Template.AddMultiTargetEffect(KnockBackEffect);
 
 	Template.AddMultiTargetEffect(DisorientEffect());
 
@@ -2575,15 +2564,16 @@ static function X2AbilityTemplate ForceWind()
 
 	Template.AbilityToHitCalc = default.DeadEye;
 
+	Template.bSkipFireAction = false;
+	Template.bShowActivation = true;
+	Template.ActionFireClass = class'X2Action_Fire_Wave';
+	Template.CustomFireAnim = 'FF_ForceWindA';
+	//Template.AssociatedPlayTiming = SPT_AfterParallel;
+
 	// Targeting Method
 	Template.TargetingMethod = class'X2TargetingMethod_Cone';
 	Template.bOverrideAim = true;
-
-	Template.SourceMissSpeech = 'SwordMiss';
-
-	// MAKE IT LIVE!
-	Template.bSkipFireAction = true;
-
+	
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 	
@@ -2592,7 +2582,7 @@ static function X2AbilityTemplate ForceWind()
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
-	
+
 	return Template;
 }
 
@@ -2658,19 +2648,18 @@ static function X2AbilityTemplate ForcePush()
 	FPCost.ConsumeAllForce = false;
 	Template.AbilityCosts.AddItem(FPCost);
 
-	KnockBackEffect = new class'X2Effect_ForcePush';
-	KnockBackEffect.KnockbackDistance = default.FORCE_PUSH_KNOCKBACK_DISTANCE;
-	KnockBackEffect.bKnockbackDestroysNonFragile = true;
-	KnockBackEffect.ForcePushAnimSequence = 'FF_ForcePushA';
-	//KnockBackEffect.bUseTargetLocation = true;
-	Template.AddTargetEffect(KnockBackEffect);
-
 	DamageEffect = new class'X2Effect_ApplyWeaponDamage';
 	DamageEffect.EnvironmentalDamageAmount = 20;
 	DamageEffect.bIgnoreBaseDamage = true;
 	DamageEffect.bBypassShields = true;
 	DamageEffect.EffectDamageValue = default.FORCE_PUSH_BASEDAMAGE;
 	Template.AddTargetEffect(DamageEffect);
+
+	KnockBackEffect = new class'X2Effect_ForcePush';
+	KnockBackEffect.KnockbackDistance = default.FORCE_PUSH_KNOCKBACK_DISTANCE;
+	KnockBackEffect.bKnockbackDestroysNonFragile = true;
+	KnockBackEffect.ForcePushAnimSequence = '';
+	Template.AddTargetEffect(KnockBackEffect);
 
 	Template.AddTargetEffect(DisorientEffect());
 
@@ -2690,11 +2679,14 @@ static function X2AbilityTemplate ForcePush()
 	Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
 	Template.bOverrideAim = true;
 	//Template.bUseSourceLocationZToAim = true;
-
-	Template.SourceMissSpeech = 'SwordMiss';
+	
+	//Template.AssociatedPlayTiming = SPT_AfterParallel;
 
 	// MAKE IT LIVE!
-	Template.bSkipFireAction = true;
+	Template.bSkipFireAction = false;
+	Template.bShowActivation = true;
+	Template.ActionFireClass = class'X2Action_Fire_Wave';
+	Template.CustomFireAnim = 'FF_ForcePushA';
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;

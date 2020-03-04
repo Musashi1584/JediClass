@@ -84,6 +84,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\AnimationListAction.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\AnimNotify_PlayWeaponAnimExtended.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\AnimNotify_UpdateWeaponMaterial.uc">
       <SubType>Content</SubType>
     </Content>
@@ -112,6 +115,12 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Action_ForceJump.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Action_ForceMeditate.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Action_ForceMeditateEnd.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Action_ForceVisibility.uc">

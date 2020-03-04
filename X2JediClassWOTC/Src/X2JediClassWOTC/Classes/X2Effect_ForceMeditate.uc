@@ -47,8 +47,20 @@ simulated function AddX2ActionsForVisualization(XComGameState VisualizeGameState
 	}
 }
 
+simulated function AddX2ActionsForVisualization_Removed(XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata, const name EffectApplyResult, XComGameState_Effect RemovedEffect)
+{
+	`LOG(default.class @ GetFuncName(),, 'X2JediClassWOTC');
+	super.AddX2ActionsForVisualization_Removed(VisualizeGameState, ActionMetadata, EffectApplyResult, RemovedEffect);
+	class'X2Action_ForceMeditateEnd'.static.AddToVisualizationTree(ActionMetadata, VisualizeGameState.GetContext(), false, ActionMetadata.LastActionAdded);
+}
+
+simulated function AddX2ActionsForVisualization_Tick(XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata, const int TickIndex, XComGameState_Effect EffectState)
+{
+
+}
+
 defaultproperties
 {
-	EffectName="ForceRegen"
+	EffectName="ForceMeditation"
 	EffectAddedFn=ForceRegenAdded
 }
