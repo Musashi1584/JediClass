@@ -1,4 +1,4 @@
-class X2Action_ForcePush extends X2Action;
+class X2Action_ForcePush extends X2Action_Knockback;
 
 var name ForcePushAnimSequence;
 var float AnimationDelay;
@@ -188,8 +188,8 @@ Begin:
 		//`LOG("X2Action_ForcePush" @ DistanceToTargetSquared @ iTries,, 'X2JediClassWOTC');
 	}
 
-	//if(!NewUnitState.IsDead() && !NewUnitState.IsIncapacitated())
-	//{		
+	if(!NewUnitState.IsDead() && !NewUnitState.IsIncapacitated())
+	{		
 		//Reset visualizers for primary weapon, in case it was dropped
 		Unit.GetInventory().GetPrimaryWeapon().Destroy(); //Aggressively get rid of the primary weapon, because dropping it can really screw things up
 		Unit.ApplyLoadoutFromGameState(NewUnitState, None);
@@ -223,7 +223,11 @@ Begin:
 
 		Unit.ProcessNewPosition();
 		Unit.IdleStateMachine.CheckForStanceUpdate();
-	//}
+	}
+	else
+	{
+
+	}
 	
 	CompleteAction();	
 }
