@@ -101,7 +101,6 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(Holocron('HolocronPool_BM',1));
 	AbilityTemplates.AddItem(ForceMeditate());
 	AbilityTemplates.AddItem(ForceDrain());
-	AbilityTemplates.AddItem(LightsaberSlash());
 	AbilityTemplates.AddItem(ForceProtection());
 	AbilityTemplates.AddItem(ForceSense());
 	AbilityTemplates.AddItem(BattleMeditation());
@@ -117,7 +116,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(ForceLightning());
 	AbilityTemplates.AddItem(ForceChainLightning());
 
-	// Pulled from PrimaryMeleeWeapons
+	AbilityTemplates.AddItem(LightsaberSlash());
 	AbilityTemplates.AddItem(LightsaberTelekinesis());
 	AbilityTemplates.AddItem(LightsaberToss());
 	AbilityTemplates.AddItem(LightsaberDeflect());
@@ -150,7 +149,9 @@ static function X2AbilityTemplate LightsaberSlash()
 	DeathActionEffect = new class'X2Effect_OverrideDeathAction';
 	DeathActionEffect.DeathActionClass = class'X2Action_SyncedAnimationDeath';
 	Template.AddTargetEffect(DeathActionEffect);
-	
+
+	Template.OverrideAbilities.AddItem(class'X2Ability_RangerAbilitySet'.default.SwordSliceName);
+
 	return Template;
 }
 
@@ -2483,6 +2484,7 @@ static function X2AbilityTemplate ForceWind()
 	local X2AbilityMultiTarget_Cone			ConeMultiTarget;
 	local X2AbilityCooldown					Cooldown;
 
+
 	// Macro to do localisation and stuffs
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceWind');
 
@@ -3232,6 +3234,7 @@ static function X2Effect_Persistent DisorientEffect()
 	DisorientedEffect = class'X2StatusEffects'.static.CreateDisorientedStatusEffect();
 	DisorientedEffect.bApplyOnHit = true;
 	DisorientedEffect.bApplyOnMiss = false;
+	DisorientedEffect.VisualizationFn = none;
 
 	Condition_UnitProperty = new class'X2Condition_UnitProperty';
 	Condition_UnitProperty.ExcludeOrganic = false;

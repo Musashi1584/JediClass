@@ -71,6 +71,8 @@ static function X2DataTemplate CreateTemplate_Saberstaff_CV()
 	Template.iSoundRange = default.SABERSTAFF_CV_ISOUNDRANGE;
 	Template.iEnvironmentDamage = default.SABERSTAFF_CV_IENVIRONMENTDAMAGE;
 	Template.BaseDamage.DamageType = 'Melee';
+
+	Template.Abilities.AddItem('DeflectBonusSaberStaff_CV');
 	
 	Template.StartingItem = false;
 	Template.CanBeBuilt = false;
@@ -126,6 +128,8 @@ static function X2DataTemplate CreateTemplate_Saberstaff_MG()
 	Template.StartingItem = false;
 	Template.CanBeBuilt = false;
 
+	Template.Abilities.AddItem('DeflectBonusSaberStaff_MG');
+
 	//Template.BonusWeaponEffects.AddItem(class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, class'X2Item_DefaultWeapons'.default.RANGERSWORD_MAGNETIC_STUNCHANCE));
 		
 	Template.bInfiniteItem = false;
@@ -179,6 +183,8 @@ static function X2DataTemplate CreateTemplate_Saberstaff_BM()
 		
 	Template.StartingItem = false;
 	Template.CanBeBuilt = false;
+
+	Template.Abilities.AddItem('DeflectBonusSaberStaff_BM');
 
 	//Template.BonusWeaponEffects.AddItem(class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, class'X2Item_DefaultWeapons'.default.RANGERSWORD_MAGNETIC_STUNCHANCE));
 	//Template.BonusWeaponEffects.AddItem(class'X2StatusEffects'.static.CreateBurningStatusEffect(3, 0));

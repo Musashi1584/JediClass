@@ -14,6 +14,10 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(DeflectBonusAbility('Twenty', 20));
 	Templates.AddItem(DeflectBonusAbility('Twentyfive', 25));
 
+	Templates.AddItem(DeflectBonusAbility('SaberStaff_CV', 10, true));
+	Templates.AddItem(DeflectBonusAbility('SaberStaff_MG', 15, true));
+	Templates.AddItem(DeflectBonusAbility('SaberStaff_BM', 20, true));
+
 	return Templates;
 }
 
@@ -34,12 +38,12 @@ static function X2DataTemplate HealthRegenAbility(name Append, int Bonus)
 	return Template;
 }
 
-static function X2DataTemplate DeflectBonusAbility(name Append, int Bonus)
+static function X2DataTemplate DeflectBonusAbility(name Append, int Bonus, optional bool bShowInUI = false)
 {
 	local X2AbilityTemplate				Template;
 	local X2Effect_ExtraDeflectChance	DeflectChanceEffect;
 	
-	Template = PurePassive(name("DeflectBonus" $ Append),,,,false);
+	Template = PurePassive(name("DeflectBonus" $ Append),,,, bShowInUI);
 
 	DeflectChanceEffect = new class'X2Effect_ExtraDeflectChance';
 	DeflectChanceEffect.BuildPersistentEffect(1);

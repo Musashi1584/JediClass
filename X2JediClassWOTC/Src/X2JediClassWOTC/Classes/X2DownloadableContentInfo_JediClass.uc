@@ -43,6 +43,65 @@ var config array<LootTableEntry> SUPERIOR_LOOT_ENTRIES;
 
 var config array<name> DebugAnimSequences;
 
+static function bool AbilityTagExpandHandler_CH(string InString, out string OutString, Object ParseObj, Object StrategyParseOb, XComGameState GameState)
+{
+	local XComGameStateHistory History;
+	local XComGameState_Effect EffectState;
+	local XComGameState_Ability AbilityState;
+	local X2AbilityTemplate AbilityTemplate;
+	local XComGameState_Unit UnitState;
+	local int DSP, LSP;
+	
+	History = `XCOMHISTORY;
+
+	if (InString != "ForceAlignment")
+	{
+		return false;
+	}
+	
+	EffectState = XComGameState_Effect(ParseObj);
+	AbilityState = XComGameState_Ability(ParseObj);
+	AbilityTemplate = X2AbilityTemplate(ParseObj);
+	
+	`LOG(GetFuncName() @ InString @ "1" @ EffectState @ AbilityState @ AbilityTemplate @ ParseObj @ GameState.GetNumGameStateObjects(),, 'X2JediClassWOTC');
+	
+	if (EffectState != none)
+	{
+		AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(EffectState.ApplyEffectParameters.AbilityStateObjectRef.ObjectID));
+	}
+	if (AbilityState != none)
+	{
+		AbilityTemplate = AbilityState.GetMyTemplate();
+
+		UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityState.OwnerStateObject.ObjectID));
+		if (UnitState != none)
+		{
+			DSP = class'JediClassHelper'.static.GetDarkSideModifier(UnitState);
+			LSP = class'JediClassHelper'.static.GetLightSideModifier(UnitState);
+			
+			if (DSP > 0)
+			{
+				OutString = class'JediClassHelper'.static.GetForceAlignmentModifierString() $ ":";
+				OutString $= DSP @ class'JediClassHelper'.default.DarkSidePoints;
+			}
+
+			if (LSP > 0)
+			{
+				OutString = class'JediClassHelper'.static.GetForceAlignmentModifierString() $ ":";
+				OutString $= LSP @ class'JediClassHelper'.default.LightSidePoints;
+			}
+
+			`LOG(GetFuncName() @ InString $ ":" @ OutString,, 'X2JediClassWOTC');
+
+			return OutString != "";
+		}
+	}
+
+	`LOG(GetFuncName() @ InString @ "2" @ EffectState @ AbilityState @ AbilityTemplate,, 'X2JediClassWOTC');
+		
+	return false;
+}
+
 static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent MeshComp)
 {
 	local XComLinearColorPalette Palette;
@@ -344,6 +403,12 @@ static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameStat
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForceChokeTarget")));
 	}
 
+	// Fallback for non lightsaber loadouts
+	if (UnitState.GetSoldierClassTemplateName() == 'Jedi')
+	{
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers")));
+	}
+
 	if (HasSaberStaffEquipped(UnitState))
 	{
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("saberstaff.Anims.AS_Soldier")));
@@ -352,30 +417,50 @@ static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameStat
 	else if (HasDualLightsaberEquipped(UnitState))
 	{
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("Lightsaber_CV.Anims.AS_JediDual")));
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers_DualMelee")));
 	}
-	
-	
-	if (HasPrimaryMeleeEquipped(UnitState))
+	else if (HasPrimaryLightsaberEquipped(UnitState))
 	{
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers_PrimaryMelee")));
 	}
+}
 
-	if (HasDualMeleeEquipped(UnitState))
+
+static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, optional XComGameState_Item ItemState=none)
+{
+	local X2WeaponTemplate WeaponTemplate;
+	local XComGameState_Unit UnitState;
+
+	if (ItemState == none)
 	{
-		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers_DualMelee")));
+		return;
 	}
 
-	if (UnitState.GetSoldierClassTemplateName() == 'Jedi')
-	{
-		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers")));
-	}
+	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(ItemState.OwnerStateObject.ObjectID));
+	WeaponTemplate = X2WeaponTemplate(ItemState.GetMyTemplate());
 
+	// Hard override if with dual lightsaber animset
+	if(UnitState != none && HasDualLightsaberEquipped(UnitState))
+	{
+		if (IsPrimaryMeleeWeaponTemplate(WeaponTemplate) || IsSecondaryMeleeWeaponTemplate(WeaponTemplate))
+		{
+			Weapon.CustomUnitPawnAnimsets.Length = 0;
+			Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+			Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("Lightsaber_CV.Anims.AS_Lightsaber_Pawn_Dual")));
+			`LOG(default.Class.Name @ GetFuncName() @ "Adding Lightsaber_CV.Anims.AS_Lightsaber_Pawn_Dual",, 'X2JediClassWOTC');
+		}
+	}
 }
 
 static function bool HasDualLightsaberEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
 	return IsPrimaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate())) &&
-		IsSecondaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
+		   IsSecondaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
+}
+
+static function bool HasPrimaryLightsaberEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	return IsPrimaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate()));
 }
 
 static function bool HasLightsaberEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)

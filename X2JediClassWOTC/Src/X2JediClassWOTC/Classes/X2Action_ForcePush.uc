@@ -224,10 +224,6 @@ Begin:
 		Unit.ProcessNewPosition();
 		Unit.IdleStateMachine.CheckForStanceUpdate();
 	}
-	else
-	{
-
-	}
 	
 	CompleteAction();	
 }

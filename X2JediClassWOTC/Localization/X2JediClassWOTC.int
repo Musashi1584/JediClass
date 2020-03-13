@@ -1,5 +1,7 @@
 [JediClassHelper]
 ForceAlignmentModifier="Force Alignment"
+DarkSidePoints="Darkside Points"
+LightSidePoints="Lightside Points"
 
 [X2Effect_JediForcePool_ByRank]
 ForceLabel="Force Points"
