@@ -8,11 +8,7 @@ var private AnimNodeSequence	            UnitAnimSeq;
 
 function Init()
 {
-	local XComGameStateHistory History;
-
 	super.Init();
-
-	History = `XCOMHISTORY;
 
 	UnitState = Unit.GetVisualizedGameState(CurrentHistoryIndex);
 	

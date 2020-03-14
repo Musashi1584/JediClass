@@ -59,7 +59,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_CV()
 	Template.Tier = 0;
 
 	Template.iRadius = 1;
-	Template.NumUpgradeSlots = 0;
+	Template.NumUpgradeSlots = 4;
 	Template.InfiniteAmmo = true;
 	Template.iPhysicsImpulse = 5;
 
@@ -108,7 +108,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_MG()
 	Template.Tier = 2;
 
 	Template.iRadius = 1;
-	Template.NumUpgradeSlots = 0;
+	Template.NumUpgradeSlots = 4;
 	Template.InfiniteAmmo = true;
 	Template.iPhysicsImpulse = 5;
 
@@ -164,7 +164,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_BM()
 	Template.Tier = 4;
 
 	Template.iRadius = 1;
-	Template.NumUpgradeSlots = 0;
+	Template.NumUpgradeSlots = 4;
 	Template.InfiniteAmmo = true;
 	Template.iPhysicsImpulse = 5;
 

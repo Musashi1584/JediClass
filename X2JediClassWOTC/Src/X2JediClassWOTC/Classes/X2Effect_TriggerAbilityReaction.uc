@@ -6,16 +6,17 @@
 
 class X2Effect_TriggerAbilityReaction extends X2Effect_Persistent;
 
-var name AbilityToActivate;         //  ability to activate when the covering fire check is matched
-var name GrantActionPoint;          //  action point to give the shooter when covering fire check is matched
-var int MaxPointsPerTurn;           //  max times per turn the action point can be granted
-var bool bDirectAttackOnly;         //  covering fire check can only match when the target of this effect is directly attacked
-var bool bPreEmptiveFire;           //  if true, the reaction fire will happen prior to the attacker's shot; otherwise it will happen after
-var bool bOnlyDuringEnemyTurn;      //  only activate the ability during the enemy turn (e.g. prevent return fire during the sharpshooter's own turn)
-var bool bUseMultiTargets;          //  initiate AbilityToActivate against yourself and look for multi targets to hit, instead of direct retaliation
-var bool bOnlyWhenAttackMisses;		//  Only activate the ability if the attack missed
-var bool bSelfTargeting;			//  The ability being activated targets the covering unit (self)
-var int	ActivationPercentChance;	//  If this is greater than zero, this is the percent chance the AbilityToActivate is activated
+var name AbilityToActivate;				//  ability to activate when the covering fire check is matched
+var name GrantActionPoint;				//  action point to give the shooter when covering fire check is matched
+var name GrantReserveActionPoint;		//  action point to give the shooter when covering fire check is matched
+var int MaxActionPointsPerTurn;			//  max times per turn the action point can be granted
+var bool bDirectAttackOnly;				//  covering fire check can only match when the target of this effect is directly attacked
+var bool bPreEmptiveFire;				//  if true, the reaction fire will happen prior to the attacker's shot; otherwise it will happen after
+var bool bOnlyDuringEnemyTurn;			//  only activate the ability during the enemy turn (e.g. prevent return fire during the sharpshooter's own turn)
+var bool bUseMultiTargets;				//  initiate AbilityToActivate against yourself and look for multi targets to hit, instead of direct retaliation
+var bool bOnlyWhenAttackMisses;			//  Only activate the ability if the attack missed
+var bool bSelfTargeting;				//  The ability being activated targets the covering unit (self)
+var int	ActivationPercentChance;		//  If this is greater than zero, this is the percent chance the AbilityToActivate is activated
 
 function RegisterForEvents(XComGameState_Effect EffectGameState)
 {
@@ -74,7 +75,6 @@ static function EventListenerReturn OnAbilityActivated(Object EventData, Object 
 			if (TriggerAbilityReactionEffect.bPreEmptiveFire)
 			{
 				//  for pre emptive fire, only process during the interrupt step
-				`LOG(default.class @ GetFuncName() @ AbilityContext.InterruptionStatus,, 'X2JediClassWOTC');
 				if (AbilityContext.InterruptionStatus != eInterruptionStatus_Interrupt)
 					return ELR_NoInterrupt;
 			}
@@ -116,22 +116,33 @@ static function EventListenerReturn OnAbilityActivated(Object EventData, Object 
 
 			if (AbilityState != none)
 			{
-				if (TriggerAbilityReactionEffect.GrantActionPoint != '' && (TriggerAbilityReactionEffect.MaxPointsPerTurn > EffectGameState.GrantsThisTurn || TriggerAbilityReactionEffect.MaxPointsPerTurn <= 0))
+				if ((TriggerAbilityReactionEffect.GrantActionPoint != '' || TriggerAbilityReactionEffect.GrantReserveActionPoint != '') && 
+					(TriggerAbilityReactionEffect.MaxActionPointsPerTurn > EffectGameState.GrantsThisTurn || TriggerAbilityReactionEffect.MaxActionPointsPerTurn <= 0))
 				{
 					NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState(string(GetFuncName()));
 					NewEffectState = XComGameState_Effect(NewGameState.ModifyStateObject(EffectGameState.Class, EffectGameState.ObjectID));
 					NewEffectState.GrantsThisTurn++;
 
 					CoveringUnit = XComGameState_Unit(NewGameState.ModifyStateObject(CoveringUnit.Class, CoveringUnit.ObjectID));
-					CoveringUnit.ReserveActionPoints.AddItem(TriggerAbilityReactionEffect.GrantActionPoint);
+					if (TriggerAbilityReactionEffect.GrantReserveActionPoint != '')
+					{
+						CoveringUnit.ReserveActionPoints.AddItem(TriggerAbilityReactionEffect.GrantReserveActionPoint);
+					}
+					if (TriggerAbilityReactionEffect.GrantActionPoint != '')
+					{
+						CoveringUnit.ActionPoints.AddItem(TriggerAbilityReactionEffect.GrantActionPoint);
+					}
 
-					if (AbilityState.CanActivateAbilityForObserverEvent(AttackingUnit, CoveringUnit) != 'AA_Success')
+					if (AbilityState.CanActivateAbilityForObserverEvent(AttackingUnit, CoveringUnit) != 'AA_Success' &&
+						AbilityState.CanActivateAbility(CoveringUnit, AbilityContext.InterruptionStatus, false) != 'AA_Success')
 					{
 						History.CleanupPendingGameState(NewGameState);
 					}
 					else
 					{
 						`TACTICALRULES.SubmitGameState(NewGameState);
+
+						`LOG(default.class @ GetFuncName() @ TriggerAbilityReactionEffect.AbilityToActivate,, 'X2JediClassWOTC');
 
 						if (TriggerAbilityReactionEffect.bUseMultiTargets)
 						{
@@ -149,12 +160,16 @@ static function EventListenerReturn OnAbilityActivated(Object EventData, Object 
 						}
 					}
 				}
-				else if (TriggerAbilityReactionEffect.bSelfTargeting && AbilityState.CanActivateAbilityForObserverEvent(CoveringUnit) == 'AA_Success')
+				else if (TriggerAbilityReactionEffect.bSelfTargeting && AbilityState.CanActivateAbilityForObserverEvent(CoveringUnit) == 'AA_Success' &&
+						AbilityState.CanActivateAbility(CoveringUnit, AbilityContext.InterruptionStatus, false) == 'AA_Success')
 				{
+					`LOG(default.class @ GetFuncName() @ TriggerAbilityReactionEffect.AbilityToActivate,, 'X2JediClassWOTC');
 					AbilityState.AbilityTriggerAgainstSingleTarget(CoveringUnit.GetReference(), TriggerAbilityReactionEffect.bUseMultiTargets);
 				}
-				else if (AbilityState.CanActivateAbilityForObserverEvent(AttackingUnit) == 'AA_Success')
+				else if (AbilityState.CanActivateAbilityForObserverEvent(AttackingUnit) == 'AA_Success' &&
+						AbilityState.CanActivateAbility(CoveringUnit, AbilityContext.InterruptionStatus, false) == 'AA_Success')
 				{
+					`LOG(default.class @ GetFuncName() @ TriggerAbilityReactionEffect.AbilityToActivate,, 'X2JediClassWOTC');
 					if (TriggerAbilityReactionEffect.bUseMultiTargets)
 					{
 						AbilityState.AbilityTriggerAgainstSingleTarget(CoveringUnit.GetReference(), true);

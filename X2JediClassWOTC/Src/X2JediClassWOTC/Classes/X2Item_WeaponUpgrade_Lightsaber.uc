@@ -167,6 +167,7 @@ static function X2DataTemplate CreateJediUpgrade(name SocketName, UpgradeSetup T
 	Template.MaxQuantity = 1;
 	Template.BlackMarketTexts = class'X2Item_DefaultUpgrades'.default.UpgradeBlackMarketTexts;
 	Template.UpgradeCats.AddItem('lightsaber');
+	Template.UpgradeCats.AddItem('saberstaff');
 	
 	`log(default.class @ GetFuncName() @ "finished setting up" @ ThisUpgradeSetup.UpgradeName, default.bLogUpgrades, 'X2JediClassWOTC');
 
@@ -185,7 +186,7 @@ static function bool CanApplyUpgradeToWeaponLightsaber(X2WeaponUpgradeTemplate U
 		
 	AttachedUpgradeTemplates = Weapon.GetMyWeaponUpgradeTemplates();
 
-	if ( Weapon.GetWeaponCategory() != 'lightsaber' )
+	if (Weapon.GetWeaponCategory() != 'lightsaber' && Weapon.GetWeaponCategory() != 'saberstaff')
 	{
 		return false;
 	}

@@ -128,7 +128,6 @@ function Update(float DeltaTime)
 function UpdatePathingPawnTile(TTile TargetTile)
 {
 	local vector GrenadePathLocation;
-	local array<Vector> TargetLocations;
 	local TTile Tile, GrenadePathTile;
 	local int Index;
 

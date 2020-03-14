@@ -1,7 +1,6 @@
-class X2TargetingMethod_ForceJump extends X2TargetingMethod_PathTarget; //X2TargetingMethod_Grenade;
+class X2TargetingMethod_ForceJump extends X2TargetingMethod_PathTarget;
 
 var X2Actor_InvalidTarget InvalidTileActor;
-var XComActionIconManager IconManager;
 var XComPrecomputedPath GrenadePath;
 
 function Init(AvailableAction InAction, int NewTargetIndex)
@@ -54,7 +53,6 @@ function GetTargetLocations(out array<Vector> TargetLocations)
 function Update(float DeltaTime)
 {
 	local vector NewTargetLocation;
-	local TTile NewTile;
 	local array<vector> TargetLocations;
 
 	PathingPawn.RenderablePath.SetHidden(true);
@@ -156,7 +154,6 @@ simulated protected function DrawInvalidTile()
 	InvalidTileActor.SetHidden(false);
 	InvalidTileActor.SetLocation(Location);
 
-	//IconManager.SetHidden(true);
 	Cursor.SetHidden(true);
 	PathingPawn.PuckMeshComponent.SetHidden(true);
 	PathingPawn.Waypoints.Length = 0;

@@ -141,9 +141,6 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Action_SyncedAnimationDeath.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_BattlePrecognition.uc">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ExtraDeflectChance.uc">
       <SubType>Content</SubType>
     </Content>
@@ -154,6 +151,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ForceMeditate.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ForcePoolBonusDamage.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ForceSpeed.uc">

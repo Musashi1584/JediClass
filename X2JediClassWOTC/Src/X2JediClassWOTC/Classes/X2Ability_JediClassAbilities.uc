@@ -3,7 +3,8 @@ class X2Ability_JediClassAbilities extends X2Ability
 
 
 var config int FORCE_JUMP_COST;
-var config int FORCE_MEDITATE_CHARGES;
+//var config int FORCE_MEDITATE_CHARGES;
+var config int FORCE_MEDITATE_COOLDOWN;
 var config float FORCE_MEDITATE_REGEN_PERCENT;
 
 var config int FORCE_DRAIN_RADIUS;
@@ -133,6 +134,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(ForcLightningAnimSets());
 	AbilityTemplates.AddItem(ForceAbilitiesAnimSet());
 	AbilityTemplates.AddItem(ForceAlignmentModifier());
+	AbilityTemplates.AddItem(ForcePoolBonusDamage());
 	AbilityTemplates.AddItem(AddSyncedAnimationDeathOverride());
 
 	return AbilityTemplates;
@@ -165,7 +167,6 @@ static function X2AbilityTemplate BattlePrecognition()
 	local X2Condition_UnitProperty          ConcealedCondition;
 	local X2Effect_SetUnitValue             UnitValueEffect;
 	local X2Condition_UnitEffects           SuppressedCondition;
-	local X2Effect_BattlePrecognition		BattlePrecognitionEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'BattlePrecognition');
 	
@@ -192,16 +193,10 @@ static function X2AbilityTemplate BattlePrecognition()
 	ReserveActionPointsEffect = new class'X2Effect_ReserveOverwatchPoints';
 	Template.AddTargetEffect(ReserveActionPointsEffect);
 	Template.DefaultKeyBinding = class'UIUtilities_Input'.const.FXS_KEY_Y;
-	
-	// Give 1 standard action point on turn end so BattlePrecognitionLeapStrike targeting thinks it can pay its movement costs
-	BattlePrecognitionEffect = new class'X2Effect_BattlePrecognition';
-	BattlePrecognitionEffect.EffectName = 'BattlePrecognition';
-	BattlePrecognitionEffect.DuplicateResponse = eDupe_Refresh;
-	BattlePrecognitionEffect.BuildPersistentEffect(1, , , , eGameRule_PlayerTurnEnd);
-	Template.AddTargetEffect(BattlePrecognitionEffect);
 
 	CoveringFireEffect = new class'X2Effect_TriggerAbilityReaction';
-	//CoveringFireEffect.GrantActionPoint = 'Move';
+	CoveringFireEffect.GrantActionPoint = 'Move';
+	CoveringFireEffect.MaxActionPointsPerTurn = 1;
 	CoveringFireEffect.bPreEmptiveFire = true;
 	CoveringFireEffect.bDirectAttackOnly = false;
 	CoveringFireEffect.bUseMultiTargets = false;
@@ -1358,6 +1353,7 @@ static function X2AbilityTemplate ForcePowerPool()
 	// Note: no visualization on purpose!
 
 	Template.bCrossClassEligible = false;
+	Template.AdditionalAbilities.AddItem('ForcePoolBonusDamage');
 
 	return Template;
 }
@@ -1397,10 +1393,12 @@ static function X2AbilityTemplate ForceMeditate()
 {
 	local X2AbilityTemplate					Template;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
-	local X2AbilityCost_Charges				ChargeCost;
-	local X2AbilityCharges					Charges;
+	local X2AbilityCooldown					Cooldown;
+	//local X2AbilityCost_Charges				ChargeCost;
+	//local X2AbilityCharges					Charges;
 	local X2Effect_ForceMeditate			MeditateEffect;
 	local X2Effect_PersistentStatChange		NoDodgeEffect;
+	local X2Effect_RemoveEffects			RemoveEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceMeditate');
 
@@ -1413,13 +1411,17 @@ static function X2AbilityTemplate ForceMeditate()
 
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SQUADDIE_PRIORITY;
 
-	Charges = new class'X2AbilityCharges';
-	Charges.InitialCharges = default.FORCE_MEDITATE_CHARGES;
-	Template.AbilityCharges = Charges;
+	//Charges = new class'X2AbilityCharges';
+	//Charges.InitialCharges = default.FORCE_MEDITATE_CHARGES;
+	//Template.AbilityCharges = Charges;
+	//
+	//ChargeCost = new class'X2AbilityCost_Charges';
+	//ChargeCost.NumCharges = 1;
+	//Template.AbilityCosts.AddItem(ChargeCost);
 
-	ChargeCost = new class'X2AbilityCost_Charges';
-	ChargeCost.NumCharges = 1;
-	Template.AbilityCosts.AddItem(ChargeCost);
+	Cooldown = new class'X2AbilityCooldown';
+	Cooldown.iNumTurns = default.FORCE_MEDITATE_COOLDOWN;
+	Template.AbilityCooldown = Cooldown;
 
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
 	ActionPointCost.iNumPoints = 1;
@@ -1439,6 +1441,12 @@ static function X2AbilityTemplate ForceMeditate()
 	NoDodgeEffect.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
 	NoDodgeEffect.AddPersistentStatChange(eStat_Dodge, 0, MODOP_PostMultiplication);       //  no dodge for you!
 	Template.AddTargetEffect(NoDodgeEffect);
+
+	RemoveEffect = new class'X2Effect_RemoveEffects';
+	RemoveEffect.EffectNamesToRemove.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName);
+	RemoveEffect.EffectNamesToRemove.AddItem(class'X2AbilityTemplateManager'.default.DazedName);
+	RemoveEffect.EffectNamesToRemove.AddItem(class'X2AbilityTemplateManager'.default.ShatteredName);
+	Template.AddTargetEffect(RemoveEffect);
 
 	Template.TargetingMethod = class'X2TargetingMethod_TopDown';
 
@@ -1902,7 +1910,7 @@ static function X2AbilityTemplate BattleMeditation()
 
 	FPCost = new class'X2AbilityCost_ForcePoints';
 	FPCost.ForceAmount = default.BATTLE_MEDITATION_COST;
-	FPCost.ConsumeAllForce = false;
+	FPCost.ConsumeAllForce = true;
 	Template.AbilityCosts.AddItem(FPCost);
 
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
@@ -3698,6 +3706,22 @@ static function X2AbilityTemplate AddSyncedAnimationDeathOverride()
 
 	return Template;
 }
+
+static function X2DataTemplate ForcePoolBonusDamage()
+{
+	local X2AbilityTemplate					Template;
+	local X2Effect_ForcePoolBonusDamage		ForcePoolBonusDamageEffect;
+
+	Template = PurePassive('ForcePoolBonusDamage',,,,false);
+
+	ForcePoolBonusDamageEffect = new class'X2Effect_ForcePoolBonusDamage';
+	ForcePoolBonusDamageEffect.BuildPersistentEffect(1, true, false);
+	Template.AddTargetEffect(ForcePoolBonusDamageEffect);
+
+	return Template;
+}
+
+
 
 DefaultProperties
 {
