@@ -1,21 +1,4 @@
-class X2Item_WeaponUpgrade_Lightsaber extends X2Item config(JediUpgrades);
-
-struct UpgradeSetup
-{
-	var name				UpgradeName;
-	var string				ImagePath;
-	var string				MeshPath;
-	var string				IconPath;
-	var int					Tier;
-	var int					UpgradeValue;
-	var int					AimBonus;
-	var int					CritChanceBonus;
-	var array<ArtifactCost>	ResourceCosts;
-	var array<ArtifactCost>	ArtifactCosts;
-	var array<name>			RequiredTechs;
-	var WeaponDamageValue	DamageValue;
-	var array<name>			BonusAbilities;
-};
+class X2Item_WeaponUpgrade_Lightsaber extends X2Item config(JediUpgrades) dependson(JediClassDataStructure);
 
 var config bool bLogUpgrades;
 var config array<UpgradeSetup>	CRYSTAL_SETUPS, CELL_SETUPS, EMITTER_SETUPS, LENS_SETUPS;

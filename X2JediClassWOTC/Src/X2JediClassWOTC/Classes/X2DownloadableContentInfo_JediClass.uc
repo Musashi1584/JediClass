@@ -29,6 +29,7 @@ var config array<DLCAnimSetAdditions> AnimSetAdditions;
 var config array<SocketReplacementInfo> SocketReplacements;
 
 var config array<Name> IgnoreAbilitiesForForceSpeed;
+var config array<Name> AllowedSecondaryWeaponCategoriesWithSaberStaff;
 
 var config array<LootTable> LOOT_TABLES;
 
@@ -549,6 +550,56 @@ static function bool CanWeaponApplyUpgrade(XComGameState_Item WeaponState, X2Wea
 		return false;	// Try to find our weapon category in the list of categories the upgrade is intended for. If it's not there, don't allow the upgrade
 
 	return true; // We only get here if: we're testing a weapon that is a lightsaber added by this mod, and the upgrade is intended for lightsabers. Good! It may pass.
+}
+
+static function bool CanAddItemToInventory_CH(out int bCanAddItem, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, int Quantity, XComGameState_Unit UnitState, optional XComGameState CheckGameState, optional out string DisabledReason)
+{
+	local X2WeaponTemplate			WeaponTemplate;
+	local bool						bEvaluate;
+	local XComGameState_Item		PrimaryWeapon, SecondaryWeapon;
+
+	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
+	PrimaryWeapon = UnitState.GetPrimaryWeapon();
+	SecondaryWeapon = UnitState.GetSecondaryWeapon();
+
+	if (WeaponTemplate != none && PrimaryWeapon != none && SecondaryWeapon != none)
+	{
+		if (X2WeaponTemplate(PrimaryWeapon.GetMyTemplate()).WeaponCat == 'saberstaff' &&
+			WeaponTemplate.InventorySlot == eInvSlot_SecondaryWeapon)
+		{
+			if (default.AllowedSecondaryWeaponCategoriesWithSaberStaff.Find(WeaponTemplate.WeaponCat) == INDEX_NONE)
+			{
+				bCanAddItem = 0;
+				DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(
+					`XEXPAND.ExpandString(
+						class'JediClassHelper'.default.m_strCategoryRestricted
+					)
+				);
+				bEvaluate = true;
+			}
+		}
+
+		if (WeaponTemplate.InventorySlot == eInvSlot_PrimaryWeapon &&
+			WeaponTemplate.WeaponCat == 'saberstaff')
+		{
+			if (default.AllowedSecondaryWeaponCategoriesWithSaberStaff.Find(
+				X2WeaponTemplate(SecondaryWeapon.GetMyTemplate()).WeaponCat) == INDEX_NONE)
+			{
+				bCanAddItem = 0;
+				DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(
+					`XEXPAND.ExpandString(
+						class'JediClassHelper'.default.m_strCategoryRestricted
+					)
+				);
+				bEvaluate = true;
+			}
+		}
+	}
+
+	if(CheckGameState == none)
+		return !bEvaluate;
+
+	return bEvaluate;
 }
 
 exec function DebugGiveJediUpgrades(optional int NumToGive = 1)

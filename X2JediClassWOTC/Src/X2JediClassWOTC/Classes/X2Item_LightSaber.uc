@@ -1,4 +1,4 @@
-class X2Item_LightSaber extends X2Item config (JediClass);
+class X2Item_LightSaber extends X2Item config (JediClass) dependson(JediClassDataStructure);
 
 var config WeaponDamageValue LIGHTSABER_CONVENTIONAL_BASEDAMAGE;
 var config int  LIGHTSABER_CONVENTIONAL_AIM;
@@ -232,37 +232,98 @@ static function bool OnLightsaberAcquired(XComGameState NewGameState, XComGameSt
 {
 	local X2ItemTemplateManager ItemTemplateMgr;
 	local array<name> WeaponUpgradeNames;
+	local X2WeaponUpgradeTemplate CrystalUpgrade, EmitterUpgrade, LensUpgrade, CellUpgrade;
 
 	ItemTemplateMgr = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
 	WeaponUpgradeNames = ItemState.GetMyWeaponUpgradeTemplateNames();
 
+	CrystalUpgrade = X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(
+		GetRandomUpgrade(X2WeaponTemplate(
+			ItemState.GetMyTemplate()).WeaponTech,
+			class'X2Item_WeaponUpgrade_Lightsaber'.default.CRYSTAL_SETUPS
+		)
+	));
+
+	EmitterUpgrade = X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(
+		GetRandomUpgrade(X2WeaponTemplate(
+			ItemState.GetMyTemplate()).WeaponTech,
+			class'X2Item_WeaponUpgrade_Lightsaber'.default.EMITTER_SETUPS
+		)
+	));
+
+	LensUpgrade = X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(
+		GetRandomUpgrade(X2WeaponTemplate(
+			ItemState.GetMyTemplate()).WeaponTech,
+			class'X2Item_WeaponUpgrade_Lightsaber'.default.LENS_SETUPS
+		)
+	));
+
+	CellUpgrade = X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(
+		GetRandomUpgrade(X2WeaponTemplate(
+			ItemState.GetMyTemplate()).WeaponTech,
+			class'X2Item_WeaponUpgrade_Lightsaber'.default.CELL_SETUPS
+		)
+	));
+
 	if (WeaponUpgradeNames.Length != 4)
 	{
 		ItemState.WipeUpgradeTemplates();
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.CRYSTAL_SETUPS[0].UpgradeName)), 0);
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.EMITTER_SETUPS[0].UpgradeName)), 1);
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.LENS_SETUPS[0].UpgradeName)), 2);
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.CELL_SETUPS[0].UpgradeName)), 3);
+		ItemState.ApplyWeaponUpgradeTemplate(CrystalUpgrade, 0);
+		ItemState.ApplyWeaponUpgradeTemplate(EmitterUpgrade, 1);
+		ItemState.ApplyWeaponUpgradeTemplate(LensUpgrade, 2);
+		ItemState.ApplyWeaponUpgradeTemplate(CellUpgrade, 3);
 		return true;
 	}
 	if (class'X2Item_WeaponUpgrade_Lightsaber'.default.CRYSTAL_SETUPS.Find('UpgradeName', WeaponUpgradeNames[0]) == INDEX_NONE)
 	{
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.CRYSTAL_SETUPS[0].UpgradeName)), 0);
+		ItemState.ApplyWeaponUpgradeTemplate(CrystalUpgrade, 0);
 	}
 	if (class'X2Item_WeaponUpgrade_Lightsaber'.default.EMITTER_SETUPS.Find('UpgradeName', WeaponUpgradeNames[1]) == INDEX_NONE)
 	{
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.EMITTER_SETUPS[0].UpgradeName)), 1);
+		ItemState.ApplyWeaponUpgradeTemplate(EmitterUpgrade, 1);
 	}
 	if (class'X2Item_WeaponUpgrade_Lightsaber'.default.LENS_SETUPS.Find('UpgradeName', WeaponUpgradeNames[2]) == INDEX_NONE)
 	{
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.LENS_SETUPS[0].UpgradeName)), 2);
+		ItemState.ApplyWeaponUpgradeTemplate(LensUpgrade, 2);
 	}
 	if (class'X2Item_WeaponUpgrade_Lightsaber'.default.CELL_SETUPS.Find('UpgradeName', WeaponUpgradeNames[3]) == INDEX_NONE)
 	{
-		ItemState.ApplyWeaponUpgradeTemplate(X2WeaponUpgradeTemplate(ItemTemplateMgr.FindItemTemplate(class'X2Item_WeaponUpgrade_Lightsaber'.default.CELL_SETUPS[0].UpgradeName)), 3);
+		ItemState.ApplyWeaponUpgradeTemplate(CellUpgrade, 3);
 	}
 
 	return true;
+}
+
+static function name GetRandomUpgrade(name WeaponTech, array<UpgradeSetup> WeaponUpgrades)
+{
+	local array<int> AvailableTiers;
+	local UpgradeSetup Upgrade;
+
+	switch (WeaponTech)
+	{
+		case 'conventional':
+			AvailableTiers.AddItem(0);
+			break;
+		case 'magnetic':
+			AvailableTiers.AddItem(0);
+			AvailableTiers.AddItem(1);
+			break;
+		case 'beam':
+			AvailableTiers.AddItem(1);
+			AvailableTiers.AddItem(2);
+			break;
+	}
+
+	Upgrade = WeaponUpgrades[`SYNC_RAND_STATIC(WeaponUpgrades.Length - 1)];
+
+	while (AvailableTiers.Find(Upgrade.Tier) == INDEX_NONE)
+	{
+		Upgrade = WeaponUpgrades[`SYNC_RAND_STATIC(WeaponUpgrades.Length - 1)];
+	}
+
+	`LOG(GetFuncName() @ WeaponTech @ Upgrade.UpgradeName,, 'X2JediClassWOTC');
+
+	return Upgrade.UpgradeName;
 }
 
 function bool ShouldUseDualWieldArchetype(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)

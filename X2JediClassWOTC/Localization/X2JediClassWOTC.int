@@ -2,6 +2,7 @@
 ForceAlignmentModifier="Force Alignment"
 DarkSidePoints="Darkside Points"
 LightSidePoints="Lightside Points"
+m_strCategoryRestricted=WEAPON CANT BE USED WITH SABERSTAFFS
 
 [X2Effect_JediForcePool_ByRank]
 ForceLabel="Force Points"
