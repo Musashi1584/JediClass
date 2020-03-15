@@ -41,12 +41,71 @@ static function array<X2DataTemplate> CreateTemplates()
 	local array<X2DataTemplate> Weapons;
 
 	// Lightsabers
+	Weapons.AddItem(CreateTemplate_LightSaber_Training());
 	Weapons.AddItem(CreateTemplate_LightSaber_Conventional());
 	Weapons.AddItem(CreateTemplate_LightSaber_Magnetic());
 	Weapons.AddItem(CreateTemplate_LightSaber_Beam());
 	
 	return Weapons;
 }
+
+static function X2DataTemplate CreateTemplate_LightSaber_Training()
+{
+	local X2WeaponTemplate Template;
+	local AltGameArchetypeUse DualWieldArchetype;
+
+	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'Lightsaber_TR');
+	Template.WeaponPanelImage = "_Sword";                       // used by the UI. Probably determines iconview of the weapon.
+
+	Template.ItemCat = 'weapon';
+	Template.WeaponCat = 'lightsaber';
+	Template.WeaponTech = 'conventional';
+	Template.strImage = "img:///LightSaber_CV.UI.LightsaberIcon";
+	Template.UIArmoryCameraPointTag = 'UIPawnLocation_WeaponUpgrade_Shotgun';
+	Template.EquipSound = "Sword_Equip_Conventional";
+	Template.InventorySlot = eInvSlot_SecondaryWeapon;
+	Template.StowedLocation = eSlot_RightHand;
+	// This all the resources; sounds, animations, models, physics, the works.
+	Template.GameArchetype = "LightSaber_CV.Archetypes.WP_LightSaber_CV";
+
+	DualWieldArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
+	DualWieldArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
+	Template.AltGameArchetypeArray.AddItem(DualWieldArchetype);
+
+	//Template.AddDefaultAttachment('Crystal', "", , "img:///JediClassWeaponUpgrades.Crystal.upgrade_diamond");
+	Template.AddDefaultAttachment('Cell', "LightSaber_CV.SkeletalMeshes.Pommel_Luke", , "img:///JediClassWeaponUpgrades.Cell.Pommel_Luke");
+	Template.AddDefaultAttachment('Emitter', "LightSaber_CV.SkeletalMeshes.Emitter_Luke", , "img:///JediClassWeaponUpgrades.Emitter.Emitter_Luke");
+	Template.AddDefaultAttachment('Lens', "LightSaber_CV.SkeletalMeshes.Grip_Luke", , "img:///JediClassWeaponUpgrades.Lens.Grip_Luke");
+
+	//Template.AddDefaultAttachment('Sheath', "ConvSword.Meshes.SM_ConvSword_Sheath", true);
+	Template.Tier = 0;
+
+	Template.iRadius = 1;
+	Template.NumUpgradeSlots = 0;
+	Template.InfiniteAmmo = true;
+	Template.iPhysicsImpulse = 0;
+
+	Template.iRange = 0;
+	Template.BaseDamage = default.LIGHTSABER_CONVENTIONAL_BASEDAMAGE;
+	
+	Template.Aim = default.LIGHTSABER_CONVENTIONAL_AIM;
+	Template.CritChance = default.LIGHTSABER_CONVENTIONAL_CRITCHANCE;
+	Template.iSoundRange = default.LIGHTSABER_CONVENTIONAL_ISOUNDRANGE;
+	Template.iEnvironmentDamage = default.LIGHTSABER_CONVENTIONAL_IENVIRONMENTDAMAGE;
+	Template.BaseDamage.DamageType = 'Melee';
+
+	AddConfigAbilities(Template, default.LIGHTSABER_CONVENTIONAL_ABILITIES);
+
+	Template.StartingItem = true;
+	Template.CanBeBuilt = false;
+	Template.bInfiniteItem = true;
+	Template.bAlwaysUnique = false;
+
+	Template.DamageTypeTemplateName = 'Melee';
+
+	return Template;
+}
+
 
 static function X2DataTemplate CreateTemplate_LightSaber_Conventional()
 {

@@ -399,7 +399,7 @@ static function string DLCAppendSockets(XComUnitPawn Pawn)
 
 static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameState_Unit UnitState, XComUnitPawn Pawn)
 {
-	if (UnitState.IsAdvent() || UnitState.IsAlien() || UnitState.IsCivilian())
+	if (UnitState.IsSoldier() || UnitState.IsAdvent() || UnitState.IsAlien() || UnitState.IsCivilian())
 	{
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForceChokeTarget")));
 	}
