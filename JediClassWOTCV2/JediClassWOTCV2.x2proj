@@ -1,0 +1,255 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Default" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Guid>e3b4761d-e017-4d0f-bcbc-6583efb1a164</Guid>
+    <Name>JediClassWOTCV2</Name>
+    <Description>Jedi Class
+
+tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
+    <SteamPublishID>0</SteamPublishID>
+    <AssemblyName>JediClassWOTCV2</AssemblyName>
+    <RootNamespace>JediClassWOTCV2</RootNamespace>
+    <ProjectGuid>{eba6e816-fc98-4de6-87f1-b9068d983a65}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="Content\" />
+    <Folder Include="Localization\" />
+    <Folder Include="Content" />
+    <Folder Include="Src\" />
+    <Folder Include="Src\JediClassWOTCV2" />
+    <Folder Include="Src\JediClassWOTCV2\Classes" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Config\XComClassData.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComGameCore.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComGameData.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComJediClass.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComJediUpgrades.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\XComPrimarySecondaries.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\Holocrons.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\JediClassAbilities.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\JediClassUI.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\JediClassWeaponUpgrades.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\LightSaber_CV.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\Perk_Force_Chain_Lightning.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\Perk_Force_Lightning.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\Perk_Force_Lightning_Assets.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\SaberStaff.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ForcePowers.txt">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\JediClassWOTCV2.int">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Notes.txt">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ReadMe.txt" />
+    <Content Include="ModPreview.jpg" />
+    <Content Include="Config\XComEditor.ini" />
+    <Content Include="Config\XComEngine.ini" />
+    <Content Include="Config\XComGame.ini" />
+    <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\JediClassWOTCV2\Classes\AnimationListAction.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\AnimNotify_PlayWeaponAnimExtended.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\AnimNotify_UpdateWeaponMaterial.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\JediClassDataStructure.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\JediClassHelper.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\UISL_TacticalHUD_JediStats.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2AbilityCost_ForcePoints.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2AbilityToHitCalc_LightsaberDeflect.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2AbilityToHitCalc_StatCheck_UnitVsUnitForce.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Ability_LightsaberComponent.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_Fire_SyncedAnimation.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_ForceJump.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_ForceMeditate.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_ForceMeditateEnd.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_ForceVisibility.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_LightsaberDeflect.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_LightsaberToss.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_Revive.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_SyncedAnimationDeath.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_ExtraDeflectChance.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_FlecheBonusDamage.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_ForceAlignmentModifier.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_ForceMeditate.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_ForcePoolBonusDamage.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_ForceSpeed.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_GrantDarkSidePoint.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_GrantLightSidePoint.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_JediForcePool_Bonus.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_JediForcePool_ByRank.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_JediForcePool_Holocron.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_LightsaberDeflect.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_LightsaberReflect.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_MindTricks.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Ability_JediClassAbilities.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_Fire_ChainLightning.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_Fire_ForceChoke.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Action_ForcePush.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2DownloadableContentInfo_JediClass.uc" />
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_ForcePush.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_PrimaryTargetGuaranteedHit.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_RemoveActionPoints.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_RemoveOverwatch.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_RevealUnit.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_Revive.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Effect_TriggerAbilityReaction.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2EventListener_JediClass.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Item_Holocrons.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Item_LightSaber.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Item_SaberStaff.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2Item_WeaponUpgrade_Lightsaber.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2StrategyElement_LightsaberTech.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2TargetingMethod_BattlePregognition.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2TargetingMethod_ForceJump.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2TargetingMethod_LeapStrike.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\X2TargetingMethod_LightsaberToss.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JediClassWOTCV2\Classes\XGLightSaber.uc">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
+</Project>
