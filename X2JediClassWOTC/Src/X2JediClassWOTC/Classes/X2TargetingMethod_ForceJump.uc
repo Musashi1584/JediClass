@@ -1,109 +1,93 @@
-class X2TargetingMethod_ForceJump extends X2TargetingMethod_Grenade;
+class X2TargetingMethod_ForceJump extends X2TargetingMethod_PathTarget;
 
-var private X2Actor_InvalidTarget InvalidTileActor;
-var private XComActionIconManager IconManager;
+var X2Actor_InvalidTarget InvalidTileActor;
+var XComPrecomputedPath GrenadePath;
 
 function Init(AvailableAction InAction, int NewTargetIndex)
 {
-	local XComGameStateHistory History;
 	local PrecomputedPathData PrecomputedPathData;
 	local float TargetingRange;
-	local X2AbilityTarget_Cursor CursorTarget;
-	//local X2AbilityTemplate AbilityTemplate;
 	local XGBattle Battle;
+	local MaterialInterface InvisibleMaterial;
 	
-	super(X2TargetingMethod).Init(InAction, NewTargetIndex);
-	
+	super.Init(InAction, NewTargetIndex);
+
 	Battle = `BATTLE;
-	History = `XCOMHISTORY;
 
 	InvalidTileActor = Battle.Spawn(class'X2Actor_InvalidTarget');
-	ExplosionEmitter.SetHidden(true);
-
-	IconManager = `PRES.GetActionIconMgr();
-	IconManager.UpdateCursorLocation(true);
-
-	AssociatedPlayerState = XComGameState_Player(History.GetGameStateForObjectID(UnitState.ControllingPlayer.ObjectID));
-	`assert(AssociatedPlayerState != none);
 
 	// determine our targeting range
 	//AbilityTemplate = Ability.GetMyTemplate();
 	TargetingRange = Ability.GetAbilityCursorRangeMeters();
 
 	// lock the cursor to that range
-	Cursor = `Cursor;
+	//Cursor = `Cursor;
 	Cursor.m_fMaxChainedDistance = `METERSTOUNITS(TargetingRange);
 
-	// set the cursor location to itself to make sure the chain distance updates
-	Cursor.CursorSetLocation(Cursor.GetCursorFeetLocation(), false, true); 
+	// hide the pathing spline
+	PathingPawn.RenderablePath.SetHidden(true);
+	
+	InvisibleMaterial = MaterialInterface(`CONTENT.RequestGameArchetype("JediClassUI.CursorSet.CursorRibbonInvisible"));
 
-	CursorTarget = X2AbilityTarget_Cursor(Ability.GetMyTemplate().AbilityTargetStyle);
-	if (CursorTarget != none)
-		bRestrictToSquadsightRange = CursorTarget.bRestrictToSquadsightRange;
+	PathingPawn.PathMaterialNormal = InvisibleMaterial;
+	PathingPawn.PathMaterialDashing = InvisibleMaterial;
+	PathingPawn.RenderablePath.SetMaterial(InvisibleMaterial);
+	// Always use blue puck
+	PathingPawn.PuckMeshDashing = StaticMesh(DynamicLoadObject(PathingPawn.PuckMeshName, class'StaticMesh'));
 
 	PrecomputedPathData.InitialPathTime = 0.8;
 	PrecomputedPathData.MaxPathTime = 2.5;
 	PrecomputedPathData.MaxNumberOfBounces = 0;
+	GrenadePath = `PRECOMPUTEDPATH;
+	GrenadePath.ClearOverrideTargetLocation(); // Clear this flag in case the grenade target location was locked.
+	GrenadePath.ActivatePath(XGWeapon(UnitState.GetPrimaryWeapon().GetVisualizer()).GetEntity(), FiringUnit.GetTeam(), PrecomputedPathData);
+	
+}
 
-	if (UseGrenadePath())
-	{
-		GrenadePath = `PRECOMPUTEDPATH;
-		GrenadePath.ClearOverrideTargetLocation(); // Clear this flag in case the grenade target location was locked.
-		GrenadePath.ActivatePath(XGWeapon(UnitState.GetPrimaryWeapon().GetVisualizer()).GetEntity(), FiringUnit.GetTeam(), PrecomputedPathData);
-	}
-
-	//ExplosionEmitter.SetHidden(true);
+function GetTargetLocations(out array<Vector> TargetLocations)
+{
+	TargetLocations.Length = 0;
+	TargetLocations.AddItem(GrenadePath.GetEndPosition());
 }
 
 function Update(float DeltaTime)
 {
 	local vector NewTargetLocation;
 	local array<vector> TargetLocations;
-	local array<TTile> Tiles;
-	local XComWorldData World;
 
-	NewTargetLocation = GetSplashRadiusCenter();
+	PathingPawn.RenderablePath.SetHidden(true);
 
-	if( NewTargetLocation != CachedTargetLocation )
+	super.Update(DeltaTime);
+	
+	NewTargetLocation = GetPathDestination();
+	UpdatePathComponents(NewTargetLocation);
+
+	if (NewTargetLocation != CachedTargetLocation)
 	{
-		// The target location has moved, check to see if the new tile
-		// is a valid location for the mimic beacon
-		TargetLocations.AddItem(Cursor.GetCursorFeetLocation());
-		if( ValidateTargetLocations(TargetLocations) == 'AA_Success' )
+		TargetLocations.Length = 0;
+		TargetLocations.AddItem(GrenadePath.GetEndPosition());
+
+		if (ValidateTargetLocations(TargetLocations) == 'AA_Success')
 		{
-			// The current tile the cursor is on is a valid tile
-			// Show the ExplosionEmitter
-			ExplosionEmitter.ParticleSystemComponent.ActivateSystem();
-			InvalidTileActor.SetHidden(true);
-
-			World = `XWORLD;
-
-			Tiles.AddItem(World.GetTileCoordinatesFromPosition(TargetLocations[0]));
-			DrawAOETiles(Tiles);
-			IconManager.UpdateCursorLocation(, true);
+			DrawValidTile();
 		}
 		else
 		{
 			DrawInvalidTile();
 		}
 	}
-
-	UpdateTargetLocation(DeltaTime);
 }
 
-simulated protected function DrawInvalidTile()
+
+function UpdatePathComponents(vector Destination)
 {
-	local Vector Center;
+	GrenadePath.bUseOverrideTargetLocation = true;
+	GrenadePath.OverrideTargetLocation = Destination;
 
-	Center = GetSplashRadiusCenter();
-
-	// Hide the ExplosionEmitter
-	ExplosionEmitter.ParticleSystemComponent.DeactivateSystem();
-	
-	InvalidTileActor.SetHidden(false);
-	InvalidTileActor.SetLocation(Center);
+	//`LOG(GrenadePath.kRenderablePath.HiddenGame @ GrenadePath.TouchEvents.Length,, 'X2JediClassWOTC');
 }
 
+static function bool UseGrenadePath() { return true; }
 
 function Canceled()
 {
@@ -114,31 +98,92 @@ function Canceled()
 
 	// unlock the 3d cursor
 	Cursor.m_fMaxChainedDistance = -1;
-	
-	if (UseGrenadePath())
-	{
-		GrenadePath.ClearPathGraphics();
-	}
+
+	GrenadePath.ClearPathGraphics();
 }
 
 function name ValidateTargetLocations(const array<Vector> TargetLocations)
 {
-	local name AbilityAvailability;
-	local TTile TeleportTile;
-	local XComWorldData World;
-	local bool bFoundFloorTile;
+	local vector PathLocation, GrenadePathLocation;
+	local TTile PathTile, GrenadePathTile;
+	local XComWorldData WorldData;
+	
+	WorldData = `XWORLD;
 
-	AbilityAvailability = super.ValidateTargetLocations(TargetLocations);
-	if( AbilityAvailability == 'AA_Success' )
+	if (TargetLocations.Length == 1)
 	{
-		World = `XWORLD;
-		
-		bFoundFloorTile = World.GetFloorTileForPosition(TargetLocations[0], TeleportTile);
-		if( bFoundFloorTile && !World.CanUnitsEnterTile(TeleportTile) )
+		GrenadePathLocation = TargetLocations[0];
+		PathLocation = GetPathDestination();
+
+		GrenadePathTile = WorldData.GetTileCoordinatesFromPosition(GrenadePathLocation);
+		PathTile = WorldData.GetTileCoordinatesFromPosition(PathLocation);
+
+		`LOG(default.class @ GetFuncName() @ GrenadePathTile.X @ GrenadePathTile.Y @ GrenadePathTile.Z @ "/" @ PathTile.X @ PathTile.Y @ PathTile.Z,, 'X2JediClassWOTC');
+
+		if (PathTile == GrenadePathTile)
 		{
-			AbilityAvailability = 'AA_TileIsBlocked';
+			return 'AA_Success';
 		}
 	}
-
-	return AbilityAvailability;
+	return 'AA_NoTargets';
 }
+
+simulated protected function DrawValidTile()
+{
+	local vector GrenadePathLocation;
+	local TTile GrenadePathTile;
+	local XComWorldData WorldData;
+
+	WorldData = `XWORLD;
+
+	GrenadePathLocation = GrenadePath.GetEndPosition();
+	GrenadePathTile = WorldData.GetTileCoordinatesFromPosition(GrenadePathLocation);
+
+	InvalidTileActor.SetHidden(true);
+	Cursor.SetHidden(false);
+	PathingPawn.PuckMeshComponent.SetHidden(false);
+	PathingPawn.RebuildOnlySplinepathingInformation(GrenadePathTile);
+}
+
+simulated protected function DrawInvalidTile()
+{
+	local Vector Location;
+
+	Location = GetPathDestination();
+
+	InvalidTileActor.SetHidden(false);
+	InvalidTileActor.SetLocation(Location);
+
+	Cursor.SetHidden(true);
+	PathingPawn.PuckMeshComponent.SetHidden(true);
+	PathingPawn.Waypoints.Length = 0;
+	PathingPawn.HazardMarkers.Length = 0;
+	PathingPawn.NoiseMarkers.Length = 0;
+	PathingPawn.ConcealmentMarkers.Length = 0;
+	PathingPawn.LaserScopeMarkers.Length = 0;
+	PathingPawn.KillZoneMarkers.Length = 0;
+	PathingPawn.UpdatePathMarkers();
+}
+
+
+//function name ValidateTargetLocations(const array<Vector> TargetLocations)
+//{
+//	local name AbilityAvailability;
+//	local TTile TeleportTile;
+//	local XComWorldData World;
+//	local bool bFoundFloorTile;
+//
+//	AbilityAvailability = super.ValidateTargetLocations(TargetLocations);
+//	if( AbilityAvailability == 'AA_Success' )
+//	{
+//		World = `XWORLD;
+//		
+//		bFoundFloorTile = World.GetFloorTileForPosition(TargetLocations[0], TeleportTile);
+//		if( bFoundFloorTile && !World.CanUnitsEnterTile(TeleportTile) )
+//		{
+//			AbilityAvailability = 'AA_TileIsBlocked';
+//		}
+//	}
+//
+//	return AbilityAvailability;
+//}

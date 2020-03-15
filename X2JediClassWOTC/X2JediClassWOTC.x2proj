@@ -39,6 +39,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Config\XComJediUpgrades.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\XComPrimarySecondaries.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\Holocrons.upk">
       <SubType>Content</SubType>
     </Content>
@@ -63,10 +66,16 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Content\Perk_Force_Lightning_Assets.upk">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Content\SaberStaff.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="ForcePowers.txt">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\X2JediClassWOTC.int">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Notes.txt">
       <SubType>Content</SubType>
     </Content>
     <Content Include="ReadMe.txt" />
@@ -75,7 +84,16 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Config\XComEngine.ini" />
     <Content Include="Config\XComGame.ini" />
     <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\X2JediClassWOTC\Classes\AnimationListAction.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\AnimNotify_PlayWeaponAnimExtended.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\AnimNotify_UpdateWeaponMaterial.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\JediClassDataStructure.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\JediClassHelper.uc">
@@ -96,7 +114,16 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Ability_LightsaberComponent.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Action_Fire_SyncedAnimation.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Action_ForceJump.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Action_ForceMeditate.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Action_ForceMeditateEnd.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Action_ForceVisibility.uc">
@@ -111,7 +138,7 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Action_Revive.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_BattlePrecognition.uc">
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Action_SyncedAnimationDeath.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ExtraDeflectChance.uc">
@@ -124,6 +151,9 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ForceMeditate.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ForcePoolBonusDamage.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Effect_ForceSpeed.uc">
@@ -196,10 +226,16 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Item_LightSaber.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2Item_SaberStaff.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2Item_WeaponUpgrade_Lightsaber.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2StrategyElement_LightsaberTech.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\X2JediClassWOTC\Classes\X2TargetingMethod_BattlePregognition.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\X2JediClassWOTC\Classes\X2TargetingMethod_ForceJump.uc">

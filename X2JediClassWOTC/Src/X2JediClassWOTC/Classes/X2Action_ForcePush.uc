@@ -1,4 +1,4 @@
-class X2Action_ForcePush extends X2Action;
+class X2Action_ForcePush extends X2Action_Knockback;
 
 var name ForcePushAnimSequence;
 var float AnimationDelay;
@@ -65,7 +65,7 @@ simulated state Executing
 	{
 		super.BeginState(PrevStateName);
 
-		`SHAPEMGR.DrawSphere(Destination, vect(5, 5, 80), MakeLinearColor(1, 0, 0, 1), true);
+		//`SHAPEMGR.DrawSphere(Destination, vect(5, 5, 80), MakeLinearColor(1, 0, 0, 1), true);
 
 		Unit.BeginUpdatingVisibility();
 	}
@@ -97,15 +97,10 @@ simulated state Executing
 			{
 				DmgObjectRef = EnvironmentDamage.GetReference();
 				//`LOG("X2Action_ForcePush Notify Environmentdamage" @ DmgObjectRef.ObjectID,, 'X2JediClassWOTC');
-				SetTimer(0.3f, false, nameof(DelayedNotify)); //Add a small delay since the is tile based 
 			}
 		}
 	}
 
-	function DelayedNotify()
-	{
-		//VisualizationMgr.SendInterTrackMessage(DmgObjectRef); - "VISUALIZATION REWRITE - MESSAGE" - InterTrack messages were removed, I guess something handles it directly without input now?
-	}
 
 	function CopyPose()
 	{
@@ -132,11 +127,13 @@ simulated state Executing
 	}
 
 Begin:
-	AnimParams = default.AnimParams;
-	AnimParams.AnimName = ForcePushAnimSequence;
-	SourceUnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(AnimParams);
-	
-	Sleep(AnimationDelay);
+	if (ForcePushAnimSequence != '')
+	{
+		AnimParams = default.AnimParams;
+		AnimParams.AnimName = ForcePushAnimSequence;
+		SourceUnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(AnimParams);
+		Sleep(AnimationDelay);
+	}
 
 	UnitPawn.DeathRestingLocation = EndingLocation;
 	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(false);
@@ -191,8 +188,8 @@ Begin:
 		//`LOG("X2Action_ForcePush" @ DistanceToTargetSquared @ iTries,, 'X2JediClassWOTC');
 	}
 
-	//if(!NewUnitState.IsDead() && !NewUnitState.IsIncapacitated())
-	//{		
+	if(!NewUnitState.IsDead() && !NewUnitState.IsIncapacitated())
+	{		
 		//Reset visualizers for primary weapon, in case it was dropped
 		Unit.GetInventory().GetPrimaryWeapon().Destroy(); //Aggressively get rid of the primary weapon, because dropping it can really screw things up
 		Unit.ApplyLoadoutFromGameState(NewUnitState, None);
@@ -226,7 +223,7 @@ Begin:
 
 		Unit.ProcessNewPosition();
 		Unit.IdleStateMachine.CheckForStanceUpdate();
-	//}
+	}
 	
 	CompleteAction();	
 }

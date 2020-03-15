@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------------
 // Based on X2Effect_Knockback
 //---------------------------------------------------------------------------------------
-class X2Effect_ForcePush extends X2Effect;
+class X2Effect_ForcePush extends X2Effect_Knockback;
 
 var name ForcePushAnimSequence;
 

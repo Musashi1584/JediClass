@@ -59,8 +59,6 @@ function Init()
 	bHit = AbilityContext.ResultContext.HitResult == eHit_Success ? true : false;
 	`LOG(default.class @ AbilityContext.ResultContext.HitResult @ bHit,, 'X2JediClassWOTC');
 
-	Params.AnimName = 'HL_LightsaberReflect';
-
 	ThisObj = self;
 	`XEVENTMGR.RegisterForEvent(ThisObj, 'Visualizer_AbilityHit', OnProjectileFromActionToWaitFor, , , InstigatingAction);
 	`XEVENTMGR.RegisterForEvent(ThisObj, 'Visualizer_ProjectileHit', OnProjectileFromActionToWaitFor, , , InstigatingAction);
@@ -252,6 +250,14 @@ simulated state Executing
 		}
 	}
 Begin:
+	Params.AnimName = 'HL_LightsaberReflectStart';
+	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
+	if (UnitPawn.GetAnimTreeController().CanPlayAnimation(Params.AnimName))
+	{
+		PlayingSequence = UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
+	}
+	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(false); // Prevent Idle from kick in
+
 	while(ActionTimer < StartOffsetTimer)
 	{
 		Sleep(0.0f);
@@ -260,6 +266,7 @@ Begin:
 	UnitPawn.EnableRMA(true, true);
 	UnitPawn.EnableRMAInteractPhysics(true);
 	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
+	Params.AnimName = 'HL_LightsaberReflect';
 	if (UnitPawn.GetAnimTreeController().CanPlayAnimation(Params.AnimName))
 	{
 		//The current use-case for this is when a unit becomes stunned; they may get stunned by a counter-attack while they have a secondary weapon out, for example.

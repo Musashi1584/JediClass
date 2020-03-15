@@ -1,21 +1,4 @@
-class X2Item_WeaponUpgrade_Lightsaber extends X2Item config(JediUpgrades);
-
-struct UpgradeSetup
-{
-	var name				UpgradeName;
-	var string				ImagePath;
-	var string				MeshPath;
-	var string				IconPath;
-	var int					Tier;
-	var int					UpgradeValue;
-	var int					AimBonus;
-	var int					CritChanceBonus;
-	var array<ArtifactCost>	ResourceCosts;
-	var array<ArtifactCost>	ArtifactCosts;
-	var array<name>			RequiredTechs;
-	var WeaponDamageValue	DamageValue;
-	var array<name>			BonusAbilities;
-};
+class X2Item_WeaponUpgrade_Lightsaber extends X2Item config(JediUpgrades) dependson(JediClassDataStructure);
 
 var config bool bLogUpgrades;
 var config array<UpgradeSetup>	CRYSTAL_SETUPS, CELL_SETUPS, EMITTER_SETUPS, LENS_SETUPS;
@@ -167,6 +150,7 @@ static function X2DataTemplate CreateJediUpgrade(name SocketName, UpgradeSetup T
 	Template.MaxQuantity = 1;
 	Template.BlackMarketTexts = class'X2Item_DefaultUpgrades'.default.UpgradeBlackMarketTexts;
 	Template.UpgradeCats.AddItem('lightsaber');
+	Template.UpgradeCats.AddItem('saberstaff');
 	
 	`log(default.class @ GetFuncName() @ "finished setting up" @ ThisUpgradeSetup.UpgradeName, default.bLogUpgrades, 'X2JediClassWOTC');
 
@@ -185,7 +169,7 @@ static function bool CanApplyUpgradeToWeaponLightsaber(X2WeaponUpgradeTemplate U
 		
 	AttachedUpgradeTemplates = Weapon.GetMyWeaponUpgradeTemplates();
 
-	if ( Weapon.GetWeaponCategory() != 'lightsaber' )
+	if (Weapon.GetWeaponCategory() != 'lightsaber' && Weapon.GetWeaponCategory() != 'saberstaff')
 	{
 		return false;
 	}

@@ -17,9 +17,19 @@ struct SocketReplacementInfo
 	var bool Female;
 };
 
+struct DLCAnimSetAdditions
+{
+	var Name CharacterGroup;
+	var String AnimSet;
+	var String FemaleAnimSet;
+};
+
+var config array<DLCAnimSetAdditions> AnimSetAdditions;
+
 var config array<SocketReplacementInfo> SocketReplacements;
 
 var config array<Name> IgnoreAbilitiesForForceSpeed;
+var config array<Name> AllowedSecondaryWeaponCategoriesWithSaberStaff;
 
 var config array<LootTable> LOOT_TABLES;
 
@@ -31,6 +41,67 @@ var config array<LootTableEntry> ADVANCED_LOOT_ENTRIES;
 
 var config name SUPERIOR_LOOT_ENTRIES_TO_TABLE;
 var config array<LootTableEntry> SUPERIOR_LOOT_ENTRIES;
+
+var config array<name> DebugAnimSequences;
+
+static function bool AbilityTagExpandHandler_CH(string InString, out string OutString, Object ParseObj, Object StrategyParseOb, XComGameState GameState)
+{
+	local XComGameStateHistory History;
+	local XComGameState_Effect EffectState;
+	local XComGameState_Ability AbilityState;
+	local X2AbilityTemplate AbilityTemplate;
+	local XComGameState_Unit UnitState;
+	local int DSP, LSP;
+	
+	History = `XCOMHISTORY;
+
+	if (InString != "ForceAlignment")
+	{
+		return false;
+	}
+	
+	EffectState = XComGameState_Effect(ParseObj);
+	AbilityState = XComGameState_Ability(ParseObj);
+	AbilityTemplate = X2AbilityTemplate(ParseObj);
+	
+	`LOG(GetFuncName() @ InString @ "1" @ EffectState @ AbilityState @ AbilityTemplate @ ParseObj @ GameState.GetNumGameStateObjects(),, 'X2JediClassWOTC');
+	
+	if (EffectState != none)
+	{
+		AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(EffectState.ApplyEffectParameters.AbilityStateObjectRef.ObjectID));
+	}
+	if (AbilityState != none)
+	{
+		AbilityTemplate = AbilityState.GetMyTemplate();
+
+		UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityState.OwnerStateObject.ObjectID));
+		if (UnitState != none)
+		{
+			DSP = class'JediClassHelper'.static.GetDarkSideModifier(UnitState);
+			LSP = class'JediClassHelper'.static.GetLightSideModifier(UnitState);
+			
+			if (DSP > 0)
+			{
+				OutString = class'JediClassHelper'.static.GetForceAlignmentModifierString() $ ":";
+				OutString $= DSP @ class'JediClassHelper'.default.DarkSidePoints;
+			}
+
+			if (LSP > 0)
+			{
+				OutString = class'JediClassHelper'.static.GetForceAlignmentModifierString() $ ":";
+				OutString $= LSP @ class'JediClassHelper'.default.LightSidePoints;
+			}
+
+			`LOG(GetFuncName() @ InString $ ":" @ OutString,, 'X2JediClassWOTC');
+
+			return OutString != "";
+		}
+	}
+
+	`LOG(GetFuncName() @ InString @ "2" @ EffectState @ AbilityState @ AbilityTemplate,, 'X2JediClassWOTC');
+		
+	return false;
+}
 
 static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent MeshComp)
 {
@@ -175,7 +246,42 @@ static event OnPostTemplatesCreated()
 {
 	//`LOG("ForceLightning Ability" @ class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager().FindAbilityTemplate('ForceLightning'),, 'X2JediClassWOTC');
 	OnPostAbilityTemplatesCreated();
+	OnPostCharacterTemplatesCreated();
 	OnPostLootTablesCreated();
+}
+
+static function OnPostCharacterTemplatesCreated()
+{
+	local X2CharacterTemplateManager CharacterTemplateMgr;
+	local X2CharacterTemplate CharacterTemplate;
+	local array<X2DataTemplate> DataTemplates;
+	local int ScanTemplates, ScanAdditions;
+	local array<name> AllTemplateNames;
+	local name TemplateName;
+
+	CharacterTemplateMgr = class'X2CharacterTemplateManager'.static.GetCharacterTemplateManager();
+	
+	CharacterTemplateMgr.GetTemplateNames(AllTemplateNames);
+
+	foreach AllTemplateNames(TemplateName)
+	{
+		CharacterTemplateMgr.FindDataTemplateAllDifficulties(TemplateName, DataTemplates);
+
+		for ( ScanTemplates = 0; ScanTemplates < DataTemplates.Length; ++ScanTemplates )
+		{
+			CharacterTemplate = X2CharacterTemplate(DataTemplates[ScanTemplates]);
+			if (CharacterTemplate != none)
+			{
+				ScanAdditions = default.AnimSetAdditions.Find('CharacterGroup', CharacterTemplate.CharacterGroupName);
+				if (ScanAdditions != INDEX_NONE)
+				{
+					CharacterTemplate.AdditionalAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype(default.AnimSetAdditions[ScanAdditions].AnimSet)));
+					CharacterTemplate.AdditionalAnimSetsFemale.AddItem(AnimSet(`CONTENT.RequestGameArchetype(default.AnimSetAdditions[ScanAdditions].FemaleAnimSet)));
+					//CharacterTemplate.Abilities.AddItem('SyncedAnimationDeathOverride');
+				}
+			}
+		}
+	}
 }
 
 static function OnPostAbilityTemplatesCreated()
@@ -250,11 +356,17 @@ static function string DLCAppendSockets(XComUnitPawn Pawn)
 	local bool bIsFemale;
 	local string DefaultString, ReturnString;
 	local XComHumanPawn HumanPawn;
+	local XComGameState_Unit UnitState;
 
 	//`LOG("DLCAppendSockets" @ Pawn,, 'DualWieldMelee');
 
 	HumanPawn = XComHumanPawn(Pawn);
 	if (HumanPawn == none) { return ""; }
+
+	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(HumanPawn.ObjectID));
+	if (UnitState == none) { return ""; }
+
+	If (!HasLightsaberEquipped(UnitState) && !HasDualLightsaberEquipped(UnitState)) { return ""; }
 
 	TorsoName = HumanPawn.m_kAppearance.nmTorso;
 	bIsFemale = HumanPawn.m_kAppearance.iGender == eGender_Female;
@@ -292,28 +404,117 @@ static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameStat
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForceChokeTarget")));
 	}
 
-	if (UnitState.GetSoldierClassTemplateName() != 'Jedi')
-		return;
+	// Fallback for non lightsaber loadouts
+	if (UnitState.GetSoldierClassTemplateName() == 'Jedi')
+	{
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers")));
+	}
 
-	if (HasDualMeleeEquipped(UnitState))
+	if (HasSaberStaffEquipped(UnitState))
+	{
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("saberstaff.Anims.AS_Soldier")));
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers_Saberstaff")));
+	}
+	else if (HasDualLightsaberEquipped(UnitState))
 	{
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("Lightsaber_CV.Anims.AS_JediDual")));
-		
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers_DualMelee")));
 	}
-	CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers")));
+	else if (HasPrimaryLightsaberEquipped(UnitState))
+	{
+		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers_PrimaryMelee")));
+	}
+}
 
+
+static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, optional XComGameState_Item ItemState=none)
+{
+	local X2WeaponTemplate WeaponTemplate;
+	local XComGameState_Unit UnitState;
+
+	if (ItemState == none)
+	{
+		return;
+	}
+
+	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(ItemState.OwnerStateObject.ObjectID));
+	WeaponTemplate = X2WeaponTemplate(ItemState.GetMyTemplate());
+
+	// Hard override if with dual lightsaber animset
+	if(UnitState != none && HasDualLightsaberEquipped(UnitState))
+	{
+		if (IsPrimaryMeleeWeaponTemplate(WeaponTemplate) || IsSecondaryMeleeWeaponTemplate(WeaponTemplate))
+		{
+			Weapon.CustomUnitPawnAnimsets.Length = 0;
+			Weapon.CustomUnitPawnAnimsetsFemale.Length = 0;
+			Weapon.CustomUnitPawnAnimsets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("Lightsaber_CV.Anims.AS_Lightsaber_Pawn_Dual")));
+			`LOG(default.Class.Name @ GetFuncName() @ "Adding Lightsaber_CV.Anims.AS_Lightsaber_Pawn_Dual",, 'X2JediClassWOTC');
+		}
+	}
+}
+
+static function bool HasDualLightsaberEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	return IsPrimaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate())) &&
+		   IsSecondaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
+}
+
+static function bool HasPrimaryLightsaberEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	return IsPrimaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate()));
+}
+
+static function bool HasLightsaberEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	return IsPrimaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate())) ||
+		IsSecondaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
+}
+
+static function bool HasSaberStaffEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	return IsPrimarySaberStaffWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate()));
+}
+
+static function bool HasPrimaryMeleeEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
+{
+	return IsPrimaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate())) &&
+		   !IsSecondaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
 }
 
 static function bool HasDualMeleeEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
 	return IsPrimaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate())) &&
-		IsSecondaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
+		   IsSecondaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
+}
+
+static function bool IsPrimarySaberStaffWeaponTemplate(X2WeaponTemplate WeaponTemplate)
+{
+	return WeaponTemplate != none &&
+		WeaponTemplate.InventorySlot == eInvSlot_PrimaryWeapon &&
+		WeaponTemplate.WeaponCat == 'saberstaff';
+}
+
+static function bool IsPrimaryLightsaberWeaponTemplate(X2WeaponTemplate WeaponTemplate)
+{
+	return WeaponTemplate != none &&
+		WeaponTemplate.InventorySlot == eInvSlot_PrimaryWeapon &&
+		WeaponTemplate.WeaponCat == 'lightsaber' &&
+		WeaponTemplate.iRange == 0;
+}
+
+static function bool IsSecondaryLightsaberWeaponTemplate(X2WeaponTemplate WeaponTemplate)
+{
+	return WeaponTemplate != none &&
+		WeaponTemplate.InventorySlot == eInvSlot_SecondaryWeapon &&
+		WeaponTemplate.WeaponCat == 'lightsaber' &&
+		WeaponTemplate.iRange == 0;
 }
 
 static function bool IsPrimaryMeleeWeaponTemplate(X2WeaponTemplate WeaponTemplate)
 {
 	return WeaponTemplate != none &&
 		WeaponTemplate.InventorySlot == eInvSlot_PrimaryWeapon &&
+		(WeaponTemplate.WeaponCat == 'lightsaber' || WeaponTemplate.WeaponCat == 'sword') &&
 		WeaponTemplate.iRange == 0;
 }
 
@@ -321,10 +522,8 @@ static function bool IsSecondaryMeleeWeaponTemplate(X2WeaponTemplate WeaponTempl
 {
 	return WeaponTemplate != none &&
 		WeaponTemplate.InventorySlot == eInvSlot_SecondaryWeapon &&
-		WeaponTemplate.iRange == 0 &&
-		WeaponTemplate.WeaponCat != 'wristblade' &&
-		WeaponTemplate.WeaponCat != 'shield' &&
-		WeaponTemplate.WeaponCat != 'gauntlet';
+		(WeaponTemplate.WeaponCat == 'lightsaber' || WeaponTemplate.WeaponCat == 'sword') &&
+		WeaponTemplate.iRange == 0;
 }
 
 static function bool CanWeaponApplyUpgrade(XComGameState_Item WeaponState, X2WeaponUpgradeTemplate UpgradeTemplate)
@@ -351,6 +550,56 @@ static function bool CanWeaponApplyUpgrade(XComGameState_Item WeaponState, X2Wea
 		return false;	// Try to find our weapon category in the list of categories the upgrade is intended for. If it's not there, don't allow the upgrade
 
 	return true; // We only get here if: we're testing a weapon that is a lightsaber added by this mod, and the upgrade is intended for lightsabers. Good! It may pass.
+}
+
+static function bool CanAddItemToInventory_CH(out int bCanAddItem, const EInventorySlot Slot, const X2ItemTemplate ItemTemplate, int Quantity, XComGameState_Unit UnitState, optional XComGameState CheckGameState, optional out string DisabledReason)
+{
+	local X2WeaponTemplate			WeaponTemplate;
+	local bool						bEvaluate;
+	local XComGameState_Item		PrimaryWeapon, SecondaryWeapon;
+
+	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
+	PrimaryWeapon = UnitState.GetPrimaryWeapon();
+	SecondaryWeapon = UnitState.GetSecondaryWeapon();
+
+	if (WeaponTemplate != none && PrimaryWeapon != none && SecondaryWeapon != none)
+	{
+		if (X2WeaponTemplate(PrimaryWeapon.GetMyTemplate()).WeaponCat == 'saberstaff' &&
+			WeaponTemplate.InventorySlot == eInvSlot_SecondaryWeapon)
+		{
+			if (default.AllowedSecondaryWeaponCategoriesWithSaberStaff.Find(WeaponTemplate.WeaponCat) == INDEX_NONE)
+			{
+				bCanAddItem = 0;
+				DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(
+					`XEXPAND.ExpandString(
+						class'JediClassHelper'.default.m_strCategoryRestricted
+					)
+				);
+				bEvaluate = true;
+			}
+		}
+
+		if (WeaponTemplate.InventorySlot == eInvSlot_PrimaryWeapon &&
+			WeaponTemplate.WeaponCat == 'saberstaff')
+		{
+			if (default.AllowedSecondaryWeaponCategoriesWithSaberStaff.Find(
+				X2WeaponTemplate(SecondaryWeapon.GetMyTemplate()).WeaponCat) == INDEX_NONE)
+			{
+				bCanAddItem = 0;
+				DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(
+					`XEXPAND.ExpandString(
+						class'JediClassHelper'.default.m_strCategoryRestricted
+					)
+				);
+				bEvaluate = true;
+			}
+		}
+	}
+
+	if(CheckGameState == none)
+		return !bEvaluate;
+
+	return bEvaluate;
 }
 
 exec function DebugGiveJediUpgrades(optional int NumToGive = 1)
@@ -462,3 +711,48 @@ exec function LogCrossClassAbilities()
 		}
 	}
 }
+
+
+exec function PlayAnim(name SequenceName, optional float PlayRate = 1.0)
+{
+	local XComTacticalController TacticalController;
+	local CustomAnimParams Params;
+	local XComUnitPawn UnitPawn;
+
+	TacticalController = XComTacticalController(class'WorldInfo'.static.GetWorldInfo().GetALocalPlayerController());
+	if (TacticalController != none)
+	{
+		UnitPawn = TacticalController.GetActiveUnit().GetPawn();
+
+		Params.AnimName = SequenceName;
+		Params.PlayRate = PlayRate;
+
+		UnitPawn.EnableRMA(true, true);
+		UnitPawn.EnableRMAInteractPhysics(true);
+
+		UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
+	}
+}
+
+exec function DebugAnimSequenceList(optional float PlayRate = 1.0)
+{
+	local XComTacticalController TacticalController;
+	local CustomAnimParams Params;
+	local XComUnitPawn UnitPawn;
+	local AnimationListAction PlayAnimAction;
+
+	TacticalController = XComTacticalController(class'WorldInfo'.static.GetWorldInfo().GetALocalPlayerController());
+	if (TacticalController != none)
+	{
+		UnitPawn = TacticalController.GetActiveUnit().GetPawn();
+		Params.PlayRate = PlayRate;
+
+		PlayAnimAction = class'WorldInfo'.static.GetWorldInfo().Spawn(class'AnimationListAction');
+		PlayAnimAction.Params = Params;
+		PlayAnimAction.UnitPawn = UnitPawn;
+		PlayAnimAction.AnimSequenceList = default.DebugAnimSequences;
+		PlayAnimAction.GotoState('Executing');
+	}
+}
+
+

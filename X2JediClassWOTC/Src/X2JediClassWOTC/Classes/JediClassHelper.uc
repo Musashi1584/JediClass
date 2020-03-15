@@ -1,6 +1,9 @@
 class JediClassHelper extends Object config (JediClass);
 
 var localized string ForceAlignmentModifier;
+var localized string DarkSidePoints;
+var localized string LightSidePoints;
+var localized string m_strCategoryRestricted;
 
 var config array<name> LightSideAbilities;
 var config array<name> DarkSideAbilities;

@@ -2,10 +2,10 @@ class X2Action_ForceJump extends X2Action_Move;
 
 const StartLandingAnimationTime = 0.5;
 const MinPathTime = 0.1;
-const JumpStartPlayRate = 2.0;
+const JumpStartPlayRate = 3.0;
 const JumpStopPlayRate = 3.0;
-const JumpRateScale = 0.7;
-const StartScaleFrom = 1.5;
+const JumpRateScale = 0.5;
+const StartScaleFrom = 0.1;
 const StartJumpLoopTransitionEarly = 0.2;
 
 var vector  DesiredLocation;
@@ -23,6 +23,11 @@ var float TraversalTime;
 var XComPrecomputedPath Path;
 var XComGameStateContext_Ability AbilityContext;
 var bool bSkipLandingAnimation;
+var float TriggerDistance; // Distance (in tiles) for tile entry to trigger window breaks (or other enviromental destruction)
+
+var string ForceJumpSoundCuePath;
+var SoundCue ForceJumpSoundCue;
+var AudioComponent ForceJumpSoundComponent;
 
 function Init()
 {
@@ -34,7 +39,7 @@ function Init()
 
 	if (DesiredLocation == EmptyVector)
 	{
-		if (AbilityContext.InputContext.MovementPaths[0].MovementData.Length > 0)
+		if (AbilityContext.InputContext.MovementPaths[0].MovementData.Length > 1)
 		{
 			DesiredLocation = AbilityContext.InputContext.MovementPaths[0].MovementData[AbilityContext.InputContext.MovementPaths[0].MovementData.Length - 1].Position;
 		}
@@ -44,12 +49,60 @@ function Init()
 			bSkipJump = true;
 		}
 	}
+
+	ForceJumpSoundCue = SoundCue(`CONTENT.RequestGameArchetype(ForceJumpSoundCuePath));
+	ForceJumpSoundComponent = CreateAudioComponent(ForceJumpSoundCue, false);
+
 	`LOG(default.class @ GetFuncName() @ `ShowVar(AbilityContext) @ `ShowVar(DesiredLocation),, 'X2JediClassWOTC');
 }
 
-function ProjectileNotifyHit(bool bMainImpactNotify, Vector HitLocation)
+function NotifyEnvironmentDamage(int PreviousPathTileIndex, bool bFragileOnly = true, bool bCheckForDestructibleObject = false)
 {
-	ProjectileHit = true;
+	local float DestroyTileDistance;
+	local Vector HitLocation;
+	local Vector TileLocation;
+	local XComGameState_EnvironmentDamage EnvironmentDamage;		
+	local XComWorldData WorldData;
+	local TTile PathTile;
+	local int Index;		
+
+	WorldData = `XWORLD;
+	//If the unit jumped more than one tile index, make sure it is caught
+	for(Index = PreviousPathTileIndex; Index <= PathTileIndex; ++Index)
+	{
+		if (bCheckForDestructibleObject)
+		{
+			//Only trigger nearby environment damage if the traversal to the next tile has a destructible object
+			if (AbilityContext.InputContext.MovementPaths[MovePathIndex].Destructibles.Length == 0 || 
+				AbilityContext.InputContext.MovementPaths[MovePathIndex].Destructibles.Find(Index + 1) == INDEX_NONE)
+			{
+				continue;
+			}
+		}
+
+		foreach LastInGameStateChain.IterateByClassType(class'XComGameState_EnvironmentDamage', EnvironmentDamage)
+		{
+			`log(default.class @ GetFuncName() @ `showvar(EnvironmentDamage),, 'X2JediClassWOTC');
+			if (EnvironmentDamage.DamageCause.ObjectID != Unit.ObjectID)
+				continue;
+			
+			HitLocation = WorldData.GetPositionFromTileCoordinates(EnvironmentDamage.HitLocationTile);			
+			PathTile = AbilityContext.InputContext.MovementPaths[MovePathIndex].MovementTiles[Index];
+			TileLocation = WorldData.GetPositionFromTileCoordinates(PathTile);
+			
+			DestroyTileDistance = VSize(HitLocation - TileLocation);
+
+			`log(default.class @ GetFuncName() @ `showvar(TileLocation),, 'X2JediClassWOTC');
+			`log(default.class @ GetFuncName() @ `showvar(HitLocation),, 'X2JediClassWOTC');
+			`log(default.class @ GetFuncName() @ `showvar(DestroyTileDistance),, 'X2JediClassWOTC');
+
+			if(DestroyTileDistance < (class'XComWorldData'.const.WORLD_StepSize * TriggerDistance)) /* for force jump purposes, don't care about the fragile flag */
+			{				
+				`XEVENTMGR.TriggerEvent('Visualizer_WorldDamage', EnvironmentDamage, self);				
+				`log(default.class @ GetFuncName() @ "Shots fired!!",, 'X2JediClassWOTC');
+			}
+		}
+	}
 }
 
 simulated function bool MoveAlongPath(float fTime, XComUnitPawn pActor)
@@ -103,6 +156,10 @@ function InterpolatePath(float StartZ)
 	local int Index;
 	local float Diff, MaxDiff, Decrement;
 
+	`LOG(default.class @ GetFuncName() @
+		"PathTime" @ Path.akKeyframes[Path.iNumKeyframes-1].fTime
+	,, 'X2JediClassWOTC');
+
 	Diff = Path.akKeyframes[0].vLoc.Z - StartZ;
 	MaxDiff = Diff;
 
@@ -151,15 +208,19 @@ simulated state Executing
 	}
 
 Begin:
-	`LOG(default.class @ GetFuncName() @ `ShowVar(UnitPawn.Location) @ `ShowVar(DesiredLocation) @ `ShowVar(bSkipJump),, 'X2JediClassWOTC');
+	Path = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).GetPrecomputedPath();
+
+	`LOG(default.class @ GetFuncName() @
+		`ShowVar(bSkipJump) @
+		`ShowVar(UnitPawn.Location) @
+		`ShowVar(DesiredLocation)
+	,, 'X2JediClassWOTC');
 
 	if (bSkipJump)
 	{
 		CompleteAction();
 	}
 	
-	Path = XComTacticalGRI(class'Engine'.static.GetCurrentWorldInfo().GRI).GetPrecomputedPath();
-
 	UnitPawn.EnableRMA(true, true);
 	UnitPawn.EnableRMAInteractPhysics(true);
 	UnitPawn.bSkipIK = true;
@@ -191,6 +252,7 @@ Begin:
 	Params = default.Params;
 	Params.AnimName = 'HL_ForceJumpLoop';
 	PlayingSequence = UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
+	ForceJumpSoundComponent.Play();
 	while(!bStartLandingAnimation)
 	{
 		//PlayingSequence.ReplayAnim();
@@ -213,83 +275,25 @@ Begin:
 
 	if (!bSkipLandingAnimation)
 	{
-		//DesiredRotation = Rotator(Normal(DesiredLocation - UnitPawn.Location));
 		Params = default.Params;
 		Params.AnimName = 'HL_ForceJumpStop';
 		Params.PlayRate = JumpStopPlayRate;
-		//Params.DesiredEndingAtoms.Add(1);
-		//Params.DesiredEndingAtoms[0].Scale = 1.0f;
-		//Params.DesiredEndingAtoms[0].Translation = Path.OverrideTargetLocation;
-		//DesiredRotation = UnitPawn.Rotation;
-		//DesiredRotation.Pitch = 0.0f;
-		//DesiredRotation.Roll = 0.0f;
-		//Params.DesiredEndingAtoms[0].Rotation = QuatFromRotator(DesiredRotation);
 		FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params));
 		UnitPawn.bSkipIK = false;
 	}
+	ForceJumpSoundComponent.Stop();
 
 	`LOG(default.class @ GetFuncName() @ `ShowVar(Params.AnimName),, 'X2JediClassWOTC');
 
 	UnitPawn.SetLocation(Path.OverrideTargetLocation);
+	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
 
 	CompleteAction();
 }
 
-//function CompleteAction()
-//{
-//	super.CompleteAction();
-//
-//	// since we step out of and step into cover from different tiles, 
-//	// need to set the enter cover restore to the destination location
-//	Unit.RestoreLocation = DesiredLocation;
-//}
-
 defaultproperties
 {
+	ForceJumpSoundCuePath="JediClassAbilities.SFX.Jumpbuild_Cue"
 	ProjectileHit = false;
+	TriggerDistance = 0.5
 }
-
-
-	//while( ProjectileHit == false )
-	//{
-	//	Sleep(0.0f);
-	//}
-
-	// Have an emphasis on seeing the grapple tight
-	//Sleep(0.1f);
-
-	//Params.AnimName = 'NO_GrappleStart';
-	//DesiredLocation.Z = Unit.GetDesiredZForLocation(DesiredLocation);
-	//DesiredRotation = Rotator(Normal(DesiredLocation - UnitPawn.Location));
-	//StartingAtom.Rotation = QuatFromRotator(DesiredRotation);
-	//StartingAtom.Translation = UnitPawn.Location;
-	//StartingAtom.Scale = 1.0f;
-	//UnitPawn.GetAnimTreeController().GetDesiredEndingAtomFromStartingAtom(Params, StartingAtom);
-	//PlayingSequence = UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
-	//
-	//// hide the targeting icon
-	//Unit.SetDiscState(eDS_None);
-	//
-	//StartingLocation = UnitPawn.Location;
-	//StopDistanceSquared = Square(VSize(DesiredLocation - StartingLocation) - UnitPawn.fStrangleStopDistance);
-	//
-	//// to protect against overshoot, rather than check the distance to the target, we check the distance from the source.
-	//// Otherwise it is possible to go from too far away in front of the target, to too far away on the other side
-	//DistanceFromStartSquared = 0;
-	//while( DistanceFromStartSquared < StopDistanceSquared )
-	//{
-	//	if( !PlayingSequence.bRelevant || !PlayingSequence.bPlaying || PlayingSequence.AnimSeq == None )
-	//	{
-	//		if( DistanceFromStartSquared < StopDistanceSquared )
-	//		{
-	//			`RedScreen("Grapple never made it to the destination");
-	//		}
-	//		break;
-	//	}
-	//
-	//	Sleep(0.0f);
-	//	DistanceFromStartSquared = VSizeSq(UnitPawn.Location - StartingLocation);
-	//}
-
-	// send messages to do the window break visualization
-	//SendWindowBreakNotifies();
