@@ -94,7 +94,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_MG()
 
 	Template.ItemCat = 'weapon';
 	Template.WeaponCat = 'saberstaff';
-	Template.WeaponTech = 'conventional';
+	Template.WeaponTech = 'magnetic';
 	//Template.strImage = "img:///WP_WOTC_LightSaber_CV.LightsaberIcon";
 	Template.strImage = "img:///saberstaff.UI.SaberstaffUI";
 
@@ -150,7 +150,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_BM()
 
 	Template.ItemCat = 'weapon';
 	Template.WeaponCat = 'saberstaff';
-	Template.WeaponTech = 'conventional';
+	Template.WeaponTech = 'beam';
 	//Template.strImage = "img:///WP_WOTC_LightSaber_CV.LightsaberIcon";
 	Template.strImage = "img:///saberstaff.UI.SaberstaffUI";
 
