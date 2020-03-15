@@ -131,7 +131,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	AbilityTemplates.AddItem(ForceDrainTriggered());
 	AbilityTemplates.AddItem(ForceSenseTrigger());
 	AbilityTemplates.AddItem(ForceSenseSpawnTrigger());
-	AbilityTemplates.AddItem(ForcLightningAnimSets());
+	AbilityTemplates.AddItem(ForceLightningAnimSets());
 	AbilityTemplates.AddItem(ForceAbilitiesAnimSet());
 	AbilityTemplates.AddItem(ForceAlignmentModifier());
 	AbilityTemplates.AddItem(ForcePoolBonusDamage());
@@ -1458,6 +1458,8 @@ static function X2AbilityTemplate ForceMeditate()
 	Template.BuildVisualizationFn = ForceMeditate_BuildVisualization;
 	//Template.BuildAffectedVisualizationSyncFn = ForceMeditate_BuildVisualizationSync;
 
+	Template.CinescriptCameraType = "Psionic_FireAtUnit";
+
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
@@ -2100,7 +2102,7 @@ static function X2AbilityTemplate ForceSpeed()
 	ForceSpeedEffect.SetDisplayInfo(ePerkBuff_Bonus, Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage, , , Template.AbilitySourceName);
 	Template.AddTargetEffect(ForceSpeedEffect);
 
-	Template.CustomFireAnim = 'HL_ForceA';
+	Template.CustomFireAnim = 'HL_GainingFocus';
 	Template.CinescriptCameraType = "Psionic_FireAtUnit";
 	Template.bShowActivation = true;
 	Template.bSkipExitCoverWhenFiring = true;
@@ -3008,7 +3010,7 @@ static function X2AbilityTemplate ForceLightning()
 	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
 	//Template.ActionFireClass = class'X2Action_Fire_ChainLightning';
 	Template.CustomFireAnim = 'HL_ForceLightningA';
-	Template.AdditionalAbilities.AddItem('ForcLightningAnimSets');
+	Template.AdditionalAbilities.AddItem('ForceLightningAnimSets');
 
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
@@ -3113,7 +3115,7 @@ static function X2AbilityTemplate ForceChainLightning()
 	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
 	Template.ActionFireClass = class'X2Action_Fire_ChainLightning';
 	Template.CustomFireAnim = 'HL_ForceChainLightningA';
-	Template.AdditionalAbilities.AddItem('ForcLightningAnimSets');
+	Template.AdditionalAbilities.AddItem('ForceLightningAnimSets');
 
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
@@ -3166,12 +3168,12 @@ static function X2AbilityTemplate ForceAlignmentModifier()
 	return Template;
 }
 
-static function X2AbilityTemplate ForcLightningAnimSets()
+static function X2AbilityTemplate ForceLightningAnimSets()
 {
 	local X2AbilityTemplate                 Template;	
 	local X2Effect_AdditionalAnimSets		AnimSets;
 
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForcLightningAnimSets');
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceLightningAnimSets');
 	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_item_nanofibervest";
 
 	Template.AbilitySourceName = 'eAbilitySource_Item';
