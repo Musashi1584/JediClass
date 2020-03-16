@@ -49,9 +49,15 @@ simulated function AddX2ActionsForVisualization(XComGameState VisualizeGameState
 
 simulated function AddX2ActionsForVisualization_Removed(XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata, const name EffectApplyResult, XComGameState_Effect RemovedEffect)
 {
+	local XComGameStateContext Context;
+
 	`LOG(default.class @ GetFuncName(),, 'JediClassWOTCV2');
 	super.AddX2ActionsForVisualization_Removed(VisualizeGameState, ActionMetadata, EffectApplyResult, RemovedEffect);
-	class'X2Action_ForceMeditateEnd'.static.AddToVisualizationTree(ActionMetadata, VisualizeGameState.GetContext(), false, ActionMetadata.LastActionAdded);
+	
+	Context = VisualizeGameState.GetContext();
+	Context.SetAssociatedPlayTiming(SPT_BeforeParallel);
+
+	class'X2Action_ForceMeditateEnd'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
 }
 
 simulated function AddX2ActionsForVisualization_Tick(XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata, const int TickIndex, XComGameState_Effect EffectState)
