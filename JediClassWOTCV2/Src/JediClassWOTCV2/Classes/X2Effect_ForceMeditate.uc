@@ -62,7 +62,7 @@ simulated function AddX2ActionsForVisualization_Removed(XComGameState VisualizeG
 
 simulated function AddX2ActionsForVisualization_Tick(XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata, const int TickIndex, XComGameState_Effect EffectState)
 {
-
+	// no tick visualization
 }
 
 defaultproperties

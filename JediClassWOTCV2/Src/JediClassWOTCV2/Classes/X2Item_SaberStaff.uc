@@ -7,6 +7,7 @@ var config int SABERSTAFF_CV_ICLIPSIZE;
 var config int SABERSTAFF_CV_ISOUNDRANGE;
 var config int SABERSTAFF_CV_IENVIRONMENTDAMAGE;
 var config int SABERSTAFF_CV_IPOINTS;
+var config array<name> SABERSTAFF_CONVENTIONAL_ABILITIES;
 
 var config WeaponDamageValue SABERSTAFF_MAGNETIC_BASEDAMAGE;
 var config int SABERSTAFF_MAGNETIC_AIM;
@@ -15,6 +16,7 @@ var config int SABERSTAFF_MAGNETIC_ICLIPSIZE;
 var config int SABERSTAFF_MAGNETIC_ISOUNDRANGE;
 var config int SABERSTAFF_MAGNETIC_IENVIRONMENTDAMAGE;
 var config int SABERSTAFF_MAGNETIC_IPOINTS;
+var config array<name> SABERSTAFF_MAGNETIC_ABILITIES;
 
 var config WeaponDamageValue SABERSTAFF_BEAM_BASEDAMAGE;
 var config int SABERSTAFF_BEAM_AIM;
@@ -23,6 +25,7 @@ var config int SABERSTAFF_BEAM_ICLIPSIZE;
 var config int SABERSTAFF_BEAM_ISOUNDRANGE;
 var config int SABERSTAFF_BEAM_IENVIRONMENTDAMAGE;
 var config int SABERSTAFF_BEAM_IPOINTS;
+var config array<name> SABERSTAFF_BEAM_ABILITIES;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -72,7 +75,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_TR()
 	Template.iEnvironmentDamage = default.SABERSTAFF_CV_IENVIRONMENTDAMAGE;
 	Template.BaseDamage.DamageType = 'Melee';
 
-	Template.Abilities.AddItem('DeflectBonusSaberStaff_CV');
+	class'X2Item_LightSaber'.static.AddConfigAbilities(Template, default.SABERSTAFF_CONVENTIONAL_ABILITIES);
 	
 	Template.StartingItem = true;
 	Template.CanBeBuilt = false;
@@ -122,7 +125,9 @@ static function X2DataTemplate CreateTemplate_Saberstaff_CV()
 	Template.iEnvironmentDamage = default.SABERSTAFF_CV_IENVIRONMENTDAMAGE;
 	Template.BaseDamage.DamageType = 'Melee';
 
-	Template.Abilities.AddItem('DeflectBonusSaberStaff_CV');
+	class'X2Item_LightSaber'.static.AddConfigAbilities(Template, default.SABERSTAFF_CONVENTIONAL_ABILITIES);
+
+	Template.BaseItem = 'Saberstaff_TR'; // Which item this will be upgraded from
 	
 	Template.StartingItem = false;
 	Template.CanBeBuilt = false;
@@ -182,7 +187,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_MG()
 	Template.bInfiniteItem = false;
 	Template.bAlwaysUnique = true;
 
-	Template.Abilities.AddItem('DeflectBonusSaberStaff_MG');
+	class'X2Item_LightSaber'.static.AddConfigAbilities(Template, default.SABERSTAFF_MAGNETIC_ABILITIES);
 
 	//Template.BonusWeaponEffects.AddItem(class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, class'X2Item_DefaultWeapons'.default.RANGERSWORD_MAGNETIC_STUNCHANCE));
 		
@@ -238,7 +243,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_BM()
 	Template.StartingItem = false;
 	Template.CanBeBuilt = false;
 
-	Template.Abilities.AddItem('DeflectBonusSaberStaff_BM');
+	class'X2Item_LightSaber'.static.AddConfigAbilities(Template, default.SABERSTAFF_BEAM_ABILITIES);
 
 	//Template.BonusWeaponEffects.AddItem(class'X2StatusEffects'.static.CreateStunnedStatusEffect(2, class'X2Item_DefaultWeapons'.default.RANGERSWORD_MAGNETIC_STUNCHANCE));
 	//Template.BonusWeaponEffects.AddItem(class'X2StatusEffects'.static.CreateBurningStatusEffect(3, 0));

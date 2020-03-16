@@ -152,6 +152,8 @@ static function X2DataTemplate CreateTemplate_LightSaber_Conventional()
 
 	AddConfigAbilities(Template, default.LIGHTSABER_CONVENTIONAL_ABILITIES);
 
+	Template.BaseItem = 'Lightsaber_TR'; // Which item this will be upgraded from
+
 	Template.StartingItem = false;
 	Template.CanBeBuilt = false;
 	Template.bInfiniteItem = false;
