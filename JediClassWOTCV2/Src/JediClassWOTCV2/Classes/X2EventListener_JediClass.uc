@@ -7,6 +7,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(CreateListenerTemplate_OnSquaddieItemStateApplied());
 	Templates.AddItem(CreateListenerTemplate_OnOverrideUnitFocusUI());
 	Templates.AddItem(CreateListenerTemplate_OnSoldierInfo());
+	Templates.AddItem(CreateListenerTemplate_OnOverrideHitEffects());
 
 	return Templates;
 }
@@ -169,5 +170,48 @@ static function EventListenerReturn OnSoldierInfo(Object EventData, Object Event
 	Tuple.Data[0].s = Info;
 	EventData = Tuple;
 
+	return ELR_NoInterrupt;
+}
+
+static function CHEventListenerTemplate CreateListenerTemplate_OnOverrideHitEffects()
+{
+	local CHEventListenerTemplate Template;
+
+	`CREATE_X2TEMPLATE(class'CHEventListenerTemplate', Template, 'JediClassOverrideHitEffects');
+
+	Template.RegisterInTactical = true;
+	Template.RegisterInStrategy = false;
+
+	Template.AddCHEvent('OverrideHitEffects', OnOverrideHitEffects, ELD_Immediate);
+	`log("Register Event OnOverrideHitEffects",, 'JediClassWOTCV2');
+
+	return Template;
+}
+
+static function EventListenerReturn OnOverrideHitEffects(Object EventData, Object EventSource, XComGameState GameState, Name Event, Object CallbackData)
+{
+	local XComLWTuple Tuple;
+	local XComUnitPawn Pawn;
+	local XComGameState_Unit UnitState;
+	local string Info;
+	local PrimitiveComponent Mesh;
+	local XComPawnHitEffect HitEffect;
+	local EAbilityHitResult HitResult;
+
+	Tuple = XComLWTuple(EventData);
+	Pawn = XComUnitPawn(EventSource);
+
+	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Pawn.m_kGameUnit.ObjectID));
+
+	if (UnitState != none && UnitState.GetSoldierClassTemplate().DataName == 'Jedi')
+	{
+		HitResult = EAbilityHitResult(Tuple.Data[6].i);
+
+		// Override the templar fx
+		if (HitResult == eHit_Deflect || HitResult == eHit_Reflect)
+		{
+			return ELR_InterruptEventAndListeners;
+		}
+	}
 	return ELR_NoInterrupt;
 }

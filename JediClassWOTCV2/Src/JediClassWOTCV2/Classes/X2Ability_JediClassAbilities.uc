@@ -196,7 +196,7 @@ static function X2AbilityTemplate BattlePrecognition()
 
 	CoveringFireEffect = new class'X2Effect_TriggerAbilityReaction';
 	CoveringFireEffect.GrantActionPoint = 'Move';
-	CoveringFireEffect.MaxActionPointsPerTurn = 1;
+	CoveringFireEffect.MaxActionPointsPerTurn = 2;
 	CoveringFireEffect.bPreEmptiveFire = true;
 	CoveringFireEffect.bDirectAttackOnly = false;
 	CoveringFireEffect.bUseMultiTargets = false;
@@ -217,6 +217,7 @@ static function X2AbilityTemplate BattlePrecognition()
 	Template.AbilityToHitCalc = default.DeadEye;
 	Template.AbilityTargetStyle = default.SelfTarget;
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+	Template.TargetingMethod = class'X2TargetingMethod_BattlePrecognition';
 	
 	Template.AbilitySourceName = 'eAbilitySource_Standard';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_HideIfOtherAvailable;
@@ -278,7 +279,7 @@ static function X2AbilityTemplate BattlePrecognitionLeapStrike()
 	Template.AbilityToHitCalc = StandardMelee;
 	
 	Template.AbilityTargetStyle = new class'X2AbilityTarget_MovingMelee';
-	Template.TargetingMethod = class'X2TargetingMethod_BattlePregognition';
+	Template.TargetingMethod = class'X2TargetingMethod_BattlePrecognitionStrike';
 
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 
@@ -3568,7 +3569,7 @@ static function X2AbilityTemplate LightsaberReflect()
 	RedirectEffect = new class'X2Effect_LightsaberReflect';
 	RedirectEffect.BuildPersistentEffect(1, true, false);
 	Template.AddTargetEffect(RedirectEffect);
-
+	
 	DeflectBonusEffect = new class'X2Effect_ExtraDeflectChance';
 	DeflectBonusEffect.BuildPersistentEffect(1);
 	DeflectBonusEffect.DeflectBonus = default.REFLECT_BONUS;

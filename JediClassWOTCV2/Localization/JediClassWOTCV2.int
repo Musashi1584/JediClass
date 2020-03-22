@@ -3,6 +3,7 @@ ForceAlignmentModifier="Force Alignment"
 DarkSidePoints="Darkside Points"
 LightSidePoints="Lightside Points"
 m_strCategoryRestricted=WEAPON CANT BE USED WITH SABERSTAFFS
+m_strHeavyArmorRestricted=JEDI CAN NOT WEAR HEAVY ARMOR
 
 [X2Effect_JediForcePool_ByRank]
 ForceLabel="Force Points"

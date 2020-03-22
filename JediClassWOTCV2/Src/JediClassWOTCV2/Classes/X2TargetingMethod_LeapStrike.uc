@@ -6,7 +6,6 @@ var protected XComPrecomputedPath GrenadePath;
 function Init(AvailableAction InAction, int NewTargetIndex)
 {
 	local MaterialInterface InvisibleMaterial;
-	local PrecomputedPathData PrecomputedPathData;
 
 	super.Init(InAction, NewTargetIndex);
 
@@ -17,18 +16,74 @@ function Init(AvailableAction InAction, int NewTargetIndex)
 	PathingPawn.RenderablePath.SetMaterial(InvisibleMaterial);
 	PathingPawn.RenderablePath.SetHidden(true);
 
-	
-	PrecomputedPathData.InitialPathTime = 0.8;
-	PrecomputedPathData.MaxPathTime = 2.5;
-	PrecomputedPathData.MaxNumberOfBounces = 0;
+	ValidatePathingPawnTiles(PathingPawn.PossibleTiles);
+}
 
-	if (UseGrenadePath())
+function InitPath()
+{
+	local PrecomputedPathData PrecomputedPathData;
+	
+	if (GrenadePath == none)
 	{
+		PrecomputedPathData.InitialPathTime = 0.8;
+		PrecomputedPathData.MaxPathTime = 2.5;
+		PrecomputedPathData.MaxNumberOfBounces = 0;
+
 		GrenadePath = `PRECOMPUTEDPATH;
 		GrenadePath.ClearOverrideTargetLocation(); // Clear this flag in case the grenade target location was locked.
 		GrenadePath.ActivatePath(XGWeapon(UnitState.GetPrimaryWeapon().GetVisualizer()).GetEntity(), FiringUnit.GetTeam(), PrecomputedPathData);
 	}
 }
+
+function ValidatePathingPawnTiles(out array<TTile> Tiles)
+{
+	local TTile Tile, GrenadePathTile;
+	local int Index;
+	local vector GrenadePathEndLocation;
+
+	//`LOG(default.class @ GetFuncName(),, 'JediClassWOTCV2');
+
+	InitPath();
+
+	GrenadePath.SetHidden(true);
+	GrenadePath.bUseOverrideTargetLocation = true;
+	for (Index = Tiles.Length - 1; Index >=0; Index--)
+	{
+		Tile = PathingPawn.PossibleTiles[Index];
+		GrenadePath.OverrideTargetLocation = `XWORLD.GetPositionFromTileCoordinates(Tile);
+		GrenadePath.ForceRebuildGrenadePath();
+		GrenadePath.UpdateTrajectory();
+
+		GrenadePathEndLocation = GrenadePath.GetEndPosition();
+		GrenadePathTile = `XWORLD.GetTileCoordinatesFromPosition(GrenadePathEndLocation);
+		if (GrenadePathTile != Tile)
+		{
+			//`LOG(default.class @ GetFuncName() @
+			//	 "Removing Tile" @ Index @ "from PossibleTiles" @
+			//	 Tile.X @ Tile.Y @ Tile.Z @
+			//	 "GrenadePathTile" @
+			//	 GrenadePathTile.X @ GrenadePathTile.Y @ GrenadePathTile.Z
+			//,, 'JediClassWOTCV2');
+
+			Tiles.Remove(Index, 1);
+		}
+		
+	}
+	GrenadePath.SetHidden(false);
+	GrenadePath.bUseOverrideTargetLocation = false;
+}
+
+function bool GetPreAbilityPath(out array<TTile> PathTiles)
+{
+	PathingPawn.GetTargetMeleePath(PathTiles);
+
+	ValidatePathingPawnTiles(PathingPawn.PossibleTiles);
+
+	PathTiles[PathTiles.Length - 1] = PathingPawn.PossibleTiles[0];
+
+	return PathTiles.Length > 1;
+}
+
 
 function bool BlockInvalidTiles()
 {
@@ -48,7 +103,6 @@ function SetTargetByObjectID(int ObjectID)
 	}
 }
 
-
 function DirectSetTarget(int TargetIndex)
 {
 	local array<TTile> PathTiles;
@@ -56,7 +110,7 @@ function DirectSetTarget(int TargetIndex)
 
 	super.DirectSetTarget(TargetIndex);
 
-	GetPreAbilityPath(PathTiles);
+	PathingPawn.GetTargetMeleePath(PathTiles);
 	TargetTile = PathTiles[PathTiles.Length - 1];
 	UpdatePathComponents(TargetTile);
 }
@@ -77,14 +131,16 @@ function UpdatePathComponents(TTile Destination)
 protected function Vector GetPathDestination()
 {
 	local XComWorldData WorldData;
+	local XComGameState_BaseObject Target;
 	local array<TTile> PathTiles;
 	local TTile Tile;
 
 	WorldData = `XWORLD;
 
-	GetPreAbilityPath(PathTiles);
+	PathingPawn.GetTargetMeleePath(PathTiles);
+
 	Tile = PathTiles[PathTiles.Length - 1];
-	
+
 	return WorldData.GetPositionFromTileCoordinates(Tile);
 }
 
@@ -113,46 +169,11 @@ function Update(float DeltaTime)
 		{
 			DrawValidTile();
 		}
-		else
+		else if (BlockInvalidTiles())
 		{
-			NewTile = `XWORLD.GetTileCoordinatesFromPosition(NewTargetLocation);
-			if (BlockInvalidTiles())
-			{
-				UpdatePathingPawnTile(NewTile);
-				DrawInvalidTile();
-			}
+			DrawInvalidTile();
 		}
 	}
-}
-
-function UpdatePathingPawnTile(TTile TargetTile)
-{
-	local vector GrenadePathLocation;
-	local TTile Tile, GrenadePathTile;
-	local int Index;
-
-	for (Index = PathingPawn.PossibleTiles.Length - 1; Index >=0; Index--)
-	{
-		Tile = PathingPawn.PossibleTiles[Index];
-
-		if (TargetTile != Tile)
-		{
-			continue;
-		}
-
-		GrenadePathLocation = GrenadePath.GetEndPosition();
-		GrenadePathTile = `XWORLD.GetTileCoordinatesFromPosition(GrenadePathLocation);
-		
-		if (GrenadePathTile != TargetTile)
-		{
-			`LOG(default.class @ GetFuncName() @ "Removing Tile" @ Index @ "from PossibleTiles" @ Tile.X @ Tile.Y @ Tile.Z,, 'JediClassWOTCV2');
-			PathingPawn.PossibleTiles.Remove(Index, 1);
-			
-		}
-	}
-
-	PathingPawn.UpdatePossibleTilesVisuals();
-	PathingPawn.DoUpdatePuckVisuals(PathingPawn.PossibleTiles[0], TargetUnit, Ability.GetMyTemplate());
 }
 
 function name ValidateTargetLocations(const array<Vector> TargetLocations)
@@ -169,7 +190,7 @@ function name ValidateTargetLocations(const array<Vector> TargetLocations)
 		GrenadePathLocation = GrenadePath.GetEndPosition();
 		GrenadePathTile = WorldData.GetTileCoordinatesFromPosition(GrenadePathLocation);
 		
-		GetPreAbilityPath(PathTiles);
+		PathingPawn.GetTargetMeleePath(PathTiles);
 		PathTile = PathTiles[PathTiles.Length - 1];
 
 		//`LOG(default.class @ GetFuncName() @ GrenadePathTile.X @ GrenadePathTile.Y @ GrenadePathTile.Z @ "/" @ PathTile.X @ PathTile.Y @ PathTile.Z,, 'JediClassWOTCV2');

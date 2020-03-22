@@ -73,9 +73,9 @@ static function X2DataTemplate CreateTemplate_LightSaber_Training()
 	Template.AltGameArchetypeArray.AddItem(DualWieldArchetype);
 
 	//Template.AddDefaultAttachment('Crystal', "", , "img:///JediClassWeaponUpgrades.Crystal.upgrade_diamond");
-	Template.AddDefaultAttachment('Cell', "LightSaber_CV.SkeletalMeshes.Pommel_Luke", , "img:///JediClassWeaponUpgrades.Cell.Pommel_Luke");
-	Template.AddDefaultAttachment('Emitter', "LightSaber_CV.SkeletalMeshes.Emitter_Luke", , "img:///JediClassWeaponUpgrades.Emitter.Emitter_Luke");
-	Template.AddDefaultAttachment('Lens', "LightSaber_CV.SkeletalMeshes.Grip_Luke", , "img:///JediClassWeaponUpgrades.Lens.Grip_Luke");
+	Template.AddDefaultAttachment('Cell', "LightSaber_CV.SkeletalMeshes.Pommel_Luke");
+	Template.AddDefaultAttachment('Emitter', "LightSaber_CV.SkeletalMeshes.Emitter_Luke");
+	Template.AddDefaultAttachment('Lens', "LightSaber_CV.SkeletalMeshes.Grip_Luke");
 
 	//Template.AddDefaultAttachment('Sheath', "ConvSword.Meshes.SM_ConvSword_Sheath", true);
 	Template.Tier = 0;
@@ -170,7 +170,6 @@ static function X2DataTemplate CreateTemplate_LightSaber_Magnetic()
 	local AltGameArchetypeUse DualWieldArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[1]);
-	//Template.GameplayInstanceClass = class'XGLightSaber';
 	Template.WeaponPanelImage = "_Pistol";                       // used by the UI. Probably determines iconview of the weapon.
 
 	Template.ItemCat = 'weapon';
@@ -229,7 +228,6 @@ static function X2DataTemplate CreateTemplate_LightSaber_Beam()
 	local AltGameArchetypeUse DualWieldArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[2]);
-	//Template.GameplayInstanceClass = class'XGLightSaber';
 	Template.WeaponPanelImage = "_Pistol";                       // used by the UI. Probably determines iconview of the weapon.
 
 	Template.ItemCat = 'weapon';

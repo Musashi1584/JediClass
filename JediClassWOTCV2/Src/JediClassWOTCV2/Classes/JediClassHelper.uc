@@ -4,6 +4,7 @@ var localized string ForceAlignmentModifier;
 var localized string DarkSidePoints;
 var localized string LightSidePoints;
 var localized string m_strCategoryRestricted;
+var localized string m_strHeavyArmorRestricted;
 
 var config array<name> LightSideAbilities;
 var config array<name> DarkSideAbilities;

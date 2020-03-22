@@ -299,6 +299,7 @@ static function OnPostAbilityTemplatesCreated()
 	AbilityMgr.GetTemplateNames(TemplateNames);
 	foreach TemplateNames(TemplateName)
 	{
+		`LOG(GetFuncName() @ TemplateName,, 'JediClassWOTCV2');
 		if (default.IgnoreAbilitiesForForceSpeed.Find(TemplateName) != INDEX_NONE)
 		{
 			continue;
@@ -594,6 +595,19 @@ static function bool CanAddItemToInventory_CH(out int bCanAddItem, const EInvent
 				bEvaluate = true;
 			}
 		}
+	}
+
+	if (X2ArmorTemplate(ItemTemplate) != none && 
+		X2ArmorTemplate(ItemTemplate).ArmorClass == 'heavy' &&
+		UnitState.GetSoldierClassTemplateName() == 'Jedi')
+	{
+		bCanAddItem = 0;
+		DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(
+			`XEXPAND.ExpandString(
+				class'JediClassHelper'.default.m_strHeavyArmorRestricted
+			)
+		);
+		bEvaluate = true;
 	}
 
 	if(CheckGameState == none)
