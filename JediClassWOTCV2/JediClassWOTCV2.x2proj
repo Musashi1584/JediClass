@@ -238,7 +238,7 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Src\JediClassWOTCV2\Classes\X2TargetingMethod_BattlePrecognition.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\JediClassWOTCV2\Classes\X2TargetingMethod_BattlePregognitionStrike.uc">
+    <Content Include="Src\JediClassWOTCV2\Classes\X2TargetingMethod_BattlePrecognitionStrike.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\JediClassWOTCV2\Classes\X2TargetingMethod_ForceJump.uc">
