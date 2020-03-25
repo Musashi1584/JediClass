@@ -20,8 +20,10 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Folder Include="Localization\" />
     <Folder Include="Content" />
     <Folder Include="Src\" />
+    <Folder Include="Src\JCustomNotifies\Classes" />
     <Folder Include="Src\JediClassRevised" />
     <Folder Include="Src\JediClassRevised\Classes" />
+    <Folder Include="Src\JCustomNotifies" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config\XComClassData.ini">
@@ -84,13 +86,13 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="Config\XComEngine.ini" />
     <Content Include="Config\XComGame.ini" />
     <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\JCustomNotifies\Classes\AnimNotify_PlayWeaponAnimExtended.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\JCustomNotifies\Classes\AnimNotify_UpdateWeaponMaterial.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\JediClassRevised\Classes\AnimationListAction.uc">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Src\JediClassRevised\Classes\AnimNotify_PlayWeaponAnimExtended.uc">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Src\JediClassRevised\Classes\AnimNotify_UpdateWeaponMaterial.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\JediClassRevised\Classes\JediClassDataStructure.uc">
