@@ -74,7 +74,7 @@ tags=Soldier Class, Jedi, Sith, May the force be with you</Description>
     <Content Include="ForcePowers.txt">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Localization\JediClassWOTCV2.int">
+    <Content Include="Localization\JediClassRevised.int">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Notes.txt">
