@@ -1,9 +1,21 @@
-class X2Effect_ForceMeditate extends X2Effect_Persistent;
+class X2Effect_ForceMeditate extends X2Effect_Stunned;
 
+var bool bStunLevelMatchesRemainingAP;
 var float RegenAmount;
 var name EventToTriggerOnRegen;
-
 var localized string RegenMessage;
+
+simulated protected function OnEffectAdded(const out EffectAppliedData ApplyEffectParameters, XComGameState_BaseObject kNewTargetState, XComGameState NewGameState, XComGameState_Effect NewEffectState)
+{
+	local XComGameState_Unit UnitState;
+
+	if (bStunLevelMatchesRemainingAP)
+	{
+		UnitState = XComGameState_Unit(kNewTargetState);
+		StunLevel = UnitState.ActionPoints.Length;
+	}
+	super.OnEffectAdded(ApplyEffectParameters, kNewTargetState, NewGameState, NewEffectState);
+}
 
 function ForceRegenAdded(X2Effect_Persistent PersistentEffect, const out EffectAppliedData ApplyEffectParameters, XComGameState_BaseObject kNewTargetState, XComGameState NewGameState)
 {
@@ -24,49 +36,22 @@ function ForceRegenAdded(X2Effect_Persistent PersistentEffect, const out EffectA
 	NewTargetState.SetUnitFloatValue(class'X2Effect_JediForcePool_ByRank'.default.CurrentForceName, CurrentForce.fValue + AmountToRegen, eCleanup_BeginTactical);
 }
 
-simulated function AddX2ActionsForVisualization(XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata, name EffectApplyResult)
-{
-	local XComGameState_Unit OldUnit, NewUnit;
-	local UnitValue OldForce, NewForce;
-	local X2Action_PlaySoundAndFlyOver SoundAndFlyOver;
-	local int Regen;
-	local string Msg;
-
-	OldUnit = XComGameState_Unit(ActionMetadata.StateObject_OldState);
-	OldUnit.GetUnitValue(class'X2Effect_JediForcePool_ByRank'.default.CurrentForceName, OldForce);
-	NewUnit = XComGameState_Unit(ActionMetadata.StateObject_NewState);
-	NewUnit.GetUnitValue(class'X2Effect_JediForcePool_ByRank'.default.CurrentForceName, NewForce);
-
-	Regen = NewForce.fValue - OldForce.fValue;
-	
-	if( Regen > 0 )
-	{
-		SoundAndFlyOver = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyOver'.static.AddToVisualizationTree(ActionMetadata, VisualizeGameState.GetContext(), false, ActionMetadata.LastActionAdded));
-		Msg = Repl(default.RegenMessage, "<Regen/>", Regen);
-		SoundAndFlyOver.SetSoundAndFlyOverParameters(None, Msg, '', eColor_Good);
-	}
-}
-
 simulated function AddX2ActionsForVisualization_Removed(XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata, const name EffectApplyResult, XComGameState_Effect RemovedEffect)
 {
 	local XComGameStateContext Context;
 
-	`LOG(default.class @ GetFuncName(),, 'JediClassRevised');
-	super.AddX2ActionsForVisualization_Removed(VisualizeGameState, ActionMetadata, EffectApplyResult, RemovedEffect);
-	
 	Context = VisualizeGameState.GetContext();
 	Context.SetAssociatedPlayTiming(SPT_BeforeParallel);
 
-	class'X2Action_ForceMeditateEnd'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
-}
-
-simulated function AddX2ActionsForVisualization_Tick(XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata, const int TickIndex, XComGameState_Effect EffectState)
-{
-	// no tick visualization
+	super.AddX2ActionsForVisualization_Removed(VisualizeGameState, ActionMetadata, EffectApplyResult, RemovedEffect);
 }
 
 defaultproperties
 {
 	EffectName="ForceMeditation"
 	EffectAddedFn=ForceRegenAdded
+	bIsImpairing=true
+	CustomIdleOverrideAnim="NO_ForceMeditationLoopA"
+	StunStartAnimName="NO_ForceMeditationStartA"
+	StunStopAnimName="NO_ForceMeditationStopA"
 }

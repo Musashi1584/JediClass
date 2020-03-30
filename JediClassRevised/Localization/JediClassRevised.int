@@ -1,7 +1,7 @@
 [JediClassHelper]
 ForceAlignmentModifier="Force Alignment"
-DarkSidePoints="Darkside Points"
-LightSidePoints="Lightside Points"
+DarkSidePointsLabel="Darkside Points"
+LightSidePointsLabel="Lightside Points"
 m_strCategoryRestricted=WEAPON CANT BE USED WITH SABERSTAFFS
 m_strHeavyArmorRestricted=JEDI CAN NOT WEAR HEAVY ARMOR
 

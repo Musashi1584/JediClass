@@ -83,13 +83,13 @@ static function bool AbilityTagExpandHandler_CH(string InString, out string OutS
 			if (DSP > 0)
 			{
 				OutString = class'JediClassHelper'.static.GetForceAlignmentModifierString() $ ":";
-				OutString $= DSP @ class'JediClassHelper'.default.DarkSidePoints;
+				OutString $= DSP @ class'JediClassHelper'.default.DarkSidePointsLabel;
 			}
 
 			if (LSP > 0)
 			{
 				OutString = class'JediClassHelper'.static.GetForceAlignmentModifierString() $ ":";
-				OutString $= LSP @ class'JediClassHelper'.default.LightSidePoints;
+				OutString $= LSP @ class'JediClassHelper'.default.LightSidePointsLabel;
 			}
 
 			`LOG(GetFuncName() @ InString $ ":" @ OutString,, 'JediClassRevised');
@@ -572,9 +572,7 @@ static function bool CanAddItemToInventory_CH(out int bCanAddItem, const EInvent
 			{
 				bCanAddItem = 0;
 				DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(
-					`XEXPAND.ExpandString(
-						class'JediClassHelper'.default.m_strCategoryRestricted
-					)
+					class'JediClassHelper'.default.m_strCategoryRestricted
 				);
 				bEvaluate = true;
 			}
@@ -588,9 +586,7 @@ static function bool CanAddItemToInventory_CH(out int bCanAddItem, const EInvent
 			{
 				bCanAddItem = 0;
 				DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(
-					`XEXPAND.ExpandString(
-						class'JediClassHelper'.default.m_strCategoryRestricted
-					)
+					class'JediClassHelper'.default.m_strCategoryRestricted
 				);
 				bEvaluate = true;
 			}
@@ -777,15 +773,15 @@ exec function GiveSoldier(string SoldierName)
 	local XComGameState NewGameState;
 	local XComGameState_HeadquartersXCom XComHQ;
 	local XComGameState_Unit UnitState;
-	local XComOnlineProfileSettings ProfileSettings;
-	local int idx;
+	//local XComOnlineProfileSettings ProfileSettings;
+	//local int idx;
 
 	History = `XCOMHISTORY;
 	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("GiveSoldier");
 	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
 	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
 
-	ProfileSettings = `XPROFILESETTINGS;
+	//ProfileSettings = `XPROFILESETTINGS;
 	Manager = `CHARACTERPOOLMGR;
 
 	UnitState = Manager.CreateCharacter(NewGameState, eCPSM_PoolOnly, , , SoldierName);

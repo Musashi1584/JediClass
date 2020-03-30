@@ -74,6 +74,7 @@ static function X2DataTemplate CreateTemplate_Saberstaff_TR()
 	Template.iSoundRange = default.SABERSTAFF_CV_ISOUNDRANGE;
 	Template.iEnvironmentDamage = default.SABERSTAFF_CV_IENVIRONMENTDAMAGE;
 	Template.BaseDamage.DamageType = 'Melee';
+	Template.BaseDamage.Damage += 1;
 
 	class'X2Item_LightSaber'.static.AddConfigAbilities(Template, default.SABERSTAFF_CONVENTIONAL_ABILITIES);
 	

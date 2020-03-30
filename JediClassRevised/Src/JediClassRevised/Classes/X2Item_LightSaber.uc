@@ -93,6 +93,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_Training()
 	Template.iSoundRange = default.LIGHTSABER_CONVENTIONAL_ISOUNDRANGE;
 	Template.iEnvironmentDamage = default.LIGHTSABER_CONVENTIONAL_IENVIRONMENTDAMAGE;
 	Template.BaseDamage.DamageType = 'Melee';
+	Template.BaseDamage.Damage += 1;
 
 	AddConfigAbilities(Template, default.LIGHTSABER_CONVENTIONAL_ABILITIES);
 
@@ -380,7 +381,7 @@ static function name GetRandomUpgrade(name WeaponTech, array<UpgradeSetup> Weapo
 		Upgrade = WeaponUpgrades[`SYNC_RAND_STATIC(WeaponUpgrades.Length - 1)];
 	}
 
-	`LOG(GetFuncName() @ WeaponTech @ Upgrade.UpgradeName,, 'X2JediClassRevised');
+	`LOG(GetFuncName() @ WeaponTech @ Upgrade.UpgradeName,, 'JediClassRevised');
 
 	return Upgrade.UpgradeName;
 }

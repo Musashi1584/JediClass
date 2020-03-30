@@ -65,7 +65,6 @@ static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent Mes
 
 				if (InStr(ParentMat, "MAT_Lightsaber_Blade") != INDEX_NONE)
 				{
-
 					Palette = `CONTENT.GetColorPalette(ePalette_ArmorTint);
 					if (Palette != none)
 					{
@@ -75,8 +74,6 @@ static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent Mes
 							MITV.SetVectorParameterValue('Emissive Color', GlowTint);
 						}
 					}
-
-					
 				}
 			}
 		}

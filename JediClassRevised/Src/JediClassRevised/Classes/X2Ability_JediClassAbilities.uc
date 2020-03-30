@@ -1400,6 +1400,7 @@ static function X2AbilityTemplate ForceMeditate()
 	local X2Effect_ForceMeditate			MeditateEffect;
 	local X2Effect_PersistentStatChange		NoDodgeEffect;
 	local X2Effect_RemoveEffects			RemoveEffect;
+	local X2Condition_UnitProperty          UnitPropertyCondition;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'ForceMeditate');
 
@@ -1430,12 +1431,24 @@ static function X2AbilityTemplate ForceMeditate()
 	Template.AbilityCosts.AddItem(ActionPointCost);
 
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
-
 	Template.AbilityTargetStyle = default.SelfTarget;
 
+	UnitPropertyCondition = new class'X2Condition_UnitProperty';
+	UnitPropertyCondition.ExcludeImpaired = true;
+	UnitPropertyCondition.ExcludeAlive = false;
+	UnitPropertyCondition.ExcludeDead = true;
+	UnitPropertyCondition.ExcludeFriendlyToSource = false;
+	UnitPropertyCondition.ExcludeHostileToSource = false;
+	UnitPropertyCondition.FailOnNonUnits = true;
+	Template.AbilityTargetConditions.AddItem(UnitPropertyCondition);
+
 	MeditateEffect = new class'X2Effect_ForceMeditate';
-	MeditateEffect.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
+	MeditateEffect.BuildPersistentEffect(1, false, true, false, eGameRule_UnitGroupTurnBegin);
 	MeditateEffect.RegenAmount = default.FORCE_MEDITATE_REGEN_PERCENT;
+	MeditateEffect.bStunLevelMatchesRemainingAP= true;
+	MeditateEffect.bIsImpairing = true;
+	MeditateEffect.EffectHierarchyValue = class'X2StatusEffects'.default.STUNNED_HIERARCHY_VALUE;
+	MeditateEffect.bRemoveWhenTargetDies = true;
 	Template.AddTargetEffect(MeditateEffect);
 
 	NoDodgeEffect = new class'X2Effect_PersistentStatChange';
@@ -1458,8 +1471,7 @@ static function X2AbilityTemplate ForceMeditate()
 	Template.CinescriptCameraType = "Psionic_FireAtUnit";
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	Template.BuildVisualizationFn = ForceMeditate_BuildVisualization;
-	//Template.BuildAffectedVisualizationSyncFn = ForceMeditate_BuildVisualizationSync;
+	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 
 	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
@@ -1467,51 +1479,6 @@ static function X2AbilityTemplate ForceMeditate()
 	Template.bFrameEvenWhenUnitIsHidden = true;
 
 	return Template;
-}
-
-simulated function ForceMeditate_BuildVisualization(XComGameState VisualizeGameState)
-{
-	local XComGameStateHistory			History;
-	local XComGameStateContext_Ability  Context;
-	local StateObjectReference          InteractingUnitRef;
-
-	local VisualizationActionMetadata			EmptyTrack;
-	local VisualizationActionMetadata			ActionMetadata;
-
-
-	History = `XCOMHISTORY;
-	Context = XComGameStateContext_Ability(VisualizeGameState.GetContext());
-
-	if (Context.InterruptionStatus == eInterruptionStatus_Interrupt)
-	{
-		// Only visualize InterruptionStatus eInterruptionStatus_None or eInterruptionStatus_Resume,
-		// if eInterruptionStatus_Interrupt then the jedi was killed (or removed)
-		return;
-	}
-
-	InteractingUnitRef = Context.InputContext.SourceObject;
-	ActionMetadata = EmptyTrack;
-	ActionMetadata.StateObject_OldState = History.GetGameStateForObjectID(InteractingUnitRef.ObjectID, eReturnType_Reference, VisualizeGameState.HistoryIndex - 1);
-	ActionMetadata.StateObject_NewState = VisualizeGameState.GetGameStateForObjectID(InteractingUnitRef.ObjectID);
-	ActionMetadata.VisualizeActor = History.GetVisualizer(InteractingUnitRef.ObjectID);
-
-	class'X2Action_ForceMeditate'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
-
-	ForceMeditateAnimationVisualization(ActionMetadata, Context);
-}
-
-static function ForceMeditate_BuildVisualizationSync(name EffectName, XComGameState VisualizeGameState, out VisualizationActionMetadata ActionMetadata)
-{
-	//class'X2Action_ForceMeditate'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded);
-	//ForceMeditateAnimationVisualization(ActionMetadata, Context);
-}
-
-static simulated function ForceMeditateAnimationVisualization(out VisualizationActionMetadata ActionMetadata, XComGameStateContext Context)
-{
-	local X2Action_PersistentEffect		PersistentEffectAction;
-
-	PersistentEffectAction = X2Action_PersistentEffect(class'X2Action_PersistentEffect'.static.AddToVisualizationTree(ActionMetadata, Context, false, ActionMetadata.LastActionAdded));
-	PersistentEffectAction.IdleAnimName = 'NO_ForceMeditationLoop';
 }
 
 static function X2AbilityTemplate ForceDrain()
