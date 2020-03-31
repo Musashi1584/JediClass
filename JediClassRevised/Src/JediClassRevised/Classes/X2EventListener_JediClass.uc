@@ -193,9 +193,6 @@ static function EventListenerReturn OnOverrideHitEffects(Object EventData, Objec
 	local XComLWTuple Tuple;
 	local XComUnitPawn Pawn;
 	local XComGameState_Unit UnitState;
-	local string Info;
-	local PrimitiveComponent Mesh;
-	local XComPawnHitEffect HitEffect;
 	local EAbilityHitResult HitResult;
 
 	Tuple = XComLWTuple(EventData);
@@ -205,12 +202,12 @@ static function EventListenerReturn OnOverrideHitEffects(Object EventData, Objec
 
 	if (UnitState != none && UnitState.GetSoldierClassTemplate().DataName == 'Jedi')
 	{
-		HitResult = EAbilityHitResult(Tuple.Data[6].i);
+		HitResult = EAbilityHitResult(Tuple.Data[7].i);
 
 		// Override the templar fx
 		if (HitResult == eHit_Deflect || HitResult == eHit_Reflect)
 		{
-			return ELR_InterruptEventAndListeners;
+			Tuple.Data[0].b = true;
 		}
 	}
 	return ELR_NoInterrupt;
