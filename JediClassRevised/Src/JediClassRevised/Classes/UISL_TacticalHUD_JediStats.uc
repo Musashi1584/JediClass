@@ -114,7 +114,7 @@ function EventListenerReturn OnUnitEvacuated(Object EventData, Object EventSourc
 
 	UnitState = XComGameState_Unit(EventData);
 
-	if (UnitState.GetSoldierClassTemplateName() != 'Jedi')
+	if (!UnitState.HasSoldierAbility('ForcePowerPool'))
 		return ELR_NoInterrupt;
 
 	CarryEffect = UnitState.GetUnitAffectedByEffectState(class'X2Ability_CarryUnit'.default.CarryUnitEffectName);

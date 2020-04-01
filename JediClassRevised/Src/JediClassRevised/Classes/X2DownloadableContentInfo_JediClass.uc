@@ -406,7 +406,7 @@ static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameStat
 	}
 
 	// Fallback for non lightsaber loadouts
-	if (UnitState.GetSoldierClassTemplateName() == 'Jedi')
+	if (UnitState.HasSoldierAbility('ForcePowerPool'))
 	{
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers")));
 	}
@@ -595,7 +595,7 @@ static function bool CanAddItemToInventory_CH(out int bCanAddItem, const EInvent
 
 	if (X2ArmorTemplate(ItemTemplate) != none && 
 		X2ArmorTemplate(ItemTemplate).ArmorClass == 'heavy' &&
-		UnitState.GetSoldierClassTemplateName() == 'Jedi')
+		UnitState.HasSoldierAbility('ForcePowerPool'))
 	{
 		bCanAddItem = 0;
 		DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(
@@ -685,7 +685,7 @@ exec function GiveDarkSidePoint(int Amount = 1)
 
 	UnitRef = Armory.GetUnitRef();
 	UnitState = XComGameState_Unit(History.GetGameStateForObjectID(UnitRef.ObjectID));
-	if (UnitState == none || UnitState.GetSoldierClassTemplateName() != 'Jedi')
+	if (UnitState == none || !UnitState.HasSoldierAbility('ForcePowerPool'))
 	{
 		return;
 	}

@@ -19,7 +19,7 @@ static function AddDarkSidePointToGameState(XComGameState_Unit Unit, out XComGam
 	local XComGameState_Unit NewSourceUnit;
 	local UnitValue DarkSidePoints;
 
-	if (Unit.GetSoldierClassTemplateName() != 'Jedi')
+	if (!Unit.HasSoldierAbility('ForcePowerPool'))
 		return;
 
 	Unit.GetUnitValue('DarkSidePoints', DarkSidePoints);
@@ -38,7 +38,7 @@ static function AddDarkSidePoint(XComGameState_Unit Unit, int DarkSidePointsToAd
 	local XComGameState NewGameState;
 	local UnitValue DarkSidePoints;
 
-	if (Unit.GetSoldierClassTemplateName() != 'Jedi')
+	if (!Unit.HasSoldierAbility('ForcePowerPool'))
 		return;
 
 	Unit.GetUnitValue('DarkSidePoints', DarkSidePoints);
@@ -58,7 +58,7 @@ static function AddLightSidePointToGameState(XComGameState_Unit Unit, out XComGa
 	local XComGameState_Unit NewSourceUnit;
 	local UnitValue LightSidePoints;
 
-	if (Unit.GetSoldierClassTemplateName() != 'Jedi')
+	if (!Unit.HasSoldierAbility('ForcePowerPool'))
 		return;
 
 	Unit.GetUnitValue('LightSidePoints', LightSidePoints);
@@ -77,7 +77,7 @@ static function AddLightSidePoint(XComGameState_Unit Unit, int LightSidePointsTo
 	local XComGameState NewGameState;
 	local UnitValue LightSidePoints;
 
-	if (Unit.GetSoldierClassTemplateName() != 'Jedi')
+	if (!Unit.HasSoldierAbility('ForcePowerPool'))
 		return;
 
 	Unit.GetUnitValue('LightSidePoints', LightSidePoints);
