@@ -400,9 +400,24 @@ function DeleteMatchingWeaponFromOtherSlot(XComGameState_Item ItemState, XComGam
 	local array<name> ItemUpgradeNames, InventoryItemUpgradeNames;
 	local StateObjectReference MatchingItemRef;
 	local XComGameState_Item InventoryItemState;
+	local X2WeaponTemplate WeaponTemplate;
 	local int idx, jdx;
 
 	History = `XCOMHISTORY;
+
+	WeaponTemplate = X2WeaponTemplate(ItemState.GetMyTemplate());
+
+	if (WeaponTemplate == none)
+	{
+		`Redscreen(default.class @ GetFuncName() @ ItemState.GetMyTemplateName() @ "is not a X2WeaponTemplate");
+		return;
+	}
+
+	if (WeaponTemplate.WeaponCat != 'lightsaber' && WeaponTemplate.WeaponCat != 'saberstaff')
+	{
+		`Redscreen(default.class @ GetFuncName() @ ItemState.GetMyTemplateName() @ "doesnt match lightsaber or saberstaff category");
+		return;
+	}
 
 	foreach NewGameState.IterateByClassType(class'XComGameState_HeadquartersXCom', XComHQ)
 	{
@@ -423,7 +438,10 @@ function DeleteMatchingWeaponFromOtherSlot(XComGameState_Item ItemState, XComGam
 		if (InventoryItemState.WeaponAppearance.iWeaponTint == ItemState.WeaponAppearance.iWeaponTint &&
 			InventoryItemState.WeaponAppearance.iWeaponDeco == ItemState.WeaponAppearance.iWeaponDeco &&
 			InventoryItemState.WeaponAppearance.nmWeaponPattern == ItemState.WeaponAppearance.nmWeaponPattern &&
-			InventoryItemState.Nickname == ItemState.Nickname)
+			InventoryItemState.Nickname == ItemState.Nickname &&
+			(InStr(InventoryItemState.GetMyTemplateName(), ItemState.GetMyTemplateName()) != INDEX_NONE ||
+			 InStr(ItemState.GetMyTemplateName(), InventoryItemState.GetMyTemplateName()) != INDEX_NONE)
+			)
 		{
 			ItemUpgradeNames = ItemState.GetMyWeaponUpgradeTemplateNames();
 			InventoryItemUpgradeNames = InventoryItemState.GetMyWeaponUpgradeTemplateNames();
@@ -489,7 +507,13 @@ function ReplaceMatchingWeaponFromOtherSlot(XComGameState_Item ItemState, XComGa
 
 	if (ItemTemplate == none)
 	{
-		`Redscreen(TemplateName @ "does not exist! Cannot add saber mirror to other slot!");
+		`Redscreen(default.class @ GetFuncName() @ TemplateName @ "does not exist! Cannot add saber mirror to other slot!");
+		return;
+	}
+
+	if (X2WeaponTemplate(ItemTemplate).WeaponCat != 'lightsaber' && X2WeaponTemplate(ItemTemplate).WeaponCat != 'saberstaff')
+	{
+		`Redscreen(default.class @ GetFuncName() @ TemplateName @ "doesnt match lightsaber or saberstaff category");
 		return;
 	}
 

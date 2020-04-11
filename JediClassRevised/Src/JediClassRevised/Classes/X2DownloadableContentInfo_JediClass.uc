@@ -560,8 +560,8 @@ static function bool CanAddItemToInventory_CH(out int bCanAddItem, const EInvent
 	local XComGameState_Item		PrimaryWeapon, SecondaryWeapon;
 
 	WeaponTemplate = X2WeaponTemplate(ItemTemplate);
-	PrimaryWeapon = UnitState.GetPrimaryWeapon();
-	SecondaryWeapon = UnitState.GetSecondaryWeapon();
+	PrimaryWeapon = UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState);
+	SecondaryWeapon = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
 
 	if (WeaponTemplate != none && PrimaryWeapon != none && SecondaryWeapon != none)
 	{
