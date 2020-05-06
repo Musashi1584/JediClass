@@ -11,6 +11,8 @@ simulated protected function OnEffectAdded(const out EffectAppliedData ApplyEffe
 	local UnitValue CurrentForce, MaxForce;
 	local int AmountToRegen;
 
+	DamageTypes.Length = 0;
+
 	OldTargetState = XComGameState_Unit(kNewTargetState);
 	OldTargetState.GetUnitValue(class'X2Effect_JediForcePool_ByRank'.default.CurrentForceName, CurrentForce);
 	OldTargetState.GetUnitValue(class'X2Effect_JediForcePool_ByRank'.default.MaxForceName, MaxForce);
@@ -42,6 +44,7 @@ simulated function AddX2ActionsForVisualization_Removed(XComGameState VisualizeG
 
 defaultproperties
 {
+	DamageTypes.Empty
 	EffectName="ForceMeditation"
 	bIsImpairing=true
 	CustomIdleOverrideAnim="NO_ForceMeditationLoopA"

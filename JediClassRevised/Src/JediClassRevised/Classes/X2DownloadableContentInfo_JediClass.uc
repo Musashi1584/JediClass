@@ -64,7 +64,7 @@ static function bool AbilityTagExpandHandler_CH(string InString, out string OutS
 	AbilityState = XComGameState_Ability(ParseObj);
 	AbilityTemplate = X2AbilityTemplate(ParseObj);
 	
-	`LOG(GetFuncName() @ InString @ "1" @ EffectState @ AbilityState @ AbilityTemplate @ ParseObj @ GameState.GetNumGameStateObjects(),, 'JediClassRevised');
+	`LOG(GetFuncName() @ InString @ "1" @ EffectState @ AbilityState @ AbilityTemplate @ ParseObj,, 'JediClassRevised');
 	
 	if (EffectState != none)
 	{
@@ -416,12 +416,12 @@ static function UpdateAnimations(out array<AnimSet> CustomAnimSets, XComGameStat
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("saberstaff.Anims.AS_Soldier")));
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers_Saberstaff")));
 	}
-	else if (HasDualLightsaberEquipped(UnitState))
+	else if (HasDualLightsaberEquipped(UnitState) || HasDualMeleeEquipped(UnitState))
 	{
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("Lightsaber_CV.Anims.AS_JediDual")));
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers_DualMelee")));
 	}
-	else if (HasPrimaryLightsaberEquipped(UnitState))
+	else if (HasPrimaryLightsaberEquipped(UnitState) || HasPrimaryMeleeEquipped(UnitState))
 	{
 		CustomAnimSets.AddItem(AnimSet(`CONTENT.RequestGameArchetype("JediClassAbilities.Anims.AS_ForcePowers_PrimaryMelee")));
 	}
@@ -456,34 +456,64 @@ static function WeaponInitialized(XGWeapon WeaponArchetype, XComWeapon Weapon, o
 
 static function bool HasDualLightsaberEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
+	if (UnitState == none)
+	{
+		return false;
+	}
+
 	return IsPrimaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate())) &&
 		   IsSecondaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
 }
 
 static function bool HasPrimaryLightsaberEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
+	if (UnitState == none)
+	{
+		return false;
+	}
+
 	return IsPrimaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate()));
 }
 
 static function bool HasLightsaberEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
+	if (UnitState == none)
+	{
+		return false;
+	}
+
 	return IsPrimaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate())) ||
 		IsSecondaryLightsaberWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
 }
 
 static function bool HasSaberStaffEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
+	if (UnitState == none)
+	{
+		return false;
+	}
+
 	return IsPrimarySaberStaffWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate()));
 }
 
 static function bool HasPrimaryMeleeEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
+	if (UnitState == none)
+	{
+		return false;
+	}
+
 	return IsPrimaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate())) &&
 		   !IsSecondaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
 }
 
 static function bool HasDualMeleeEquipped(XComGameState_Unit UnitState, optional XComGameState CheckGameState)
 {
+	if (UnitState == none)
+	{
+		return false;
+	}
+
 	return IsPrimaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState).GetMyTemplate())) &&
 		   IsSecondaryMeleeWeaponTemplate(X2WeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState).GetMyTemplate()));
 }

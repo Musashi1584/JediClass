@@ -222,7 +222,7 @@ static function X2AbilityTemplate BattlePrecognition()
 	Template.AbilitySourceName = 'eAbilitySource_Standard';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_HideIfOtherAvailable;
 	Template.HideIfAvailable.AddItem('LongWatch');
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_overwatch";
+	Template.IconImage = "img:///JediClassUI.UIPerk_BattlePrecog";
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.OVERWATCH_PRIORITY;
 	Template.bNoConfirmationWithHotKey = true;
 	Template.bDisplayInUITooltip = false;
@@ -260,7 +260,7 @@ static function X2AbilityTemplate BattlePrecognitionLeapStrike()
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
 	
 	Template.CinescriptCameraType = "Ranger_Reaper";
-	Template.IconImage = "img:///JediClassUI.UIPerk_LeapStrike";
+	Template.IconImage = "img:///JediClassUI.UIPerk_BattlePrecog";
 	Template.bHideOnClassUnlock = true;
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_SQUADDIE_PRIORITY;
 	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
