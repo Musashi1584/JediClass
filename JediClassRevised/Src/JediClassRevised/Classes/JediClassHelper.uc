@@ -9,6 +9,11 @@ var localized string m_strHeavyArmorRestricted;
 var config array<name> LightSideAbilities;
 var config array<name> DarkSideAbilities;
 
+static function bool IsJedi(XComGameState_Unit UnitState)
+{
+	return UnitState.HasSoldierAbility('ForcePowerPool');
+}
+
 static function string GetForceAlignmentModifierString()
 {
 	return default.ForceAlignmentModifier;
@@ -19,7 +24,7 @@ static function AddDarkSidePointToGameState(XComGameState_Unit Unit, out XComGam
 	local XComGameState_Unit NewSourceUnit;
 	local UnitValue DarkSidePoints;
 
-	if (!Unit.HasSoldierAbility('ForcePowerPool'))
+	if (!IsJedi(Unit))
 		return;
 
 	Unit.GetUnitValue('DarkSidePoints', DarkSidePoints);
@@ -38,7 +43,7 @@ static function AddDarkSidePoint(XComGameState_Unit Unit, int DarkSidePointsToAd
 	local XComGameState NewGameState;
 	local UnitValue DarkSidePoints;
 
-	if (!Unit.HasSoldierAbility('ForcePowerPool'))
+	if (!IsJedi(Unit))
 		return;
 
 	Unit.GetUnitValue('DarkSidePoints', DarkSidePoints);
@@ -58,7 +63,7 @@ static function AddLightSidePointToGameState(XComGameState_Unit Unit, out XComGa
 	local XComGameState_Unit NewSourceUnit;
 	local UnitValue LightSidePoints;
 
-	if (!Unit.HasSoldierAbility('ForcePowerPool'))
+	if (!IsJedi(Unit))
 		return;
 
 	Unit.GetUnitValue('LightSidePoints', LightSidePoints);
@@ -77,7 +82,7 @@ static function AddLightSidePoint(XComGameState_Unit Unit, int LightSidePointsTo
 	local XComGameState NewGameState;
 	local UnitValue LightSidePoints;
 
-	if (!Unit.HasSoldierAbility('ForcePowerPool'))
+	if (!IsJedi(Unit))
 		return;
 
 	Unit.GetUnitValue('LightSidePoints', LightSidePoints);

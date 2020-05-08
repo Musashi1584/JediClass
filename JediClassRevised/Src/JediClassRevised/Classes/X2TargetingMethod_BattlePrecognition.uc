@@ -11,15 +11,14 @@ var private int LastTarget;
 function Init(AvailableAction InAction, int NewTargetIndex)
 {
 	local array<TTile>	Tiles;
-	local name			AbilityTemplateName;
+	//local name			AbilityTemplateName;
 	local int			AP;
 	local float			Mobility;
 
 	super.Init(InAction, NewTargetIndex);
 
-	//	Change unit's available AP based on which ability is being used with this targeting method.
-	AbilityTemplateName = Ability.GetMyTemplateName();
-
+	//	@TODO Change unit's available AP based on which ability is being used with this targeting method.
+	//AbilityTemplateName = Ability.GetMyTemplateName();
 	AP = 2;
 	
 	Mobility = UnitState.GetCurrentStat(eStat_Mobility);

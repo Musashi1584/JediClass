@@ -138,7 +138,7 @@ static function EventListenerReturn OnSoldierInfo(Object EventData, Object Event
 
 	//`LOG(GetFuncName() @ UnitState.GetFullName(),, 'JediClassRevised');
 
-	if (!UnitState.HasSoldierAbility('ForcePowerPool'))
+	if (!class'JediClassHelper'.static.IsJedi(UnitState))
 	{
 		//`LOG(GetFuncName() @ "bailing" @ UnitState.GetSoldierClassTemplate().DisplayName @ UnitState.GetSoldierClassTemplate().DataName,, 'JediClassRevised');
 		return ELR_NoInterrupt;
@@ -200,7 +200,7 @@ static function EventListenerReturn OnOverrideHitEffects(Object EventData, Objec
 
 	UnitState = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Pawn.m_kGameUnit.ObjectID));
 
-	if (UnitState != none && UnitState.HasSoldierAbility('ForcePowerPool'))
+	if (UnitState != none && class'JediClassHelper'.static.IsJedi(UnitState))
 	{
 		HitResult = EAbilityHitResult(Tuple.Data[7].i);
 

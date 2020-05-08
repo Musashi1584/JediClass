@@ -52,7 +52,7 @@ static function array<X2DataTemplate> CreateTemplates()
 static function X2DataTemplate CreateTemplate_LightSaber_Training()
 {
 	local X2WeaponTemplate Template;
-	local AltGameArchetypeUse DualWieldArchetype;
+	local AltGameArchetypeUse AlternateArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, 'Lightsaber_TR');
 	Template.WeaponPanelImage = "_Sword";                       // used by the UI. Probably determines iconview of the weapon.
@@ -68,9 +68,13 @@ static function X2DataTemplate CreateTemplate_LightSaber_Training()
 	// This all the resources; sounds, animations, models, physics, the works.
 	Template.GameArchetype = "LightSaber_CV.Archetypes.WP_LightSaber_CV";
 
-	DualWieldArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
-	DualWieldArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
-	Template.AltGameArchetypeArray.AddItem(DualWieldArchetype);
+	AlternateArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
+	AlternateArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
+	Template.AltGameArchetypeArray.AddItem(AlternateArchetype);
+
+	AlternateArchetype.ArchetypeString = "Lightsaber_CV.Archetypes.WP_Lightsaber_CV_Secondary";
+	AlternateArchetype.UseGameArchetypeFn = ShouldUseSecondaryArchetype;
+	Template.AltGameArchetypeArray.AddItem(AlternateArchetype);
 
 	//Template.AddDefaultAttachment('Crystal', "", , "img:///JediClassWeaponUpgrades.Crystal.upgrade_diamond");
 	Template.AddDefaultAttachment('Cell', "LightSaber_CV.SkeletalMeshes.Pommel_Luke");
@@ -111,7 +115,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_Training()
 static function X2DataTemplate CreateTemplate_LightSaber_Conventional()
 {
 	local X2WeaponTemplate Template;
-	local AltGameArchetypeUse DualWieldArchetype;
+	local AltGameArchetypeUse AlternateArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[0]);
 	Template.WeaponPanelImage = "_Sword";                       // used by the UI. Probably determines iconview of the weapon.
@@ -127,9 +131,13 @@ static function X2DataTemplate CreateTemplate_LightSaber_Conventional()
 	// This all the resources; sounds, animations, models, physics, the works.
 	Template.GameArchetype = "LightSaber_CV.Archetypes.WP_LightSaber_CV";
 
-	DualWieldArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
-	DualWieldArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
-	Template.AltGameArchetypeArray.AddItem(DualWieldArchetype);
+	AlternateArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
+	AlternateArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
+	Template.AltGameArchetypeArray.AddItem(AlternateArchetype);
+
+	AlternateArchetype.ArchetypeString = "Lightsaber_CV.Archetypes.WP_Lightsaber_CV_Secondary";
+	AlternateArchetype.UseGameArchetypeFn = ShouldUseSecondaryArchetype;
+	Template.AltGameArchetypeArray.AddItem(AlternateArchetype);
 
 	//Template.AddDefaultAttachment('Sheath', "ConvSword.Meshes.SM_ConvSword_Sheath", true);
 	Template.Tier = 0;
@@ -168,7 +176,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_Conventional()
 static function X2DataTemplate CreateTemplate_LightSaber_Magnetic()
 {
 	local X2WeaponTemplate Template;
-	local AltGameArchetypeUse DualWieldArchetype;
+	local AltGameArchetypeUse AlternateArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[1]);
 	Template.WeaponPanelImage = "_Pistol";                       // used by the UI. Probably determines iconview of the weapon.
@@ -184,9 +192,13 @@ static function X2DataTemplate CreateTemplate_LightSaber_Magnetic()
 	// This all the resources; sounds, animations, models, physics, the works.
 	Template.GameArchetype = "LightSaber_CV.Archetypes.WP_LightSaber_CV";
 
-	DualWieldArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
-	DualWieldArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
-	Template.AltGameArchetypeArray.AddItem(DualWieldArchetype);
+	AlternateArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
+	AlternateArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
+	Template.AltGameArchetypeArray.AddItem(AlternateArchetype);
+
+	AlternateArchetype.ArchetypeString = "Lightsaber_CV.Archetypes.WP_Lightsaber_CV_Secondary";
+	AlternateArchetype.UseGameArchetypeFn = ShouldUseSecondaryArchetype;
+	Template.AltGameArchetypeArray.AddItem(AlternateArchetype);
 
 	Template.Tier = 1;
 	Template.OnAcquiredFn = OnLightsaberAcquired;
@@ -226,7 +238,7 @@ static function X2DataTemplate CreateTemplate_LightSaber_Magnetic()
 static function X2DataTemplate CreateTemplate_LightSaber_Beam()
 {
 	local X2WeaponTemplate Template;
-	local AltGameArchetypeUse DualWieldArchetype;
+	local AltGameArchetypeUse AlternateArchetype;
 
 	`CREATE_X2TEMPLATE(class'X2WeaponTemplate', Template, default.LIGHTSABER_TEMPLATE_NAMES[2]);
 	Template.WeaponPanelImage = "_Pistol";                       // used by the UI. Probably determines iconview of the weapon.
@@ -242,9 +254,13 @@ static function X2DataTemplate CreateTemplate_LightSaber_Beam()
 	// This all the resources; sounds, animations, models, physics, the works.
 	Template.GameArchetype = "LightSaber_CV.Archetypes.WP_LightSaber_CV";
 	
-	DualWieldArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
-	DualWieldArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
-	Template.AltGameArchetypeArray.AddItem(DualWieldArchetype);
+	AlternateArchetype.ArchetypeString = "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual";
+	AlternateArchetype.UseGameArchetypeFn = ShouldUseDualWieldArchetype;
+	Template.AltGameArchetypeArray.AddItem(AlternateArchetype);
+
+	AlternateArchetype.ArchetypeString = "Lightsaber_CV.Archetypes.WP_Lightsaber_CV_Secondary";
+	AlternateArchetype.UseGameArchetypeFn = ShouldUseSecondaryArchetype;
+	Template.AltGameArchetypeArray.AddItem(AlternateArchetype);
 
 	Template.Tier = 2;
 	Template.OnAcquiredFn = OnLightsaberAcquired;
@@ -388,8 +404,17 @@ static function name GetRandomUpgrade(name WeaponTech, array<UpgradeSetup> Weapo
 
 function bool ShouldUseDualWieldArchetype(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)
 {
-	return (class'X2DownloadableContentInfo_JediClass'.static.HasDualLightsaberEquipped(UnitState) &&
+	return (UnitState != none &&
+		class'X2DownloadableContentInfo_JediClass'.static.HasDualLightsaberEquipped(UnitState) &&
 		ConsiderArchetype == "LightSaber_CV.Archetypes.WP_LightSaber_CV_Dual");
+}
+
+function bool ShouldUseSecondaryArchetype(XComGameState_Item ItemState, XComGameState_Unit UnitState, string ConsiderArchetype)
+{
+	return (UnitState != none &&
+		!class'X2DownloadableContentInfo_JediClass'.static.HasDualLightsaberEquipped(UnitState) &&
+		!class'X2DownloadableContentInfo_JediClass'.static.HasPrimaryLightsaberEquipped(UnitState) &&
+		ConsiderArchetype == "Lightsaber_CV.Archetypes.WP_Lightsaber_CV_Secondary");
 }
 
 function DeleteMatchingWeaponFromOtherSlot(XComGameState_Item ItemState, XComGameState_Unit UnitState, XComGameState NewGameState)

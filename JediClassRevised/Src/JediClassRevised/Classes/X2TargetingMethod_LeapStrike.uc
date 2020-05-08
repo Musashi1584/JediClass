@@ -134,7 +134,6 @@ function UpdatePathComponents(TTile Destination)
 protected function Vector GetPathDestination()
 {
 	local XComWorldData WorldData;
-	local XComGameState_BaseObject Target;
 	local array<TTile> PathTiles;
 	local TTile Tile;
 
@@ -156,7 +155,6 @@ function GetTargetLocations(out array<Vector> TargetLocations)
 function Update(float DeltaTime)
 {
 	local vector NewTargetLocation;
-	local TTile NewTile;
 	local array<vector> TargetLocations;
 
 	super.Update(DeltaTime);
@@ -181,7 +179,7 @@ function Update(float DeltaTime)
 
 function name ValidateTargetLocations(const array<Vector> TargetLocations)
 {
-	local vector PathLocation, GrenadePathLocation;
+	local vector GrenadePathLocation;
 	local TTile PathTile, GrenadePathTile;
 	local XComWorldData WorldData;
 	local array<TTile> PathTiles;
