@@ -65,7 +65,7 @@ static function X2DataTemplate CreateJediUpgrade(name SocketName, UpgradeSetup T
 	
 	if (ThisUpgradeSetup.CritChanceBonus > 0)
 	{
-		Template.CritBonus = ThisUpgradeSetup.AimBonus;
+		Template.CritBonus = ThisUpgradeSetup.CritChanceBonus;
 		Template.AddCritChanceModifierFn = CritUpgradeModifier;
 	}
 
