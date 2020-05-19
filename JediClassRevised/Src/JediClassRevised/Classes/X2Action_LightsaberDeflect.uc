@@ -83,7 +83,10 @@ function SendProjectile(AnimNotify_FireWeaponVolley FireVolleyNotify)
 	if (ProjectileTemplate == none)
 	{
 		InstigatingAction = X2Action_Fire(`XCOMVISUALIZATIONMGR.GetCurrentActionForVisualizer(TargetUnitState.GetVisualizer()));
-		ProjectileTemplate = InstigatingAction.ProjectileVolleys[0];
+		if (InstigatingAction != none)
+		{
+			ProjectileTemplate = InstigatingAction.ProjectileVolleys[0];
+		}
 	}
 	
 	FireVolleyNotify.bCosmeticVolley = true;
@@ -280,13 +283,15 @@ Begin:
 		else
 		{
 			PlayingSequence = UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params);
-			while(bShouldContinueAnim && !bProjectilesFired)
+			do
 			{
 				`log("X2Action_LightsaberDeflect PlayingSequence " @ bShouldContinueAnim,, 'JediClassRevised');
 				PlayingSequence.ReplayAnim();
 				FinishAnim(PlayingSequence);
 				Sleep(0.0f);
 			}
+			until (!bShouldContinueAnim || bProjectilesFired);
+
 			Sleep(0.0f);
 			//if (FireVolleyNotifies.Length > 1)
 			//{
@@ -300,6 +305,13 @@ Begin:
 	else
 	{
 		`log("X2Action_LightsaberDeflect Failed to play animation" @ Params.AnimName @ "on" @ UnitPawn @ "as part of" @ self,, 'JediClassRevised');
+	}
+
+	Params.AnimName = 'HL_LightsaberReflectStop';
+	UnitPawn.GetAnimTreeController().SetAllowNewAnimations(true);
+	if (UnitPawn.GetAnimTreeController().CanPlayAnimation(Params.AnimName))
+	{
+		FinishAnim(UnitPawn.GetAnimTreeController().PlayFullBodyDynamicAnim(Params));
 	}
 
 	//bShouldContinueAnim = false;

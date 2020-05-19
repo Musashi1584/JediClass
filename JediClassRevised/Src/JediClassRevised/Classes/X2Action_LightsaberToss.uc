@@ -82,7 +82,7 @@ function SetProjectileColor()
 			Mat = MeshComp.GetMaterial(i);
 			MIC = MaterialInstanceConstant(Mat);
 			//`log(default.class @ GetFuncName() @ "MIC" @ i @ MIC @ MIC.Parent,, 'JediClassRevised');
-			if (InStr(MIC.Parent, "MAT_Lightsaber_Blade") != INDEX_NONE)
+			if (MIC != none && InStr(MIC.Parent, "MAT_Lightsaber_Blade") != INDEX_NONE)
 			{
 				//`log(default.class @ GetFuncName() @ "MIC" @ "applying",, 'JediClassRevised');
 				Weapon.DefaultProjectileTemplate.ProjectileElements[0].DefaultParticleSystemInstanceParameterSet.InstanceParameters[0].Material = MIC;
@@ -91,7 +91,7 @@ function SetProjectileColor()
 			
 			MITV = MaterialInstanceTimeVarying(Mat);
 			//`log(default.class @ GetFuncName() @ "MITV" @ i @ MITV @ MITV.Parent,, 'JediClassRevised');
-			if (InStr(MITV.Parent, "MAT_Lightsaber_Blade") != INDEX_NONE)
+			if (MITV != none && InStr(MITV.Parent, "MAT_Lightsaber_Blade") != INDEX_NONE)
 			{
 				//`log(default.class @ GetFuncName() @ "MITV" @ "applying",, 'JediClassRevised');
 				Weapon.DefaultProjectileTemplate.ProjectileElements[0].DefaultParticleSystemInstanceParameterSet.InstanceParameters[0].Material = MITV;

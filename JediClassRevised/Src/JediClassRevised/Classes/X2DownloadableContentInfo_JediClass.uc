@@ -1,13 +1,3 @@
-//---------------------------------------------------------------------------------------
-//  FILE:   XComDownloadableContentInfo_JediClass.uc                                    
-//           
-//	Use the X2DownloadableContentInfo class to specify unique mod behavior when the 
-//  player creates a new campaign or loads a saved game.
-//  
-//---------------------------------------------------------------------------------------
-//  Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
-//---------------------------------------------------------------------------------------
-
 class X2DownloadableContentInfo_JediClass extends X2DownloadableContentInfo config(JediClass);
 
 struct SocketReplacementInfo
@@ -22,6 +12,12 @@ struct DLCAnimSetAdditions
 	var Name CharacterGroup;
 	var String AnimSet;
 	var String FemaleAnimSet;
+};
+
+struct AbilityWeaponCategoryRestriction
+{
+	var name AbilityName;
+	var array<name> WeaponCategories;
 };
 
 var config array<DLCAnimSetAdditions> AnimSetAdditions;
@@ -44,12 +40,14 @@ var config array<LootTableEntry> SUPERIOR_LOOT_ENTRIES;
 
 var config array<name> DebugAnimSequences;
 
+var config array<AbilityWeaponCategoryRestriction> AbilityWeaponCategoryRestrictions;
+
 static function bool AbilityTagExpandHandler_CH(string InString, out string OutString, Object ParseObj, Object StrategyParseOb, XComGameState GameState)
 {
 	local XComGameStateHistory History;
 	local XComGameState_Effect EffectState;
 	local XComGameState_Ability AbilityState;
-	local X2AbilityTemplate AbilityTemplate;
+	//local X2AbilityTemplate AbilityTemplate;
 	local XComGameState_Unit UnitState;
 	local int DSP, LSP;
 	
@@ -62,9 +60,9 @@ static function bool AbilityTagExpandHandler_CH(string InString, out string OutS
 	
 	EffectState = XComGameState_Effect(ParseObj);
 	AbilityState = XComGameState_Ability(ParseObj);
-	AbilityTemplate = X2AbilityTemplate(ParseObj);
+	//AbilityTemplate = X2AbilityTemplate(ParseObj);
 	
-	`LOG(GetFuncName() @ InString @ "1" @ EffectState @ AbilityState @ AbilityTemplate @ ParseObj,, 'JediClassRevised');
+	//`LOG(GetFuncName() @ InString @ "1" @ EffectState @ AbilityState @ AbilityTemplate @ ParseObj,, 'JediClassRevised');
 	
 	if (EffectState != none)
 	{
@@ -72,7 +70,7 @@ static function bool AbilityTagExpandHandler_CH(string InString, out string OutS
 	}
 	if (AbilityState != none)
 	{
-		AbilityTemplate = AbilityState.GetMyTemplate();
+		//AbilityTemplate = AbilityState.GetMyTemplate();
 
 		UnitState = XComGameState_Unit(History.GetGameStateForObjectID(AbilityState.OwnerStateObject.ObjectID));
 		if (UnitState != none)
@@ -92,15 +90,176 @@ static function bool AbilityTagExpandHandler_CH(string InString, out string OutS
 				OutString $= LSP @ class'JediClassHelper'.default.LightSidePointsLabel;
 			}
 
-			`LOG(GetFuncName() @ InString $ ":" @ OutString,, 'JediClassRevised');
+			//`LOG(GetFuncName() @ InString $ ":" @ OutString,, 'JediClassRevised');
 
 			return OutString != "";
 		}
 	}
 
-	`LOG(GetFuncName() @ InString @ "2" @ EffectState @ AbilityState @ AbilityTemplate,, 'JediClassRevised');
+	//`LOG(GetFuncName() @ InString @ "2" @ EffectState @ AbilityState @ AbilityTemplate,, 'JediClassRevised');
 		
 	return false;
+}
+
+static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out array<AbilitySetupData> SetupData, optional XComGameState StartState, optional XComGameState_Player PlayerState, optional bool bMultiplayerDisplay)
+{
+	local int Index, ConfigIndex;
+	local name WeaponCategory;
+	local array<XComGameState_Item> FoundItems;
+	local XComGameState_Item InventoryItem;
+	local StateObjectReference ItemRef;
+	local array<StateObjectReference> ItemRefs;
+
+	if (!UnitState.IsSoldier())
+		return;
+
+	for(Index = SetupData.Length - 1; Index >= 0; Index--)
+	{
+		ConfigIndex = default.AbilityWeaponCategoryRestrictions.Find('AbilityName', SetupData[Index].TemplateName);
+		
+		if (ConfigIndex != INDEX_NONE)
+		{
+			// Reset ref
+			SetupData[Index].SourceWeaponRef.ObjectID = 0;
+
+			foreach default.AbilityWeaponCategoryRestrictions[ConfigIndex].WeaponCategories(WeaponCategory)
+			{
+				FoundItems = GetInventoryItemsForCategory(UnitState, WeaponCategory, StartState);
+
+				//`LOG(GetFuncName() @ UnitState.SummaryString() @ SetupData[Index].TemplateName @ WeaponCategory @ `ShowVar(FoundItems.Length),, 'RPG');
+
+				if (FoundItems.Length > 0)
+				{
+					ItemRefs.Length = 0;
+					// Checking slots in descending priority
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_PrimaryWeapon));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_SecondaryWeapon));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_Armor));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_Pistol));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_PsiAmp));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_HeavyWeapon));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_ExtraSecondary));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_GrenadePocket));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_AmmoPocket));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_Utility));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_CombatDrugs));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_CombatSim));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_Plating));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_Vest));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_SparkLauncher));
+					ItemRefs.AddItem(GetItemReferenceForInventorySlot(FoundItems, eInvSlot_SecondaryPayload));
+					
+					foreach ItemRefs(ItemRef)
+					{
+						If (ItemRef.ObjectID != 0)
+						{
+							//`LOG(GetFuncName() @ UnitState.SummaryString() @ `ShowVar(ItemRef.ObjectID) @ InventoryItem.SummaryString() @ InventoryItem.InventorySlot,, 'RPG');
+							SetupData[Index].SourceWeaponRef = ItemRef;
+							break;
+						}
+					}
+
+					// We havent found anything above, take the first found item
+					if (SetupData[Index].SourceWeaponRef.ObjectID == 0)
+					{
+						SetupData[Index].SourceWeaponRef = FoundItems[0].GetReference();
+						break;
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+
+			// havent found any items for ability, lets remove it
+			if (SetupData[Index].SourceWeaponRef.ObjectID == 0)
+			{
+				`LOG(GetFuncName() @ UnitState.SummaryString() @
+					"Removing" @ SetupData[Index].TemplateName @
+					"cause no matching items found"
+				,, 'JediClassRevised');
+
+				SetupData.Remove(Index, 1);
+			}
+			else
+			{
+				InventoryItem = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID));
+
+				`LOG(GetFuncName() @ UnitState.SummaryString() @
+					"Patching" @ SetupData[Index].TemplateName @
+					"to" @ InventoryItem.InventorySlot
+					@ InventoryItem.SummaryString()
+				,, 'JediClassRevised');
+			}
+		}
+	}
+}
+
+
+static function StateObjectReference GetItemReferenceForInventorySlot(array<XComGameState_Item> Items, EInventorySlot InventorySlot)
+{
+	local XComGameState_Item Item;
+	local StateObjectReference EmptyRef;
+
+	foreach Items(Item)
+	{
+		if (Item.InventorySlot == InventorySlot)
+		{
+			return Item.GetReference();
+		}
+	}
+
+	return EmptyRef;
+}
+
+
+static function array<XComGameState_Item> GetInventoryItemsForCategory(
+	XComGameState_Unit UnitState,
+	name WeaponCategory,
+	optional XComGameState StartState
+	)
+{
+	local array<XComGameState_Item> CurrentInventory, FoundItems;
+	local X2WeaponTemplate WeaponTemplate;
+	local X2PairedWeaponTemplate PairedWeaponTemplate;
+	local array<name> PairedTemplates;
+	local XComGameState_Item InventoryItem;
+
+	CurrentInventory = UnitState.GetAllInventoryItems(StartState);
+
+	foreach CurrentInventory(InventoryItem)
+	{
+		PairedWeaponTemplate = X2PairedWeaponTemplate(InventoryItem.GetMyTemplate());
+		if (PairedWeaponTemplate != none)
+		{
+			PairedTemplates.AddItem(PairedWeaponTemplate.PairedTemplateName);
+		}
+	}
+
+	foreach CurrentInventory(InventoryItem)
+	{
+		PairedWeaponTemplate = X2PairedWeaponTemplate(InventoryItem.GetMyTemplate());
+		// Ignore loot mod created paired templates
+		if (PairedWeaponTemplate != none && InStr(string(PairedWeaponTemplate.DataName), "Paired") != INDEX_NONE)
+		{
+			continue;
+		}
+
+		// ignore paired targets like WristBladeLeft_CV
+		if (PairedTemplates.Find(InventoryItem.GetMyTemplateName()) != INDEX_NONE)
+		{
+			continue;
+		}
+
+		WeaponTemplate = X2WeaponTemplate(InventoryItem.GetMyTemplate());
+		if (WeaponTemplate != none && WeaponTemplate.WeaponCat == WeaponCategory)
+		{
+			`LOG(GetFuncName() @ InventoryItem.GetMyTemplate().DataName @ InventoryItem.GetMyTemplate().Class.Name @ X2WeaponTemplate(InventoryItem.GetMyTemplate()).WeaponCat @ WeaponCategory,, 'RPG');
+			FoundItems.AddItem(InventoryItem);
+		}
+	}
+	return FoundItems;
 }
 
 static function UpdateWeaponMaterial(XGWeapon WeaponArchetype, MeshComponent MeshComp)
@@ -299,7 +458,7 @@ static function OnPostAbilityTemplatesCreated()
 	AbilityMgr.GetTemplateNames(TemplateNames);
 	foreach TemplateNames(TemplateName)
 	{
-		`LOG(GetFuncName() @ TemplateName,, 'JediClassRevised');
+		//`LOG(GetFuncName() @ TemplateName,, 'JediClassRevised');
 		if (default.IgnoreAbilitiesForForceSpeed.Find(TemplateName) != INDEX_NONE)
 		{
 			continue;
@@ -527,6 +686,11 @@ static function bool IsPrimarySaberStaffWeaponTemplate(XComGameState_Item ItemSt
 {
 	local X2WeaponTemplate WeaponTemplate;
 
+	if (ItemState == none)
+	{
+		return false;
+	}
+
 	WeaponTemplate = X2WeaponTemplate(ItemState.GetMyTemplate());
 
 	return WeaponTemplate != none &&
@@ -537,6 +701,11 @@ static function bool IsPrimarySaberStaffWeaponTemplate(XComGameState_Item ItemSt
 static function bool IsPrimaryLightsaberWeaponTemplate(XComGameState_Item ItemState)
 {
 	local X2WeaponTemplate WeaponTemplate;
+
+	if (ItemState == none)
+	{
+		return false;
+	}
 
 	WeaponTemplate = X2WeaponTemplate(ItemState.GetMyTemplate());
 
@@ -550,6 +719,11 @@ static function bool IsSecondaryLightsaberWeaponTemplate(XComGameState_Item Item
 {
 	local X2WeaponTemplate WeaponTemplate;
 
+	if (ItemState == none)
+	{
+		return false;
+	}
+
 	WeaponTemplate = X2WeaponTemplate(ItemState.GetMyTemplate());
 
 	return WeaponTemplate != none &&
@@ -562,6 +736,11 @@ static function bool IsPrimaryMeleeWeaponTemplate(XComGameState_Item ItemState)
 {
 	local X2WeaponTemplate WeaponTemplate;
 
+	if (ItemState == none)
+	{
+		return false;
+	}
+
 	WeaponTemplate = X2WeaponTemplate(ItemState.GetMyTemplate());
 
 	return WeaponTemplate != none &&
@@ -573,6 +752,11 @@ static function bool IsPrimaryMeleeWeaponTemplate(XComGameState_Item ItemState)
 static function bool IsSecondaryMeleeWeaponTemplate(XComGameState_Item ItemState)
 {
 	local X2WeaponTemplate WeaponTemplate;
+
+	if (ItemState == none)
+	{
+		return false;
+	}
 
 	WeaponTemplate = X2WeaponTemplate(ItemState.GetMyTemplate());
 
@@ -618,7 +802,21 @@ static function bool CanAddItemToInventory_CH(out int bCanAddItem, const EInvent
 	PrimaryWeapon = UnitState.GetItemInSlot(eInvSlot_PrimaryWeapon, CheckGameState);
 	SecondaryWeapon = UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon, CheckGameState);
 
-	if (WeaponTemplate != none && PrimaryWeapon != none && SecondaryWeapon != none)
+	if (WeaponTemplate != none &&
+		!class'JediClassHelper'.static.IsJedi(UnitState) && (
+		WeaponTemplate.WeaponCat == 'lightsaber' ||
+		WeaponTemplate.WeaponCat == 'saberstaff' ||
+		WeaponTemplate.WeaponCat == 'holocron')
+	)
+	{
+		bCanAddItem = 0;
+		DisabledReason = class'UIUtilities_Text'.static.CapsCheckForGermanScharfesS(
+			class'UIArmory_Loadout'.default.m_strUnavailableToClass
+		);
+		bEvaluate = true;
+	}
+
+	if (!bEvaluate && WeaponTemplate != none && PrimaryWeapon != none && SecondaryWeapon != none)
 	{
 		if (X2WeaponTemplate(PrimaryWeapon.GetMyTemplate()).WeaponCat == 'saberstaff' &&
 			WeaponTemplate.InventorySlot == eInvSlot_SecondaryWeapon)
@@ -648,7 +846,8 @@ static function bool CanAddItemToInventory_CH(out int bCanAddItem, const EInvent
 		}
 	}
 
-	if (X2ArmorTemplate(ItemTemplate) != none && 
+	if (!bEvaluate &&
+		X2ArmorTemplate(ItemTemplate) != none && 
 		X2ArmorTemplate(ItemTemplate).ArmorClass == 'heavy' &&
 		class'JediClassHelper'.static.IsJedi(UnitState))
 	{
@@ -828,15 +1027,12 @@ exec function GiveSoldier(string SoldierName)
 	local XComGameState NewGameState;
 	local XComGameState_HeadquartersXCom XComHQ;
 	local XComGameState_Unit UnitState;
-	//local XComOnlineProfileSettings ProfileSettings;
-	//local int idx;
 
 	History = `XCOMHISTORY;
 	NewGameState = class'XComGameStateContext_ChangeContainer'.static.CreateChangeState("GiveSoldier");
 	XComHQ = XComGameState_HeadquartersXCom(History.GetSingleGameStateObjectForClass(class'XComGameState_HeadquartersXCom'));
 	XComHQ = XComGameState_HeadquartersXCom(NewGameState.ModifyStateObject(class'XComGameState_HeadquartersXCom', XComHQ.ObjectID));
 
-	//ProfileSettings = `XPROFILESETTINGS;
 	Manager = `CHARACTERPOOLMGR;
 
 	UnitState = Manager.CreateCharacter(NewGameState, eCPSM_PoolOnly, , , SoldierName);

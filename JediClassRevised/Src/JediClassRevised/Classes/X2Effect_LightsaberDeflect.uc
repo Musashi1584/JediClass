@@ -25,7 +25,7 @@ function bool ChangeHitResultForTarget(
 	local X2AbilityToHitCalc_StandardAim AttackToHit;
 	local X2AbilityTemplate AbilityTemplate;
 	local X2Effect_ApplyWeaponDamage DamageEffect;
-	local name CurrentEffect, DamageType, WeaponCat;
+	local name CurrentEffect, DamageType;
 	local UnitValue DeflectUsedValue, ReflectBonusValue;
 	local int Index, RandRoll, ReflectMalus, ReflectBonus, ModifiedHitChance;;
 
@@ -42,11 +42,6 @@ function bool ChangeHitResultForTarget(
 
 	// target must be able to respond to incoming fire
 	if (!TargetUnit.IsAbleToAct())
-		return false;
-
-	// target must be wielding a lightsaber as their primary weapon (we'll deal with dual wielding conditions later?)
-	WeaponCat = X2WeaponTemplate(TargetUnit.GetPrimaryWeapon().GetMyTemplate()).WeaponCat;
-	if (default.ValidWeaponCategories.Find(WeaponCat) == INDEX_NONE)
 		return false;
 
 	// incoming attack must not have a non-reflectable damage type

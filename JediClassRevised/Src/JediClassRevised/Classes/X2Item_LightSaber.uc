@@ -414,6 +414,7 @@ function bool ShouldUseSecondaryArchetype(XComGameState_Item ItemState, XComGame
 	return (UnitState != none &&
 		!class'X2DownloadableContentInfo_JediClass'.static.HasDualLightsaberEquipped(UnitState) &&
 		!class'X2DownloadableContentInfo_JediClass'.static.HasPrimaryLightsaberEquipped(UnitState) &&
+		class'X2DownloadableContentInfo_JediClass'.static.IsSecondaryLightsaberWeaponTemplate(UnitState.GetItemInSlot(eInvSlot_SecondaryWeapon)) &&
 		ConsiderArchetype == "Lightsaber_CV.Archetypes.WP_Lightsaber_CV_Secondary");
 }
 

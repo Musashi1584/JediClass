@@ -115,6 +115,11 @@ simulated function bool MoveAlongPath(float fTime, XComUnitPawn pActor)
 	
 	//fTime *= 1.8;
 
+	if (Path.iNumKeyframes == INDEX_NONE)
+	{
+		return true;
+	}
+
 	KF = Path.ExtractInterpolatedKeyframe(fTime);
 	TargetLocation = KF.vLoc;
 

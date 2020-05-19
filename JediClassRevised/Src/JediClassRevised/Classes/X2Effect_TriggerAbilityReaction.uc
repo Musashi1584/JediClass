@@ -49,6 +49,7 @@ static function EventListenerReturn OnAbilityActivated(Object EventData, Object 
 	local XComGameState_Effect NewEffectState;
 	local X2AbilityTemplate AbilityTemplate;
 	local X2TargetingMethod TargetingMethod;
+	local XComGameState_Item ItemState;
 	local int RandRoll;
 
 	AbilityContext = XComGameStateContext_Ability(GameState.GetContext());
@@ -110,12 +111,18 @@ static function EventListenerReturn OnAbilityActivated(Object EventData, Object 
 
 			AbilityRef = CoveringUnit.FindAbility(TriggerAbilityReactionEffect.AbilityToActivate);
 			AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityRef.ObjectID));
+			ItemState = XComGameState_Item(History.GetGameStateForObjectID(AbilityState.SourceWeapon.ObjectID));
 			AbilityTemplate = AbilityState.GetMyTemplate();
 			TargetingMethod = new AbilityTemplate.TargetingMethod;
 			TargetingMethod.InitFromState(AbilityState);
 
 			if (AbilityState != none)
 			{
+				`LOG(default.class @ GetFuncName() @
+					AbilityState.GetMyTemplateName() @
+					ItemState.InventorySlot
+				,, 'JediClassRevised');
+
 				if ((TriggerAbilityReactionEffect.GrantActionPoint != '' || TriggerAbilityReactionEffect.GrantReserveActionPoint != '') && 
 					(TriggerAbilityReactionEffect.MaxActionPointsPerTurn > EffectGameState.GrantsThisTurn || TriggerAbilityReactionEffect.MaxActionPointsPerTurn <= 0))
 				{
@@ -142,14 +149,22 @@ static function EventListenerReturn OnAbilityActivated(Object EventData, Object 
 					{
 						`TACTICALRULES.SubmitGameState(NewGameState);
 
-						`LOG(default.class @ GetFuncName() @ TriggerAbilityReactionEffect.AbilityToActivate,, 'JediClassRevised');
-
 						if (TriggerAbilityReactionEffect.bUseMultiTargets)
 						{
+							`LOG(default.class @ GetFuncName() @
+								"AbilityTriggerAgainstSingleTarget 1" @
+								TriggerAbilityReactionEffect.AbilityToActivate @
+								ItemState.InventorySlot
+							,, 'JediClassRevised');
 							AbilityState.AbilityTriggerAgainstSingleTarget(CoveringUnit.GetReference(), true);
 						}
 						else
 						{
+							`LOG(default.class @ GetFuncName() @
+								"ActivateAbilityByTemplateName 1"  @
+								TriggerAbilityReactionEffect.AbilityToActivate @
+								ItemState.InventorySlot
+							,, 'JediClassRevised');
 							class'XComGameStateContext_Ability'.static.ActivateAbilityByTemplateName(
 								CoveringUnit.GetReference(),
 								TriggerAbilityReactionEffect.AbilityToActivate,
@@ -163,20 +178,32 @@ static function EventListenerReturn OnAbilityActivated(Object EventData, Object 
 				else if (TriggerAbilityReactionEffect.bSelfTargeting && AbilityState.CanActivateAbilityForObserverEvent(CoveringUnit) == 'AA_Success' &&
 						AbilityState.CanActivateAbility(CoveringUnit, AbilityContext.InterruptionStatus, false) == 'AA_Success')
 				{
-					`LOG(default.class @ GetFuncName() @ TriggerAbilityReactionEffect.AbilityToActivate,, 'JediClassRevised');
+					`LOG(default.class @ GetFuncName() @
+						"AbilityTriggerAgainstSingleTarget bSelfTargeting" @
+						TriggerAbilityReactionEffect.AbilityToActivate @
+						ItemState.InventorySlot
+					,, 'JediClassRevised');
 					AbilityState.AbilityTriggerAgainstSingleTarget(CoveringUnit.GetReference(), TriggerAbilityReactionEffect.bUseMultiTargets);
 				}
 				else if (AbilityState.CanActivateAbilityForObserverEvent(AttackingUnit) == 'AA_Success' &&
 						AbilityState.CanActivateAbility(CoveringUnit, AbilityContext.InterruptionStatus, false) == 'AA_Success')
 				{
-					`LOG(default.class @ GetFuncName() @ TriggerAbilityReactionEffect.AbilityToActivate,, 'JediClassRevised');
 					if (TriggerAbilityReactionEffect.bUseMultiTargets)
 					{
+						`LOG(default.class @ GetFuncName() @
+							"AbilityTriggerAgainstSingleTarget 2" @
+							TriggerAbilityReactionEffect.AbilityToActivate @
+							ItemState.InventorySlot
+						,, 'JediClassRevised');
 						AbilityState.AbilityTriggerAgainstSingleTarget(CoveringUnit.GetReference(), true);
 					}
 					else
 					{
-						
+						`LOG(default.class @ GetFuncName() @
+							"ActivateAbilityByTemplateName 2" @
+							TriggerAbilityReactionEffect.AbilityToActivate @
+							ItemState.InventorySlot
+						,, 'JediClassRevised');
 						class'XComGameStateContext_Ability'.static.ActivateAbilityByTemplateName(
 							CoveringUnit.GetReference(),
 							TriggerAbilityReactionEffect.AbilityToActivate,

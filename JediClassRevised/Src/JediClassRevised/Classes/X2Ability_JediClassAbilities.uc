@@ -88,6 +88,8 @@ var config int REFLECT_HIT_DIFFICULTY;
 var privatewrite name ForceDrainEventName;
 var privatewrite name ForceDrainUnitValue;
 
+var name BattlePrecognitionReserveType;
+
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> AbilityTemplates;
@@ -191,6 +193,7 @@ static function X2AbilityTemplate BattlePrecognition()
 	Template.AbilityShooterConditions.AddItem(SuppressedCondition);
 	
 	ReserveActionPointsEffect = new class'X2Effect_ReserveOverwatchPoints';
+	ReserveActionPointsEffect.ReserveType = default.BattlePrecognitionReserveType;
 	Template.AddTargetEffect(ReserveActionPointsEffect);
 	Template.DefaultKeyBinding = class'UIUtilities_Input'.const.FXS_KEY_Y;
 
@@ -221,7 +224,6 @@ static function X2AbilityTemplate BattlePrecognition()
 	
 	Template.AbilitySourceName = 'eAbilitySource_Standard';
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_HideIfOtherAvailable;
-	Template.HideIfAvailable.AddItem('LongWatch');
 	Template.IconImage = "img:///JediClassUI.UIPerk_BattlePrecog";
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.OVERWATCH_PRIORITY;
 	Template.bNoConfirmationWithHotKey = true;
@@ -267,7 +269,7 @@ static function X2AbilityTemplate BattlePrecognitionLeapStrike()
 	
 	ReserveActionPointCost = new class'X2AbilityCost_ReserveActionPoints';
 	ReserveActionPointCost.iNumPoints = 1;
-	ReserveActionPointCost.AllowedTypes.AddItem(class'X2CharacterTemplateManager'.default.OverwatchReserveActionPoint);
+	ReserveActionPointCost.AllowedTypes.AddItem(default.BattlePrecognitionReserveType);
 	Template.AbilityCosts.AddItem(ReserveActionPointCost);
 
 	FPCost = new class'X2AbilityCost_ForcePoints';
@@ -332,8 +334,6 @@ static function X2AbilityTemplate BattlePrecognitionLeapStrike()
 	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
 	
-	Template.DefaultSourceItemSlot = eInvSlot_PrimaryWeapon;
-
 	return Template;
 }
 
@@ -429,50 +429,6 @@ static function X2AbilityTemplate LeapStrike()
 	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
 	
 	return Template;
-}
-
-static simulated function XComGameState LeapStrike_BuildGameState_UNUSED(XComGameStateContext Context)
-{
-	local XComGameState NewGameState;
-	local XComGameState_Unit UnitState;
-	local XComGameStateContext_Ability AbilityContext;
-	local vector NewLocation;
-	local TTile NewTileLocation;
-	local XComWorldData World;
-	local X2EventManager EventManager;
-	local int LastElementIndex;
-
-	World = `XWORLD;
-	EventManager = `XEVENTMGR;
-
-	//Build the new game state frame
-	NewGameState = TypicalAbility_BuildGameState(Context);
-
-	AbilityContext = XComGameStateContext_Ability(NewGameState.GetContext());	
-	UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(class'XComGameState_Unit', AbilityContext.InputContext.SourceObject.ObjectID));
-
-	LastElementIndex = AbilityContext.InputContext.MovementPaths[0].MovementData.Length - 1;
-
-	// Set the unit's new location
-	// The last position in MovementData will be the end location
-	//`assert(LastElementIndex > 0);
-	`LOG(GetFuncName() @ LastElementIndex,, 'JediClassRevised');
-	if (LastElementIndex > 0)
-	{
-		NewLocation = AbilityContext.InputContext.MovementPaths[0].MovementData[LastElementIndex].Position;
-		NewTileLocation = World.GetTileCoordinatesFromPosition(NewLocation);
-		UnitState.SetVisibilityLocation(NewTileLocation);
-		`LOG(GetFuncName() @ NewTileLocation.X @ NewTileLocation.Y @ NewTileLocation.Z,, 'JediClassRevised');
-	}
-	
-
-	AbilityContext.ResultContext.bPathCausesDestruction = MoveAbility_StepCausesDestruction(UnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
-	MoveAbility_AddTileStateObjects(NewGameState, UnitState, AbilityContext.InputContext, 0, AbilityContext.InputContext.MovementPaths[0].MovementTiles.Length - 1);
-
-	EventManager.TriggerEvent('ObjectMoved', UnitState, UnitState, NewGameState);
-	EventManager.TriggerEvent('UnitMoveFinished', UnitState, UnitState, NewGameState);
-
-	return NewGameState;
 }
 
 // Copy of TypicalAbility_BuildVisualization for the most part
@@ -3268,7 +3224,7 @@ static function X2AbilityTemplate LightsaberTelekinesis()
 	//local X2AbilityTarget_Cursor				CursorTarget;
 	//local X2AbilityTarget_Single				SingleTarget;
 	local X2Effect_PrimaryTargetGuaranteedHit	PrimaryTargetGuaranteedHitEffect;
-	local X2Condition_UnitInventory				LightsaberCondition;
+	local X2Condtion_UnitInventoryExpanded		LightsaberCondition;
 	
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberTelekinesis');
 
@@ -3321,8 +3277,9 @@ static function X2AbilityTemplate LightsaberTelekinesis()
 
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
 	// Can't toss a non-saber
-	LightsaberCondition = new class'X2Condition_UnitInventory';
-	LightsaberCondition.RelevantSlot = eInvSlot_PrimaryWeapon;
+	LightsaberCondition = new class'X2Condtion_UnitInventoryExpanded';
+	LightsaberCondition.RelevantSlots.AddItem(eInvSlot_PrimaryWeapon);
+	LightsaberCondition.RelevantSlots.AddItem(eInvSlot_SecondaryWeapon);
 	LightsaberCondition.RequireWeaponCategory = 'lightsaber';
 	Template.AbilityShooterConditions.AddItem(LightsaberCondition);
 
@@ -3366,7 +3323,7 @@ static function X2AbilityTemplate LightsaberToss()
 	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
 	local array<name>                       SkipExclusions;
 	//local X2AbilityCost_Ammo                AmmoCost;
-	local X2Condition_UnitInventory			LightsaberCondition;
+	local X2Condtion_UnitInventoryExpanded		LightsaberCondition;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'LightsaberToss');
 
@@ -3405,8 +3362,9 @@ static function X2AbilityTemplate LightsaberToss()
 	// Can't shoot while dead
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
 	// Can't toss a non-saber
-	LightsaberCondition = new class'X2Condition_UnitInventory';
-	LightsaberCondition.RelevantSlot = eInvSlot_PrimaryWeapon;
+	LightsaberCondition = new class'X2Condtion_UnitInventoryExpanded';
+	LightsaberCondition.RelevantSlots.AddItem(eInvSlot_PrimaryWeapon);
+	LightsaberCondition.RelevantSlots.AddItem(eInvSlot_SecondaryWeapon);
 	LightsaberCondition.RequireWeaponCategory = 'lightsaber';
 	Template.AbilityShooterConditions.AddItem(LightsaberCondition);
 
@@ -3444,9 +3402,16 @@ static function X2AbilityTemplate LightsaberDeflect()
 	local X2AbilityTemplate						Template;
 	local X2Effect_LightsaberDeflect			RedirectEffect;
 	local X2Effect_PersistentStatChange			PersistentStatChangeEffect;
+	local X2Condtion_UnitInventoryExpanded		LightsaberCondition;
 
 	Template = PurePassive('LightsaberDeflect', "img:///LightSaber_CV.UI.UIPerk_Reflect", , 'eAbilitySource_Perk');
 	Template.AdditionalAbilities.AddItem('LightsaberDeflectShot');
+
+	LightsaberCondition = new class'X2Condtion_UnitInventoryExpanded';
+	LightsaberCondition.RelevantSlots.AddItem(eInvSlot_PrimaryWeapon);
+	LightsaberCondition.RelevantSlots.AddItem(eInvSlot_SecondaryWeapon);
+	LightsaberCondition.RequireWeaponCategory = 'lightsaber';
+	Template.AbilityShooterConditions.AddItem(LightsaberCondition);
 
 	RedirectEffect = new class'X2Effect_LightsaberDeflect';
 	RedirectEffect.BuildPersistentEffect(1, true, false);
@@ -3527,11 +3492,18 @@ static function X2AbilityTemplate LightsaberReflect()
 	local X2Effect_LightsaberReflect			RedirectEffect;
 	local X2Effect_ExtraDeflectChance			DeflectBonusEffect;
 	local X2Effect_PersistentStatChange			PersistentStatChangeEffect;
+	local X2Condtion_UnitInventoryExpanded		LightsaberCondition;
 	
 	Template = PurePassive('LightsaberReflect', "img:///LightSaber_CV.UI.UIPerk_Reflect", , 'eAbilitySource_Perk');
 	Template.PrerequisiteAbilities.AddItem('LightsaberDeflect');
 	Template.OverrideAbilities.AddItem('LightsaberDeflect');
 	Template.AdditionalAbilities.AddItem('LightsaberReflectShot');
+
+	LightsaberCondition = new class'X2Condtion_UnitInventoryExpanded';
+	LightsaberCondition.RelevantSlots.AddItem(eInvSlot_PrimaryWeapon);
+	LightsaberCondition.RelevantSlots.AddItem(eInvSlot_SecondaryWeapon);
+	LightsaberCondition.RequireWeaponCategory = 'lightsaber';
+	Template.AbilityShooterConditions.AddItem(LightsaberCondition);
 
 	RedirectEffect = new class'X2Effect_LightsaberReflect';
 	RedirectEffect.BuildPersistentEffect(1, true, false);
@@ -3697,4 +3669,5 @@ DefaultProperties
 {
 	ForceDrainEventName="ForceDrainTriggered"
 	ForceDrainUnitValue="ForceDrainAmount"
+	BattlePrecognitionReserveType = "BattlePrecognition";
 }
