@@ -173,16 +173,16 @@ static function FinalizeUnitAbilitiesForInit(XComGameState_Unit UnitState, out a
 			}
 
 			// havent found any items for ability, lets remove it
-			if (SetupData[Index].SourceWeaponRef.ObjectID == 0)
-			{
-				`LOG(GetFuncName() @ UnitState.SummaryString() @
-					"Removing" @ SetupData[Index].TemplateName @
-					"cause no matching items found"
-				,, 'JediClassRevised');
-
-				SetupData.Remove(Index, 1);
-			}
-			else
+			//if (SetupData[Index].SourceWeaponRef.ObjectID == 0)
+			//{
+			//	`LOG(GetFuncName() @ UnitState.SummaryString() @
+			//		"Removing" @ SetupData[Index].TemplateName @
+			//		"cause no matching items found"
+			//	,, 'JediClassRevised');
+			//
+			//	SetupData.Remove(Index, 1);
+			//}
+			if (SetupData[Index].SourceWeaponRef.ObjectID > 0)
 			{
 				InventoryItem = XComGameState_Item(`XCOMHISTORY.GetGameStateForObjectID(SetupData[Index].SourceWeaponRef.ObjectID));
 
