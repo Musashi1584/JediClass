@@ -3401,7 +3401,7 @@ static function X2AbilityTemplate LightsaberDeflect()
 {
 	local X2AbilityTemplate						Template;
 	local X2Effect_LightsaberDeflect			RedirectEffect;
-	local X2Effect_PersistentStatChange			PersistentStatChangeEffect;
+	//local X2Effect_PersistentStatChange			PersistentStatChangeEffect;
 	local X2Condtion_UnitInventoryExpanded		LightsaberCondition;
 
 	Template = PurePassive('LightsaberDeflect', "img:///LightSaber_CV.UI.UIPerk_Reflect", , 'eAbilitySource_Perk');
@@ -3417,10 +3417,10 @@ static function X2AbilityTemplate LightsaberDeflect()
 	RedirectEffect.BuildPersistentEffect(1, true, false);
 	Template.AddTargetEffect(RedirectEffect);
 
-	PersistentStatChangeEffect = new class'X2Effect_PersistentStatChange';
-	PersistentStatChangeEffect.BuildPersistentEffect(1, true, false, false);
-	PersistentStatChangeEffect.AddPersistentStatChange(eStat_Defense, -50);
-	Template.AddTargetEffect(PersistentStatChangeEffect);
+	//PersistentStatChangeEffect = new class'X2Effect_PersistentStatChange';
+	//PersistentStatChangeEffect.BuildPersistentEffect(1, true, false, false);
+	//PersistentStatChangeEffect.AddPersistentStatChange(eStat_Defense, -50);
+	//Template.AddTargetEffect(PersistentStatChangeEffect);
 
 	return Template;
 }
@@ -3491,7 +3491,7 @@ static function X2AbilityTemplate LightsaberReflect()
 	local X2AbilityTemplate						Template;
 	local X2Effect_LightsaberReflect			RedirectEffect;
 	local X2Effect_ExtraDeflectChance			DeflectBonusEffect;
-	local X2Effect_PersistentStatChange			PersistentStatChangeEffect;
+	//local X2Effect_PersistentStatChange			PersistentStatChangeEffect;
 	local X2Condtion_UnitInventoryExpanded		LightsaberCondition;
 	
 	Template = PurePassive('LightsaberReflect', "img:///LightSaber_CV.UI.UIPerk_Reflect", , 'eAbilitySource_Perk');
@@ -3514,10 +3514,10 @@ static function X2AbilityTemplate LightsaberReflect()
 	DeflectBonusEffect.DeflectBonus = default.REFLECT_BONUS;
 	Template.AddTargetEffect(DeflectBonusEffect);
 
-	PersistentStatChangeEffect = new class'X2Effect_PersistentStatChange';
-	PersistentStatChangeEffect.BuildPersistentEffect(1, true, false, false);
-	PersistentStatChangeEffect.AddPersistentStatChange(eStat_Defense, -50);
-	Template.AddTargetEffect(PersistentStatChangeEffect);
+	//PersistentStatChangeEffect = new class'X2Effect_PersistentStatChange';
+	//PersistentStatChangeEffect.BuildPersistentEffect(1, true, false, false);
+	//PersistentStatChangeEffect.AddPersistentStatChange(eStat_Defense, -50);
+	//Template.AddTargetEffect(PersistentStatChangeEffect);
 
 	return Template;
 }
